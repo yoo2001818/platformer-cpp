@@ -2,6 +2,8 @@
 #define __ENTITY_HPP__
 
 class entity;
+class entity_chunk;
+class entity_group;
 
 class component {
   // Component manages the memory inside each entity chunk - the entity's
@@ -38,11 +40,15 @@ private:
   entity_handle mHandle;
   bool mDeleted;
   bool mFloating;
+  entity_chunk *mEntityChunk;
 };
 
 class entity_chunk {
 public:
   void get_component_memory(void **pPosition, int *pStride);
+
+private:
+  entity_group *mEntityGroup;
 };
 
 class entity_group {};

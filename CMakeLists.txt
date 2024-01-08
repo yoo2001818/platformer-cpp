@@ -22,7 +22,14 @@ FetchContent_Declare(
   GIT_TAG        v3.0.1
 )
 
+FetchContent_Declare(
+  entt 
+  GIT_REPOSITORY https://github.com/skypjack/entt.git
+  GIT_TAG        v3.12.2
+)
+
 # FetchContent_MakeAvailable(Catch2)
+FetchContent_MakeAvailable(entt)
 
 # add_compile_options(-fsanitize=address)
 # add_link_options(-fsanitize=address)

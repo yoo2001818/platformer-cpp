@@ -5,7 +5,8 @@
 #include <SDL2/SDL_video.h>
 #include <ctime>
 
-application::application() {}
+application::application(std::unique_ptr<application_applet> &&pApplet)
+    : mApplet(std::move(pApplet)) {}
 
 void application::start() {
   if (this->init() != 0)
@@ -18,6 +19,7 @@ void application::start() {
         exit = true;
         break;
       }
+      // TODO: Handle additional events
     }
     if (exit)
       break;
@@ -54,15 +56,18 @@ int application::init() {
   if (glewInit() != GLEW_OK) {
     return 1;
   }
+
+  this->mApplet->init();
   return 0;
 }
 
 void application::update() {
-  // Game logic will be here
+  this->mApplet->update();
   SDL_GL_SwapWindow(this->mWindow);
 }
 
 void application::dispose() {
+  this->mApplet->dispose();
   SDL_GL_DeleteContext(this->mGLContext);
   SDL_DestroyWindow(this->mWindow);
   SDL_Quit();

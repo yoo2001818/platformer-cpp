@@ -10,3 +10,6 @@ compile_commands.json
 CTestTestfile.cmake
 _deps
 PlatformerCpp
+.cache
+.cmake
+build.ninja

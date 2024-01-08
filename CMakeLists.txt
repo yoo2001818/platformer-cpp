@@ -4,6 +4,7 @@ project(PlatformerCpp)
 
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED True)
+set(CMAKE_EXPORT_COMPILE_COMMANDS True)
 set(OpenGL_GL_PREFERENCE GLVND)
 
 find_package(Vulkan REQUIRED)
@@ -23,13 +24,13 @@ FetchContent_Declare(
 )
 
 FetchContent_Declare(
-  entt 
+  EnTT
   GIT_REPOSITORY https://github.com/skypjack/entt.git
   GIT_TAG        v3.12.2
 )
 
 # FetchContent_MakeAvailable(Catch2)
-FetchContent_MakeAvailable(entt)
+FetchContent_MakeAvailable(EnTT)
 
 # add_compile_options(-fsanitize=address)
 # add_link_options(-fsanitize=address)
@@ -50,3 +51,4 @@ target_link_libraries(PlatformerCpp ${SDL2_IMAGE_LIBRARIES})
 target_link_libraries(PlatformerCpp ${SDL2_TTF_LIBRARIES})
 target_link_libraries(PlatformerCpp ${OPENGL_LIBRARIES})
 target_link_libraries(PlatformerCpp ${GLEW_LIBRARIES})
+target_link_libraries(PlatformerCpp EnTT::EnTT)

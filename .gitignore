@@ -13,3 +13,5 @@ PlatformerCpp
 .cache
 .cmake
 build.ninja
+/tests
+/build

@@ -20,7 +20,7 @@ PKG_SEARCH_MODULE(SDL2_IMAGE REQUIRED SDL2_image)
 FetchContent_Declare(
   Catch2
   GIT_REPOSITORY https://github.com/catchorg/Catch2.git
-  GIT_TAG        v3.0.1
+  GIT_TAG        v3.5.1
 )
 
 FetchContent_Declare(
@@ -29,7 +29,7 @@ FetchContent_Declare(
   GIT_TAG        v3.12.2
 )
 
-# FetchContent_MakeAvailable(Catch2)
+FetchContent_MakeAvailable(Catch2)
 FetchContent_MakeAvailable(EnTT)
 
 # add_compile_options(-fsanitize=address)
@@ -43,8 +43,8 @@ include_directories(${GLM_INCLUDE_DIRS})
 include_directories(${OPENGL_INCLUDE_DIRS})
 include_directories(${GLEW_INCLUDE_DIRS})
 
-include_directories(${PROJECT_SOURCE_DIR}/src)
-file(GLOB SOURCES ${PROJECT_SOURCE_DIR}/src/*.cpp)
+include_directories(${PROJECT_SOURCE_DIR}/src ${PROJECT_SOURCE_DIR}/main)
+file(GLOB SOURCES ${PROJECT_SOURCE_DIR}/src/*.cpp ${PROJECT_SOURCE_DIR}/main/*.cpp)
 add_executable(PlatformerCpp ${SOURCES})
 target_link_libraries(PlatformerCpp ${SDL2_LIBRARIES})
 target_link_libraries(PlatformerCpp ${SDL2_IMAGE_LIBRARIES})
@@ -52,3 +52,13 @@ target_link_libraries(PlatformerCpp ${SDL2_TTF_LIBRARIES})
 target_link_libraries(PlatformerCpp ${OPENGL_LIBRARIES})
 target_link_libraries(PlatformerCpp ${GLEW_LIBRARIES})
 target_link_libraries(PlatformerCpp EnTT::EnTT)
+
+file(GLOB TEST_SOURCES ${PROJECT_SOURCE_DIR}/src/*.cpp ${PROJECT_SOURCE_DIR}/test/*.cpp)
+add_executable(tests ${TEST_SOURCES})
+target_link_libraries(tests ${SDL2_LIBRARIES})
+target_link_libraries(tests ${SDL2_IMAGE_LIBRARIES})
+target_link_libraries(tests ${SDL2_TTF_LIBRARIES})
+target_link_libraries(tests ${OPENGL_LIBRARIES})
+target_link_libraries(tests ${GLEW_LIBRARIES})
+target_link_libraries(tests EnTT::EnTT)
+target_link_libraries(tests Catch2::Catch2WithMain)

@@ -1,12 +1,11 @@
 #include "game.hpp"
 
-game::game() {
-  entt::registry registry;
-  auto entity = registry.create();
-}
+game::game() : mRegistry() {}
 
-void game::init() {}
+void game::init() { auto entity = this->mRegistry.create(); }
 
-void game::update() {}
+void game::update(float pDelta) {}
 
 void game::dispose() {}
+
+void game::handle_event(SDL_Event &pEvent) {}

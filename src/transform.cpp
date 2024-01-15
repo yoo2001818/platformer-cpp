@@ -1,6 +1,10 @@
 #include "transform.hpp"
 #include "entt/entity/fwd.hpp"
 #include <exception>
+#include <glm/ext/matrix_transform.hpp>
+#include <glm/ext/quaternion_common.hpp>
+#include <glm/ext/quaternion_transform.hpp>
+#include <glm/gtx/matrix_decompose.hpp>
 #include <stdexcept>
 
 using namespace platformer;
@@ -120,41 +124,73 @@ void transform::apply_matrix(const glm::mat4 &pValue) {
 }
 
 void transform::translate(const glm::vec3 &pValue) {
-  throw std::logic_error("Not implemented yet");
+  this->update_component();
+  this->mPosition += pValue;
+  this->mark_component_changed();
 }
 
 void transform::rotate(const glm::quat &pValue) {
-  throw std::logic_error("Not implemented yet");
+  this->update_component();
+  this->mRotation = pValue * this->mRotation;
+  this->mark_component_changed();
 }
 
 void transform::rotate_x(float pRad) {
-  throw std::logic_error("Not implemented yet");
+  this->update_component();
+  this->mRotation =
+      glm::rotate(this->mRotation, pRad, glm::vec3(1.0f, 0.0f, 0.0f));
+  this->mark_component_changed();
 }
 
 void transform::rotate_y(float pRad) {
-  throw std::logic_error("Not implemented yet");
+  this->update_component();
+  this->mRotation =
+      glm::rotate(this->mRotation, pRad, glm::vec3(0.0f, 1.0f, 0.0f));
+  this->mark_component_changed();
 }
 
 void transform::rotate_z(float pRad) {
-  throw std::logic_error("Not implemented yet");
+  this->update_component();
+  this->mRotation =
+      glm::rotate(this->mRotation, pRad, glm::vec3(0.0f, 0.0f, 1.0f));
+  this->mark_component_changed();
 }
 
 void transform::rotate_axis(const glm::vec3 &pAxis, float pRad) {
-  throw std::logic_error("Not implemented yet");
+  this->update_component();
+  this->mRotation = glm::rotate(this->mRotation, pRad, pAxis);
+  this->mark_component_changed();
 }
 
 void transform::look_at(const glm::vec3 &pTarget) {
   throw std::logic_error("Not implemented yet");
 }
 
-void transform::update_component() {}
+void transform::update_component() {
+  if (this->mComponentVersion < this->mMatrixVersion) {
+    glm::vec3 skew;
+    glm::vec4 perspective;
+    glm::decompose(this->mMatrix, this->mScale, this->mRotation,
+                   this->mPosition, skew, perspective);
+    this->mRotation = glm::conjugate(this->mRotation);
+    this->mComponentVersion = this->mMatrixVersion;
+  }
+}
 
-void transform::update_matrix() {}
+void transform::update_matrix() {
+  if (this->mMatrixVersion < this->mComponentVersion) {
+    this->mMatrix = glm::mat4(1.0);
+    this->mMatrix = glm::translate(this->mMatrix, this->mPosition);
+    this->mMatrix *= glm::mat4_cast(this->mRotation);
+    this->mMatrix = glm::scale(this->mMatrix, this->mScale);
+    this->mMatrixVersion = this->mComponentVersion;
+  }
+}
 
 void transform::update_world_matrix() {}
 
 void transform::update_world_inverse_matrix() {}
 
-void transform::mark_component_changed() {}
+void transform::mark_component_changed() { this->mComponentVersion += 1; }
 
-void transform::mark_matrix_changed() {}
+void transform::mark_matrix_changed() { this->mMatrixVersion += 1; }

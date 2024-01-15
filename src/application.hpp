@@ -6,6 +6,7 @@
 #include <SDL2/SDL_video.h>
 #include <memory>
 
+namespace platformer {
 class application_applet {
 public:
   virtual void init() = 0;
@@ -27,5 +28,6 @@ private:
   void update(float pDelta);
   void dispose();
 };
+}; // namespace platformer
 
 #endif // __APPLICATION_HPP__

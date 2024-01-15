@@ -6,6 +6,8 @@
 #include <SDL2/SDL_video.h>
 #include <ctime>
 
+using namespace platformer;
+
 application::application(std::unique_ptr<application_applet> &&pApplet)
     : mApplet(std::move(pApplet)) {}
 

@@ -6,6 +6,7 @@
 #include "entt/entity/fwd.hpp"
 #include <entt/entt.hpp>
 
+namespace platformer {
 class game : public application_applet {
 public:
   game();
@@ -17,5 +18,6 @@ public:
 private:
   entt::registry mRegistry;
 };
+}; // namespace platformer
 
 #endif // __GAME_HPP__

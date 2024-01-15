@@ -1,5 +1,7 @@
 #include "game.hpp"
 
+using namespace platformer;
+
 game::game() : mRegistry() {}
 
 void game::init() { auto entity = this->mRegistry.create(); }

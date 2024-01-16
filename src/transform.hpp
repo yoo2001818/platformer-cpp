@@ -50,21 +50,31 @@ public:
   void look_at(const glm::vec3 &pTarget);
 
 private:
+  static glm::mat4 IDENTITY;
   void update_component();
   void update_matrix();
-  void update_world_matrix();
-  void update_world_inverse_matrix();
+  void update_world_matrix(entt::registry &pRegistry);
+  void update_world_inverse_matrix(entt::registry &pRegistry);
   void mark_component_changed();
   void mark_matrix_changed();
+  const glm::mat4 &matrix_world_parent(entt::registry &pRegistry);
+  const glm::mat4 &matrix_world_inverse_parent(entt::registry &pRegistry);
 
   glm::vec3 mPosition{};
   glm::vec3 mScale{1.0};
   glm::quat mRotation{0.0, 0.0, 0.0, 1.0};
   glm::mat4 mMatrix{1.0};
+  // NOTE: The version number is used to synchronize all states to newest
+  // version, acting like a dirty flag
   int mComponentVersion = 0;
   int mMatrixVersion = 0;
-  int mParentVersion = 0;
-  int mInverseVersion = 0;
+  // Since the world matrix has two things to follow (local matrix, parent),
+  // it needs to track both two versions, and manage its own version.
+  // TODO: A simple signal-object could be helpful.
+  int mWorldMatrixVersion = 0;
+  int mWorldParentVersion = 0;
+  int mWorldVersion = 0;
+  int mWorldInverseVersion = 0;
   glm::mat4 mMatrixWorld{1.0};
   glm::mat4 mMatrixWorldInverse{1.0};
   std::optional<entt::entity> mParent = std::nullopt;

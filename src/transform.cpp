@@ -4,7 +4,10 @@
 #include <glm/ext/matrix_transform.hpp>
 #include <glm/ext/quaternion_common.hpp>
 #include <glm/ext/quaternion_transform.hpp>
+#include <glm/fwd.hpp>
 #include <glm/gtx/matrix_decompose.hpp>
+#include <glm/matrix.hpp>
+#include <optional>
 #include <stdexcept>
 
 using namespace platformer;
@@ -68,18 +71,18 @@ const std::optional<entt::entity> &transform::parent() const {
 void transform::parent(const std::optional<entt::entity> &pParent) {
   this->mParent = pParent;
   // Reset parent versions to force invalidation
-  this->mParentVersion = -1;
-  this->mInverseVersion = -1;
+  this->mWorldParentVersion = -1;
 }
 
 const glm::mat4 &transform::matrix_world(entt::registry &pRegistry) {
-  this->update_world_matrix();
+  this->update_world_matrix(pRegistry);
   return this->mMatrixWorld;
 }
 
 void transform::matrix_world(entt::registry &pRegistry,
                              const glm::mat4 &pValue) {
-  throw std::logic_error("Not implemented yet");
+  auto &parentMat = this->matrix_world_inverse_parent(pRegistry);
+  this->matrix_local(parentMat * pValue);
 }
 
 glm::vec3 transform::position_world(entt::registry &pRegistry) {
@@ -110,17 +113,20 @@ void transform::rotation_world(entt::registry &pRegistry,
 }
 
 const glm::mat4 &transform::matrix_world_inverse(entt::registry &pRegistry) {
-  this->update_world_inverse_matrix();
+  this->update_world_inverse_matrix(pRegistry);
   return this->mMatrixWorldInverse;
 }
 
 void transform::matrix_world_inverse(entt::registry &pRegistry,
                                      const glm::mat4 &pValue) {
-  throw std::logic_error("Not implemented yet");
+  auto &parentMat = this->matrix_world_inverse_parent(pRegistry);
+  this->matrix_local(parentMat * glm::inverse(pValue));
 }
 
 void transform::apply_matrix(const glm::mat4 &pValue) {
-  throw std::logic_error("Not implemented yet");
+  this->update_matrix();
+  this->mMatrix = pValue * this->mMatrix;
+  this->mark_matrix_changed();
 }
 
 void transform::translate(const glm::vec3 &pValue) {
@@ -166,6 +172,31 @@ void transform::look_at(const glm::vec3 &pTarget) {
   throw std::logic_error("Not implemented yet");
 }
 
+const glm::mat4 &transform::matrix_world_parent(entt::registry &pRegistry) {
+  transform *parent = nullptr;
+  if (this->mParent != std::nullopt) {
+    parent = pRegistry.try_get<transform>(this->mParent.value());
+  }
+  if (parent != nullptr) {
+    return parent->matrix_world(pRegistry);
+  }
+  transform::IDENTITY = glm::mat4(1.0);
+  return transform::IDENTITY;
+}
+
+const glm::mat4 &
+transform::matrix_world_inverse_parent(entt::registry &pRegistry) {
+  transform *parent = nullptr;
+  if (this->mParent != std::nullopt) {
+    parent = pRegistry.try_get<transform>(this->mParent.value());
+  }
+  if (parent != nullptr) {
+    return parent->matrix_world_inverse(pRegistry);
+  }
+  transform::IDENTITY = glm::mat4(1.0);
+  return transform::IDENTITY;
+}
+
 void transform::update_component() {
   if (this->mComponentVersion < this->mMatrixVersion) {
     glm::vec3 skew;
@@ -187,9 +218,40 @@ void transform::update_matrix() {
   }
 }
 
-void transform::update_world_matrix() {}
+void transform::update_world_matrix(entt::registry &pRegistry) {
+  this->update_matrix();
+  transform *parent = nullptr;
+  if (this->mParent != std::nullopt) {
+    parent = pRegistry.try_get<transform>(this->mParent.value());
+  }
+  if (parent != nullptr) {
+    auto &target_matrix = parent->matrix_world(pRegistry);
+    auto &target_version = parent->mWorldVersion;
+    if (this->mMatrixVersion != this->mWorldMatrixVersion &&
+        this->mWorldParentVersion != target_version) {
+      this->mMatrixWorld = target_matrix * this->mMatrix;
+      this->mWorldMatrixVersion = this->mMatrixVersion;
+      this->mWorldParentVersion = target_version;
+      this->mWorldVersion += 1;
+    }
+  } else {
+    if (this->mMatrixVersion != this->mWorldMatrixVersion &&
+        this->mWorldParentVersion != 0) {
+      this->mMatrixWorld = this->mMatrix;
+      this->mWorldMatrixVersion = this->mMatrixVersion;
+      this->mWorldParentVersion = 0;
+      this->mWorldVersion += 1;
+    }
+  }
+}
 
-void transform::update_world_inverse_matrix() {}
+void transform::update_world_inverse_matrix(entt::registry &pRegistry) {
+  this->update_world_matrix(pRegistry);
+  if (this->mWorldVersion != this->mWorldInverseVersion) {
+    this->mMatrixWorldInverse = glm::inverse(this->mMatrixWorld);
+    this->mWorldInverseVersion = this->mWorldVersion;
+  }
+}
 
 void transform::mark_component_changed() { this->mComponentVersion += 1; }
 

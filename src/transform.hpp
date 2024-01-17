@@ -50,7 +50,6 @@ public:
   void look_at(const glm::vec3 &pTarget);
 
 private:
-  static glm::mat4 IDENTITY;
   void update_component();
   void update_matrix();
   void update_world_matrix(entt::registry &pRegistry);
@@ -62,7 +61,7 @@ private:
 
   glm::vec3 mPosition{};
   glm::vec3 mScale{1.0};
-  glm::quat mRotation{0.0, 0.0, 0.0, 1.0};
+  glm::quat mRotation{1.0, 0.0, 0.0, 0.0};
   glm::mat4 mMatrix{1.0};
   // NOTE: The version number is used to synchronize all states to newest
   // version, acting like a dirty flag

@@ -225,6 +225,8 @@ void transform::look_at(const glm::vec3 &pTarget) {
   this->rotation(out);
 }
 
+glm::mat4 MAT4_IDENTITY;
+
 const glm::mat4 &transform::matrix_world_parent(entt::registry &pRegistry) {
   transform *parent = nullptr;
   if (this->mParent != std::nullopt) {
@@ -233,8 +235,8 @@ const glm::mat4 &transform::matrix_world_parent(entt::registry &pRegistry) {
   if (parent != nullptr) {
     return parent->matrix_world(pRegistry);
   }
-  transform::IDENTITY = glm::mat4(1.0);
-  return transform::IDENTITY;
+  MAT4_IDENTITY = glm::mat4(1.0);
+  return MAT4_IDENTITY;
 }
 
 const glm::mat4 &
@@ -246,8 +248,8 @@ transform::matrix_world_inverse_parent(entt::registry &pRegistry) {
   if (parent != nullptr) {
     return parent->matrix_world_inverse(pRegistry);
   }
-  transform::IDENTITY = glm::mat4(1.0);
-  return transform::IDENTITY;
+  MAT4_IDENTITY = glm::mat4(1.0);
+  return MAT4_IDENTITY;
 }
 
 void transform::update_component() {
@@ -280,7 +282,7 @@ void transform::update_world_matrix(entt::registry &pRegistry) {
   if (parent != nullptr) {
     auto &target_matrix = parent->matrix_world(pRegistry);
     auto &target_version = parent->mWorldVersion;
-    if (this->mMatrixVersion != this->mWorldMatrixVersion &&
+    if (this->mMatrixVersion != this->mWorldMatrixVersion ||
         this->mWorldParentVersion != target_version) {
       this->mMatrixWorld = target_matrix * this->mMatrix;
       this->mWorldMatrixVersion = this->mMatrixVersion;
@@ -288,7 +290,7 @@ void transform::update_world_matrix(entt::registry &pRegistry) {
       this->mWorldVersion += 1;
     }
   } else {
-    if (this->mMatrixVersion != this->mWorldMatrixVersion &&
+    if (this->mMatrixVersion != this->mWorldMatrixVersion ||
         this->mWorldParentVersion != 0) {
       this->mMatrixWorld = this->mMatrix;
       this->mWorldMatrixVersion = this->mMatrixVersion;

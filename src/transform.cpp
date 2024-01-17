@@ -1,10 +1,13 @@
 #include "transform.hpp"
 #include "entt/entity/fwd.hpp"
+#include <cmath>
 #include <exception>
 #include <glm/ext/matrix_transform.hpp>
 #include <glm/ext/quaternion_common.hpp>
+#include <glm/ext/quaternion_geometric.hpp>
 #include <glm/ext/quaternion_transform.hpp>
 #include <glm/fwd.hpp>
+#include <glm/geometric.hpp>
 #include <glm/gtx/matrix_decompose.hpp>
 #include <glm/matrix.hpp>
 #include <optional>
@@ -86,30 +89,65 @@ void transform::matrix_world(entt::registry &pRegistry,
 }
 
 glm::vec3 transform::position_world(entt::registry &pRegistry) {
-  throw std::logic_error("Not implemented yet");
+  this->update_world_matrix(pRegistry);
+  // TODO: This could be optimized.
+  glm::vec3 scale;
+  glm::quat rotation;
+  glm::vec3 position;
+  glm::vec3 skew;
+  glm::vec4 perspective;
+  glm::decompose(this->mMatrixWorld, scale, rotation, position, skew,
+                 perspective);
+  return position;
 }
 
 void transform::position_world(entt::registry &pRegistry,
                                const glm::vec3 &pValue) {
-  throw std::logic_error("Not implemented yet");
+  auto &parentMat = this->matrix_world_inverse_parent(pRegistry);
+  glm::vec3 nextPos = glm::vec3(glm::vec4(pValue, 1.0) * parentMat);
+  this->position(nextPos);
 }
 
 glm::vec3 transform::scale_world(entt::registry &pRegistry) {
-  throw std::logic_error("Not implemented yet");
+  this->update_world_matrix(pRegistry);
+  // TODO: This could be optimized.
+  glm::vec3 scale;
+  glm::quat rotation;
+  glm::vec3 position;
+  glm::vec3 skew;
+  glm::vec4 perspective;
+  glm::decompose(this->mMatrixWorld, scale, rotation, position, skew,
+                 perspective);
+  return scale;
 }
 
 void transform::scale_world(entt::registry &pRegistry,
                             const glm::vec3 &pValue) {
-  throw std::logic_error("Not implemented yet");
+  auto prevScale = this->scale_world(pRegistry);
+  auto nextScale = pValue / prevScale;
+  this->scale(nextScale);
 }
 
 glm::quat transform::rotation_world(entt::registry &pRegistry) {
-  throw std::logic_error("Not implemented yet");
+  this->update_world_matrix(pRegistry);
+  // TODO: This could be optimized.
+  glm::vec3 scale;
+  glm::quat rotation;
+  glm::vec3 position;
+  glm::vec3 skew;
+  glm::vec4 perspective;
+  glm::decompose(this->mMatrixWorld, scale, rotation, position, skew,
+                 perspective);
+  return rotation;
 }
 
 void transform::rotation_world(entt::registry &pRegistry,
                                const glm::quat &pValue) {
-  throw std::logic_error("Not implemented yet");
+  auto prevRotation = this->rotation_world(pRegistry);
+  prevRotation = glm::normalize(prevRotation);
+  prevRotation = glm::conjugate(prevRotation);
+  auto nextRotation = prevRotation * pValue;
+  this->rotation(nextRotation);
 }
 
 const glm::mat4 &transform::matrix_world_inverse(entt::registry &pRegistry) {
@@ -169,7 +207,22 @@ void transform::rotate_axis(const glm::vec3 &pAxis, float pRad) {
 }
 
 void transform::look_at(const glm::vec3 &pTarget) {
-  throw std::logic_error("Not implemented yet");
+  glm::vec3 to = pTarget - this->position();
+  to = glm::normalize(to);
+
+  glm::vec3 rot = glm::cross(glm::vec3(0.0, 0.0, 1.0), to);
+  rot = glm::normalize(rot);
+  if (glm::length(rot) == 0) {
+    rot = glm::vec3(0.0, 1.0, 0.0);
+  }
+
+  auto dot = glm::dot(glm::vec3(0.0, 0.0, 1.0), to);
+  auto angle = std::acos(dot);
+
+  glm::quat out = glm::identity<glm::quat>();
+  out = glm::rotate(out, angle, rot);
+
+  this->rotation(out);
 }
 
 const glm::mat4 &transform::matrix_world_parent(entt::registry &pRegistry) {

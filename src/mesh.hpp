@@ -1,8 +1,9 @@
 #ifndef __MESH_HPP__
 #define __MESH_HPP__
-#include "entt/entity/fwd.hpp"
 #include <any>
+#include <entt/entt.hpp>
 #include <glm/fwd.hpp>
+#include <glm/glm.hpp>
 #include <memory>
 #include <string>
 #include <utility>
@@ -73,10 +74,10 @@ class shader {
 public:
   const std::string &vertex() const;
   void vertex(const std::string &pCode);
-  void vertex(const std::string &&pCode);
+  void vertex(std::string &&pCode);
   const std::string &fragment() const;
   void fragment(const std::string &pCode);
-  void fragment(const std::string &&pCode);
+  void fragment(std::string &&pCode);
   // TODO: Expand this template to whatever it needs to be
   template <typename T> void set(std::string &pName, const T &pValue);
 
@@ -115,7 +116,7 @@ public:
   mesh();
   mesh(std::vector<mesh_pair> &pMeshes);
 
-  void render(entt::registry pRegistry, const entt::entity &pEntity);
+  void render(entt::registry &pRegistry, const entt::entity &pEntity);
 
 private:
   std::vector<mesh_pair> mMeshes;

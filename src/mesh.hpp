@@ -61,25 +61,40 @@ private:
   unsigned int mVbo = -1;
   unsigned int mEbo = -1;
   unsigned int mVao = -1;
-  std::vector<glm::vec3> mPositions;
-  std::vector<glm::vec2> mTexCoords;
-  std::vector<glm::vec3> mNormals;
-  std::vector<glm::vec4> mTangents;
-  std::vector<unsigned int> mIndices;
-  int mSize;
-  bool mIsDirty;
+  std::vector<glm::vec3> mPositions{};
+  std::vector<glm::vec2> mTexCoords{};
+  std::vector<glm::vec3> mNormals{};
+  std::vector<glm::vec4> mTangents{};
+  std::vector<unsigned int> mIndices{};
+  bool mIsDirty = true;
 };
 
 class shader {
 public:
+  shader();
+  shader(const std::string &pVertex, const std::string &pFragment);
+  shader(const shader &pValue);
+  shader(shader &&pValue);
+
+  shader &operator=(const shader &pValue);
+  shader &operator=(shader &&pValue);
+
+  ~shader();
+
   const std::string &vertex() const;
   void vertex(const std::string &pCode);
   void vertex(std::string &&pCode);
   const std::string &fragment() const;
   void fragment(const std::string &pCode);
   void fragment(std::string &&pCode);
-  // TODO: Expand this template to whatever it needs to be
-  template <typename T> void set(std::string &pName, const T &pValue);
+
+  void set(const std::string &pName, float pValue);
+  void set(const std::string &pName, const glm::vec2 &pValue);
+  void set(const std::string &pName, const glm::vec3 &pValue);
+  void set(const std::string &pName, const glm::vec4 &pValue);
+  void set(const std::string &pName, const glm::mat2 &pValue);
+  void set(const std::string &pName, const glm::mat3 &pValue);
+  void set(const std::string &pName, const glm::mat4 &pValue);
 
   void prepare();
   void dispose();
@@ -90,7 +105,7 @@ private:
   unsigned int mVertexId = -1;
   unsigned int mFragmentId = -1;
   unsigned int mProgramId = -1;
-  bool mIsDirty;
+  bool mIsDirty = true;
 };
 
 class texture {

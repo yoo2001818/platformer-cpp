@@ -15,6 +15,8 @@ namespace platformer {
 // Since that is only a luxury at this point, and there's no real benefit of
 // doing it so prematurely, it'd be better to stick with having some internal
 // data inside it.
+class shader;
+
 class geometry {
 public:
   geometry();
@@ -49,6 +51,8 @@ public:
 
   int size();
 
+  // NOTE: Shader program must be prepared first
+  void prepare(shader &pShader);
   void render();
   void dispose();
 

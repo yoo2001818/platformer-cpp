@@ -71,6 +71,9 @@ private:
   std::vector<glm::vec4> mTangents{};
   std::vector<unsigned int> mIndices{};
   bool mIsDirty = true;
+
+  void setAttribute(shader &pShader, const std::string &pName, int pSize,
+                    int pType, bool pNormalized, int pStride, size_t pPointer);
 };
 
 class shader {
@@ -110,6 +113,7 @@ private:
   unsigned int mFragmentId = -1;
   unsigned int mProgramId = -1;
   bool mIsDirty = true;
+  friend geometry;
 };
 
 class texture {

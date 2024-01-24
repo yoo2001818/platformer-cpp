@@ -118,93 +118,133 @@ void geometry::indices(std::vector<unsigned int> &&pValue) {
 int geometry::size() {
   // Instead of using std::optional, let's just use empty vector as empty
   if (this->mIndices.empty()) {
-    return this->mPositions.size() / 3;
+    return this->mPositions.size();
   } else {
-    return this->mIndices.size() / 3;
+    return this->mIndices.size();
   }
 }
 
 void geometry::prepare(shader &pShader) {
   if (this->mVbo == -1) {
     glGenBuffers(1, &(this->mVbo));
-    glBindBuffer(GL_ARRAY_BUFFER, this->mVbo);
-    // Estimate total size of attributes
-    auto size = this->mPositions.size();
-    auto byteSize = sizeof(glm::vec3) * size;
-    if (!this->mTexCoords.empty()) {
-      byteSize += sizeof(glm::vec2) * size;
-    }
-    if (!this->mNormals.empty()) {
-      byteSize += sizeof(glm::vec3) * size;
-    }
-    if (!this->mTangents.empty()) {
-      byteSize += sizeof(glm::vec3) * size;
-    }
-    // Upload each buffer
-    glBufferData(GL_ARRAY_BUFFER, byteSize, nullptr, GL_STATIC_DRAW);
-    auto pos = 0;
-    glBufferSubData(GL_ARRAY_BUFFER, pos, sizeof(glm::vec3) * size,
-                    mPositions.data());
-    pos += sizeof(glm::vec3) * size;
-    if (!this->mTexCoords.empty()) {
-      glBufferSubData(GL_ARRAY_BUFFER, pos, sizeof(glm::vec2) * size,
-                      mTexCoords.data());
-      pos += sizeof(glm::vec2) * size;
-    }
-    if (!this->mNormals.empty()) {
-      glBufferSubData(GL_ARRAY_BUFFER, pos, sizeof(glm::vec3) * size,
-                      mNormals.data());
-      pos += sizeof(glm::vec3) * size;
-    }
-    if (!this->mTangents.empty()) {
-      glBufferSubData(GL_ARRAY_BUFFER, pos, sizeof(glm::vec3) * size,
-                      mTangents.data());
-      pos += sizeof(glm::vec3) * size;
-    }
   }
-  if (this->mEbo == -1 && !this->mIndices.empty()) {
+  if (this->mEbo == -1) {
     glGenBuffers(1, &(this->mEbo));
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, this->mEbo);
-    glBufferData(GL_ELEMENT_ARRAY_BUFFER,
-                 sizeof(unsigned int) * this->mIndices.size(),
-                 this->mIndices.data(), GL_STATIC_DRAW);
   }
   if (this->mVao == -1) {
     // FIXME: VAO is unique to each geometry/shader pair, so it shouldn't be
     // managed in here...
     glGenVertexArrays(1, &(this->mVao));
+  }
+  if (this->mIsDirty) {
+    {
+      glBindBuffer(GL_ARRAY_BUFFER, this->mVbo);
+      // Estimate total size of attributes
+      auto size = this->mPositions.size();
+      auto byteSize = sizeof(glm::vec3) * size;
+      if (!this->mTexCoords.empty()) {
+        byteSize += sizeof(glm::vec2) * size;
+      }
+      if (!this->mNormals.empty()) {
+        byteSize += sizeof(glm::vec3) * size;
+      }
+      if (!this->mTangents.empty()) {
+        byteSize += sizeof(glm::vec4) * size;
+      }
+      // Upload each buffer
+      glBufferData(GL_ARRAY_BUFFER, byteSize, nullptr, GL_STATIC_DRAW);
+      auto pos = 0;
+      glBufferSubData(GL_ARRAY_BUFFER, pos, sizeof(glm::vec3) * size,
+                      mPositions.data());
+      pos += sizeof(glm::vec3) * size;
+      if (!this->mTexCoords.empty()) {
+        glBufferSubData(GL_ARRAY_BUFFER, pos, sizeof(glm::vec2) * size,
+                        mTexCoords.data());
+        pos += sizeof(glm::vec2) * size;
+      }
+      if (!this->mNormals.empty()) {
+        glBufferSubData(GL_ARRAY_BUFFER, pos, sizeof(glm::vec3) * size,
+                        mNormals.data());
+        pos += sizeof(glm::vec3) * size;
+      }
+      if (!this->mTangents.empty()) {
+        glBufferSubData(GL_ARRAY_BUFFER, pos, sizeof(glm::vec4) * size,
+                        mTangents.data());
+        pos += sizeof(glm::vec4) * size;
+      }
+    }
+    if (!this->mIndices.empty()) {
+      glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, this->mEbo);
+      glBufferData(GL_ELEMENT_ARRAY_BUFFER,
+                   sizeof(unsigned int) * this->mIndices.size(),
+                   this->mIndices.data(), GL_STATIC_DRAW);
+    }
     glBindVertexArray(this->mVao);
-    glBindBuffer(GL_ARRAY_BUFFER, this->mVbo);
-    auto pos = 0;
-    auto size = this->mPositions.size();
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(glm::vec3),
-                          (void *)0);
-    glEnableVertexAttribArray(0);
-    pos += sizeof(glm::vec3) * size;
-    if (!this->mTexCoords.empty()) {
-      glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, sizeof(glm::vec2),
-                            (void *)pos);
-      glEnableVertexAttribArray(1);
-      pos += sizeof(glm::vec2) * size;
-    }
-    if (!this->mNormals.empty()) {
-      glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, sizeof(glm::vec3),
-                            (void *)pos);
-      glEnableVertexAttribArray(2);
+    {
+      auto pos = 0;
+      auto size = this->mPositions.size();
+      this->setAttribute(pShader, "aPosition", 3, GL_FLOAT, GL_FALSE,
+                         sizeof(glm::vec3), pos);
       pos += sizeof(glm::vec3) * size;
+      if (!this->mTexCoords.empty()) {
+        this->setAttribute(pShader, "aTexCoord", 2, GL_FLOAT, GL_FALSE,
+                           sizeof(glm::vec2), pos);
+        pos += sizeof(glm::vec2) * size;
+      }
+      if (!this->mNormals.empty()) {
+        this->setAttribute(pShader, "aNormal", 3, GL_FLOAT, GL_FALSE,
+                           sizeof(glm::vec3), pos);
+        pos += sizeof(glm::vec3) * size;
+      }
+      if (!this->mTangents.empty()) {
+        this->setAttribute(pShader, "aTangent", 4, GL_FLOAT, GL_FALSE,
+                           sizeof(glm::vec4), pos);
+        pos += sizeof(glm::vec4) * size;
+      }
     }
-    if (!this->mTangents.empty()) {
-      glVertexAttribPointer(3, 3, GL_FLOAT, GL_FALSE, sizeof(glm::vec3),
-                            (void *)pos);
-      glEnableVertexAttribArray(2);
-      pos += sizeof(glm::vec3) * size;
+    this->mIsDirty = false;
+  } else {
+    glBindVertexArray(this->mVao);
+    if (!this->mIndices.empty()) {
+      glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, this->mEbo);
     }
   }
 }
 
-void geometry::render() {}
+void geometry::setAttribute(shader &pShader, const std::string &pName,
+                            int pSize, int pType, bool pNormalized, int pStride,
+                            size_t pPointer) {
+  auto index = glGetAttribLocation(pShader.mProgramId, pName.c_str());
+  if (index == -1)
+    return;
+  glVertexAttribPointer(index, pSize, pType, pNormalized, pStride,
+                        (void *)pPointer);
+  glEnableVertexAttribArray(index);
+}
 
-void geometry::dispose() {}
+void geometry::render() {
+  if (this->mIndices.empty()) {
+    glDrawArrays(GL_TRIANGLES, 0, this->mPositions.size());
+  } else {
+    glDrawElements(GL_TRIANGLES, this->mIndices.size(), GL_UNSIGNED_INT, 0);
+  }
+}
+
+void geometry::dispose() {
+  if (this->mVao != -1) {
+    glDeleteVertexArrays(1, &(this->mVao));
+    this->mVao = -1;
+  }
+  if (this->mVbo != -1) {
+    glDeleteBuffers(1, &(this->mVbo));
+    this->mVbo = -1;
+  }
+  if (this->mEbo != -1) {
+    glDeleteBuffers(1, &(this->mEbo));
+    this->mEbo = -1;
+  }
+  this->mIsDirty = true;
+}
 
 void geometry::calc_normals(geometry &pGeometry) {}
 

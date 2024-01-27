@@ -109,8 +109,6 @@ public:
 private:
   std::string mVertex;
   std::string mFragment;
-  unsigned int mVertexId = -1;
-  unsigned int mFragmentId = -1;
   unsigned int mProgramId = -1;
   bool mIsDirty = true;
   friend geometry;

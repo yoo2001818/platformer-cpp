@@ -2,6 +2,8 @@
 #include "entt/entity/fwd.hpp"
 #include <GL/glew.h>
 #include <fstream>
+#include <glm/gtc/type_ptr.hpp>
+#include <stdexcept>
 #include <utility>
 #include <vector>
 
@@ -549,17 +551,97 @@ void shader::fragment(std::string &&pCode) {
   this->mIsDirty = true;
 }
 
-void shader::set(const std::string &pName, float pValue) {}
-void shader::set(const std::string &pName, const glm::vec2 &pValue) {}
-void shader::set(const std::string &pName, const glm::vec3 &pValue) {}
-void shader::set(const std::string &pName, const glm::vec4 &pValue) {}
-void shader::set(const std::string &pName, const glm::mat2 &pValue) {}
-void shader::set(const std::string &pName, const glm::mat3 &pValue) {}
-void shader::set(const std::string &pName, const glm::mat4 &pValue) {}
+void shader::set(const std::string &pName, float pValue) {
+  auto pos = glGetUniformLocation(this->mProgramId, pName.c_str());
+  if (pos == -1)
+    return;
+  glUniform1f(pos, pValue);
+}
+void shader::set(const std::string &pName, const glm::vec2 &pValue) {
+  auto pos = glGetUniformLocation(this->mProgramId, pName.c_str());
+  if (pos == -1)
+    return;
+  glUniform2fv(pos, 1, glm::value_ptr(pValue));
+}
+void shader::set(const std::string &pName, const glm::vec3 &pValue) {
+  auto pos = glGetUniformLocation(this->mProgramId, pName.c_str());
+  if (pos == -1)
+    return;
+  glUniform3fv(pos, 1, glm::value_ptr(pValue));
+}
+void shader::set(const std::string &pName, const glm::vec4 &pValue) {
+  auto pos = glGetUniformLocation(this->mProgramId, pName.c_str());
+  if (pos == -1)
+    return;
+  glUniform4fv(pos, 1, glm::value_ptr(pValue));
+}
+void shader::set(const std::string &pName, const glm::mat2 &pValue) {
+  auto pos = glGetUniformLocation(this->mProgramId, pName.c_str());
+  if (pos == -1)
+    return;
+  glUniformMatrix2fv(pos, 1, false, glm::value_ptr(pValue));
+}
+void shader::set(const std::string &pName, const glm::mat3 &pValue) {
+  auto pos = glGetUniformLocation(this->mProgramId, pName.c_str());
+  if (pos == -1)
+    return;
+  glUniformMatrix3fv(pos, 1, false, glm::value_ptr(pValue));
+}
+void shader::set(const std::string &pName, const glm::mat4 &pValue) {
+  auto pos = glGetUniformLocation(this->mProgramId, pName.c_str());
+  if (pos == -1)
+    return;
+  glUniformMatrix4fv(pos, 1, false, glm::value_ptr(pValue));
+}
 
-void shader::prepare() {}
+void shader::prepare() {
+  if (this->mIsDirty) {
+    this->dispose();
+    int success;
+    char infoLog[512];
+    auto vsSource = this->mVertex.data();
+    auto vs = glCreateShader(GL_VERTEX_SHADER);
+    glShaderSource(vs, 1, &vsSource, NULL);
+    glCompileShader(vs);
+    glGetShaderiv(vs, GL_COMPILE_STATUS, &success);
+    if (!success) {
+      glGetShaderInfoLog(vs, 512, NULL, infoLog);
+      throw std::runtime_error(infoLog);
+    };
 
-void shader::dispose() {}
+    auto fsSource = this->mFragment.data();
+    auto fs = glCreateShader(GL_FRAGMENT_SHADER);
+    glShaderSource(fs, 1, &fsSource, NULL);
+    glCompileShader(fs);
+    glGetShaderiv(fs, GL_COMPILE_STATUS, &success);
+    if (!success) {
+      glGetShaderInfoLog(fs, 512, NULL, infoLog);
+      throw std::runtime_error(infoLog);
+    };
+
+    this->mProgramId = glCreateProgram();
+    glAttachShader(this->mProgramId, vs);
+    glAttachShader(this->mProgramId, fs);
+    glLinkProgram(this->mProgramId);
+    glGetProgramiv(this->mProgramId, GL_LINK_STATUS, &success);
+    if (!success) {
+      glGetProgramInfoLog(this->mProgramId, 512, NULL, infoLog);
+      throw std::runtime_error(infoLog);
+    }
+
+    glDeleteShader(vs);
+    glDeleteShader(fs);
+    this->mIsDirty = false;
+  }
+  glUseProgram(this->mProgramId);
+}
+
+void shader::dispose() {
+  if (this->mProgramId != -1) {
+    glDeleteProgram(this->mProgramId);
+    this->mProgramId = -1;
+  }
+}
 
 material::material() {}
 

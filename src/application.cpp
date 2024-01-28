@@ -57,6 +57,9 @@ int application::init() {
                                    SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE);
 
   this->mGLContext = SDL_GL_CreateContext(this->mWindow);
+  if (this->mGLContext == NULL) {
+    return 1;
+  }
   SDL_GL_MakeCurrent(this->mWindow, this->mGLContext);
   if (glewInit() != GLEW_OK) {
     return 1;

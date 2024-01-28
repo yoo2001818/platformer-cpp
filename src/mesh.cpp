@@ -4,6 +4,8 @@
 #include <GL/glew.h>
 #include <fstream>
 #include <glm/gtc/type_ptr.hpp>
+#include <glm/gtx/string_cast.hpp>
+#include <iostream>
 #include <sstream>
 #include <stdexcept>
 #include <utility>
@@ -142,6 +144,7 @@ void geometry::prepare(shader &pShader) {
     glGenVertexArrays(1, &(this->mVao));
   }
   if (this->mIsDirty) {
+    glBindVertexArray(this->mVao);
     {
       glBindBuffer(GL_ARRAY_BUFFER, this->mVbo);
       // Estimate total size of attributes
@@ -184,7 +187,6 @@ void geometry::prepare(shader &pShader) {
                    sizeof(unsigned int) * this->mIndices.size(),
                    this->mIndices.data(), GL_STATIC_DRAW);
     }
-    glBindVertexArray(this->mVao);
     {
       auto pos = 0;
       auto size = this->mPositions.size();
@@ -593,6 +595,7 @@ void shader::set(const std::string &pName, const glm::mat4 &pValue) {
   auto pos = glGetUniformLocation(this->mProgramId, pName.c_str());
   if (pos == -1)
     return;
+  std::cout << pName << ": " << glm::to_string(pValue) << std::endl;
   glUniformMatrix4fv(pos, 1, false, glm::value_ptr(pValue));
 }
 

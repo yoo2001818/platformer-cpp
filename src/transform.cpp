@@ -210,13 +210,13 @@ void transform::look_at(const glm::vec3 &pTarget) {
   glm::vec3 to = pTarget - this->position();
   to = glm::normalize(to);
 
-  glm::vec3 rot = glm::cross(glm::vec3(0.0, 0.0, 1.0), to);
+  glm::vec3 rot = glm::cross(glm::vec3(0.0, 0.0, -1.0), to);
   rot = glm::normalize(rot);
   if (glm::length(rot) == 0) {
     rot = glm::vec3(0.0, 1.0, 0.0);
   }
 
-  auto dot = glm::dot(glm::vec3(0.0, 0.0, 1.0), to);
+  auto dot = glm::dot(glm::vec3(0.0, 0.0, -1.0), to);
   auto angle = std::acos(dot);
 
   glm::quat out = glm::identity<glm::quat>();

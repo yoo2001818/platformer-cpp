@@ -1,5 +1,7 @@
 #ifndef __MESH_HPP__
 #define __MESH_HPP__
+#include "entt/entity/fwd.hpp"
+#include "transform.hpp"
 #include <any>
 #include <entt/entt.hpp>
 #include <glm/fwd.hpp>
@@ -119,11 +121,46 @@ public:
   int placeholder;
 };
 
+class mesh;
+
+class camera {
+public:
+  // FIXME: This is against the convention; it could and should be improved
+  // in the future
+  enum { PERSPECTIVE, ORTHOGRAPHIC } type;
+  float near;
+  float far;
+  float fov;
+
+  glm::mat4 getProjection(float pAspect);
+};
+
+struct render_context {
+  // This contains all the information needed to render the object -
+  // For example, the entity, the framebuffer to render to, the list of lights,
+  // and so more.
+  // Material will read this data and set it as uniforms. (Consider using UBOs,
+  // or even better, instancing)
+  // The current structure necessitiates for material to be aware of armatures,
+  // but that is simply unavoidable at this point.
+  entt::registry &registry;
+  float aspect;
+
+  const entt::entity &entity;
+  platformer::transform &transform;
+  platformer::mesh &mesh;
+  platformer::geometry &geometry;
+
+  const entt::entity &camera_entity;
+  platformer::transform &camera_transform;
+  platformer::camera &camera_camera;
+};
+
 class material {
 public:
   material();
 
-  void prepare();
+  void render(const render_context &pContext);
   void dispose();
 
 private:

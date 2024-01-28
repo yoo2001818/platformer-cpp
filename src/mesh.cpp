@@ -3,6 +3,7 @@
 #include <GL/glew.h>
 #include <fstream>
 #include <glm/gtc/type_ptr.hpp>
+#include <sstream>
 #include <stdexcept>
 #include <utility>
 #include <vector>
@@ -643,11 +644,33 @@ void shader::dispose() {
   }
 }
 
-material::material() {}
+material::material() {
+  std::ifstream vsFile("res/normal.vert");
+  std::stringstream vsStream;
+  vsStream << vsFile.rdbuf();
+  std::ifstream fsFile("res/normal.frag");
+  std::stringstream fsStream;
+  fsStream << fsFile.rdbuf();
 
-void material::prepare() {}
+  this->mShader.vertex(vsStream.str());
+  this->mShader.fragment(fsStream.str());
+}
 
-void material::dispose() {}
+void material::render(const render_context &pContext) {
+  this->mShader.prepare();
+  pContext.geometry.prepare(this->mShader);
+  // Set up uniforms
+  this->mShader.set("uModel",
+                    pContext.transform.matrix_world(pContext.registry));
+  this->mShader.set("uView", pContext.camera_transform.matrix_world_inverse(
+                                 pContext.registry));
+  this->mShader.set("uProjection",
+                    pContext.camera_camera.getProjection(pContext.aspect));
+  // Issue draw call
+  pContext.geometry.render();
+}
+
+void material::dispose() { this->mShader.dispose(); }
 
 mesh::mesh() {}
 

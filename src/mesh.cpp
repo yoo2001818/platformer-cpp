@@ -1,5 +1,6 @@
 #include "mesh.hpp"
 #include "entt/entity/fwd.hpp"
+#include "transform.hpp"
 #include <GL/glew.h>
 #include <fstream>
 #include <glm/gtc/type_ptr.hpp>
@@ -644,6 +645,18 @@ void shader::dispose() {
   }
 }
 
+glm::mat4 camera::getProjection(float pAspect) {
+  switch (this->type) {
+  case ORTHOGRAPHIC:
+    return glm::ortho(-1.0f, 1.0f, -1.0f / pAspect, 1.0f / pAspect, this->near,
+                      this->far);
+  case PERSPECTIVE:
+    return glm::perspective(this->fov, pAspect, this->near, this->far);
+  default:
+    return glm::mat4();
+  }
+}
+
 material::material() {
   std::ifstream vsFile("res/normal.vert");
   std::stringstream vsStream;
@@ -674,6 +687,21 @@ void material::dispose() { this->mShader.dispose(); }
 
 mesh::mesh() {}
 
-mesh::mesh(std::vector<mesh::mesh_pair> &pMeshes) {}
-
-void mesh::render(entt::registry &pRegistry, const entt::entity &pEntity) {}
+void mesh::render(entt::registry &pRegistry, const entt::entity &pEntity,
+                  render_context_root &pRenderContextRoot) {
+  auto &transformVal = pRegistry.get<transform>(pEntity);
+  int index = 0;
+  for (auto &[materialVal, geometryVal] : this->mMeshes) {
+    materialVal->render({
+        .registry = pRegistry,
+        .aspect = pRenderContextRoot.aspect,
+        .entity = pEntity,
+        .transform = transformVal,
+        .mesh = *this,
+        .geometry = *geometryVal,
+        .camera_entity = pRenderContextRoot.camera_entity,
+        .camera_transform = pRenderContextRoot.camera_transform,
+        .camera_camera = pRenderContextRoot.camera_camera,
+    });
+  }
+}

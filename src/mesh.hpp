@@ -156,6 +156,16 @@ struct render_context {
   platformer::camera &camera_camera;
 };
 
+struct render_context_root {
+  // Root-level render context.
+  entt::registry &registry;
+  float aspect;
+
+  const entt::entity &camera_entity;
+  platformer::transform &camera_transform;
+  platformer::camera &camera_camera;
+};
+
 class material {
 public:
   material();
@@ -172,9 +182,9 @@ public:
   using mesh_pair =
       std::pair<std::shared_ptr<material>, std::shared_ptr<geometry>>;
   mesh();
-  mesh(std::vector<mesh_pair> &pMeshes);
 
-  void render(entt::registry &pRegistry, const entt::entity &pEntity);
+  void render(entt::registry &pRegistry, const entt::entity &pEntity,
+              render_context_root &pRenderContextRoot);
 
 private:
   std::vector<mesh_pair> mMeshes;

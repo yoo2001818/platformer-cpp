@@ -686,6 +686,10 @@ void material::render(const render_context &pContext) {
 void material::dispose() { this->mShader.dispose(); }
 
 mesh::mesh() {}
+mesh::mesh(const std::vector<mesh_pair> &pMeshes) : mMeshes(pMeshes) {}
+mesh::mesh(std::vector<mesh_pair> &&pMeshes) : mMeshes(pMeshes) {}
+
+std::vector<mesh::mesh_pair> &mesh::meshes() { return this->mMeshes; }
 
 void mesh::render(entt::registry &pRegistry, const entt::entity &pEntity,
                   render_context_root &pRenderContextRoot) {

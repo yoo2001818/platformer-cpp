@@ -17,6 +17,7 @@ public:
 
 private:
   entt::registry mRegistry;
+  entt::entity mCamera;
 };
 }; // namespace platformer
 

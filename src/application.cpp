@@ -23,7 +23,7 @@ void application::start() {
         exit = true;
         break;
       }
-      this->mApplet->handle_event(event);
+      this->mApplet->handle_event(*this, event);
     }
     if (exit)
       break;
@@ -65,12 +65,12 @@ int application::init() {
     return 1;
   }
 
-  this->mApplet->init();
+  this->mApplet->init(*this);
   return 0;
 }
 
 void application::update(float pDelta) {
-  this->mApplet->update(pDelta);
+  this->mApplet->update(*this, pDelta);
   SDL_GL_SwapWindow(this->mWindow);
 }
 
@@ -80,3 +80,5 @@ void application::dispose() {
   SDL_DestroyWindow(this->mWindow);
   SDL_Quit();
 }
+
+SDL_Window *&application::window() { return this->mWindow; }

@@ -10,14 +10,17 @@ namespace platformer {
 class game : public application_applet {
 public:
   game();
-  virtual void init() override;
-  virtual void update(float pDelta) override;
+  virtual void init(application &pApplication) override;
+  virtual void update(application &pApplication, float pDelta) override;
   virtual void dispose() override;
-  virtual void handle_event(SDL_Event &pEvent) override;
+  virtual void handle_event(application &pApplication,
+                            SDL_Event &pEvent) override;
 
 private:
   entt::registry mRegistry;
   entt::entity mCamera;
+  int mWindowWidth;
+  int mWindowHeight;
 };
 }; // namespace platformer
 

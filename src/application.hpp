@@ -7,18 +7,21 @@
 #include <memory>
 
 namespace platformer {
+class application;
+
 class application_applet {
 public:
-  virtual void init() = 0;
-  virtual void update(float pDelta) = 0;
+  virtual void init(application &pApplication) = 0;
+  virtual void update(application &pApplication, float pDelta) = 0;
   virtual void dispose() = 0;
-  virtual void handle_event(SDL_Event &pEvent) = 0;
+  virtual void handle_event(application &pApplication, SDL_Event &pEvent) = 0;
 };
 
 class application {
 public:
   application(std::unique_ptr<application_applet> &&pApplet);
   void start();
+  SDL_Window *&window();
 
 private:
   SDL_Window *mWindow;

@@ -595,7 +595,6 @@ void shader::set(const std::string &pName, const glm::mat4 &pValue) {
   auto pos = glGetUniformLocation(this->mProgramId, pName.c_str());
   if (pos == -1)
     return;
-  std::cout << pName << ": " << glm::to_string(pValue) << std::endl;
   glUniformMatrix4fv(pos, 1, false, glm::value_ptr(pValue));
 }
 

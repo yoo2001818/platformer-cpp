@@ -21,6 +21,7 @@ private:
   entt::entity mCamera;
   int mWindowWidth;
   int mWindowHeight;
+  bool mMouseLocked = false;
 };
 }; // namespace platformer
 

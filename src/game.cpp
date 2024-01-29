@@ -1,11 +1,22 @@
 #include "game.hpp"
 #include "SDL_events.h"
+#include "SDL_keycode.h"
+#include "SDL_mouse.h"
 #include "SDL_video.h"
 #include "application.hpp"
 #include "mesh.hpp"
 #include "transform.hpp"
 #include <GL/glew.h>
+#include <algorithm>
+#include <cmath>
+#include <glm/ext/matrix_transform.hpp>
+#include <glm/ext/quaternion_transform.hpp>
+#include <glm/fwd.hpp>
+#include <glm/gtx/quaternion.hpp>
+#include <glm/gtx/string_cast.hpp>
+#include <iostream>
 #include <memory>
+#include <numbers>
 
 using namespace platformer;
 
@@ -27,13 +38,13 @@ void game::init(application &pApplication) {
   {
     auto cam = this->mRegistry.create();
     auto &transformVal = this->mRegistry.emplace<transform>(cam);
-    transformVal.position(glm::vec3(0.0, 5.0, 5.0));
-    transformVal.look_at(glm::vec3(0.0));
+    transformVal.position(glm::vec3(0.0, 0.0, 5.0));
+    // transformVal.look_at(glm::vec3(0.0));
     auto &cameraVal = this->mRegistry.emplace<camera>(cam);
     cameraVal.type = camera::PERSPECTIVE;
     cameraVal.near = 0.1f;
     cameraVal.far = 100.0f;
-    cameraVal.fov = glm::radians(120.0f);
+    cameraVal.fov = glm::radians(90.0f);
     this->mCamera = cam;
   }
 }
@@ -70,5 +81,44 @@ void game::handle_event(application &pApplication, SDL_Event &pEvent) {
     this->mWindowWidth = pEvent.window.data1;
     this->mWindowHeight = pEvent.window.data2;
     glViewport(0, 0, this->mWindowWidth, this->mWindowHeight);
+  }
+  if (pEvent.type == SDL_MOUSEMOTION) {
+    if (this->mMouseLocked) {
+      // FIXME: This shouldn't be here
+      auto &cameraEntity = this->mCamera;
+      auto &cameraTransform = this->mRegistry.get<transform>(cameraEntity);
+      auto &prevRot = cameraTransform.rotation();
+
+      glm::vec3 eye = glm::rotate(prevRot, glm::vec3(0.0, 0.0, 1.0));
+
+      float yaw = atan2(eye.x, eye.z);
+      float pitch = atan2(eye.y, std::sqrt(eye.x * eye.x + eye.z * eye.z));
+
+      std::cout << "eye: " << glm::to_string(eye) << std::endl;
+      std::cout << "dir: " << pitch << ", " << yaw << std::endl;
+
+      yaw += static_cast<float>(pEvent.motion.xrel) / 400.0f * std::numbers::pi;
+      pitch +=
+          static_cast<float>(pEvent.motion.yrel) / 400.0f * std::numbers::pi;
+      pitch = std::min(static_cast<float>(std::numbers::pi) / 2.0f, pitch);
+      pitch = std::max(-static_cast<float>(std::numbers::pi) / 2.0f, pitch);
+      glm::quat newRot = glm::identity<glm::quat>();
+      // newRot = glm::rotate(newRot, pitch, glm::vec3(1.0f, 0.0f, 0.0f));
+      newRot = glm::rotate(newRot, yaw, glm::vec3(0.0f, 1.0f, 0.0f));
+      newRot = glm::rotate(newRot, -pitch, glm::vec3(1.0f, 0.0f, 0.0f));
+      cameraTransform.rotation(newRot);
+    }
+  }
+  if (pEvent.type == SDL_MOUSEBUTTONDOWN) {
+    if (pEvent.button.button == SDL_BUTTON_LEFT && !this->mMouseLocked) {
+      this->mMouseLocked = true;
+      SDL_SetRelativeMouseMode(SDL_TRUE);
+    }
+  }
+  if (pEvent.type == SDL_KEYDOWN) {
+    if (pEvent.key.keysym.sym == SDLK_ESCAPE) {
+      this->mMouseLocked = false;
+      SDL_SetRelativeMouseMode(SDL_FALSE);
+    }
   }
 }

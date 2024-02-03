@@ -1,3 +1,4 @@
+#define GLM_ENABLE_EXPERIMENTAL
 #include "transform.hpp"
 #include "entt/entity/fwd.hpp"
 #include <cmath>

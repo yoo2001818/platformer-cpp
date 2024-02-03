@@ -1,3 +1,4 @@
+#define GLM_ENABLE_EXPERIMENTAL
 #include "game.hpp"
 #include "SDL_events.h"
 #include "SDL_keycode.h"
@@ -25,9 +26,11 @@ game::game() : mRegistry() {}
 void game::init(application &pApplication) {
   SDL_GetWindowSize(pApplication.window(), &(this->mWindowWidth),
                     &(this->mWindowHeight));
-  {
+  for (int i = 0; i < 10; i++) {
     auto cube = this->mRegistry.create();
-    this->mRegistry.emplace<transform>(cube);
+    auto &trans = this->mRegistry.emplace<transform>(cube);
+    trans.position(glm::vec3(cos(i / 10.0f * 3.14f * 2) * 5.0f, 0.0f,
+                             sin(i / 10.0f * 3.14f * 2) * 5.0f));
 
     std::vector<mesh::mesh_pair> meshes{};
     meshes.push_back({std::make_shared<material>(),
@@ -94,10 +97,7 @@ void game::handle_event(application &pApplication, SDL_Event &pEvent) {
       float yaw = atan2(eye.x, eye.z);
       float pitch = atan2(eye.y, std::sqrt(eye.x * eye.x + eye.z * eye.z));
 
-      std::cout << "eye: " << glm::to_string(eye) << std::endl;
-      std::cout << "dir: " << pitch << ", " << yaw << std::endl;
-
-      yaw += static_cast<float>(pEvent.motion.xrel) / 400.0f * std::numbers::pi;
+      yaw -= static_cast<float>(pEvent.motion.xrel) / 400.0f * std::numbers::pi;
       pitch +=
           static_cast<float>(pEvent.motion.yrel) / 400.0f * std::numbers::pi;
       pitch = std::min(static_cast<float>(std::numbers::pi) / 2.0f, pitch);

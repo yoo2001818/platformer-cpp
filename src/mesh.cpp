@@ -1,3 +1,4 @@
+#define GLM_ENABLE_EXPERIMENTAL
 #include "mesh.hpp"
 #include "entt/entity/fwd.hpp"
 #include "transform.hpp"

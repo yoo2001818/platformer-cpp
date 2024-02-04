@@ -37,7 +37,8 @@ void application::start() {
 
     prevTime = beginTime;
     if (sleepTime > 0) {
-      SDL_Delay(sleepTime);
+      // This is not necessary as vsync will cap the framerate
+      // SDL_Delay(sleepTime);
     }
   }
   this->dispose();
@@ -62,6 +63,10 @@ int application::init() {
     return 1;
   }
   SDL_GL_MakeCurrent(this->mWindow, this->mGLContext);
+  // Try adaptive vsync, and use vsync if not supported
+  if (SDL_GL_SetSwapInterval(-1) == -1) {
+    SDL_GL_SetSwapInterval(1);
+  }
   if (glewInit() != GLEW_OK) {
     return 1;
   }

@@ -1,12 +1,15 @@
 #define GLM_ENABLE_EXPERIMENTAL
 #include "movement.hpp"
 #include "SDL_events.h"
+#include "SDL_keycode.h"
 #include "SDL_mouse.h"
 #include "game.hpp"
 #include "transform.hpp"
 #include <glm/ext/matrix_transform.hpp>
+#include <glm/ext/quaternion_common.hpp>
 #include <glm/ext/quaternion_transform.hpp>
 #include <glm/fwd.hpp>
+#include <glm/geometric.hpp>
 #include <glm/gtx/quaternion.hpp>
 #include <glm/gtx/string_cast.hpp>
 #include <optional>
@@ -47,13 +50,33 @@ glm::vec3 movement::eye() {
 }
 
 void movement_system::init(game &pGame) {
-  this->mMoveForward = 0;
-  this->mMoveRight = 0;
-  this->mMoveUp = 0;
+  this->mMovePressed.reset();
   this->mMouseLocked = false;
 }
 
-void movement_system::update(game &pGame, float pDelta) {}
+void movement_system::update(game &pGame, float pDelta) {
+  glm::vec3 direction(0.0);
+  for (int i = 0; i < 6; i += 1) {
+    if (this->mMovePressed[i]) {
+      direction[i % 3] += i < 3 ? 1.0f : -1.0f;
+    }
+  }
+  if (glm::length(direction) < 0.01f)
+    return;
+  direction = glm::normalize(direction);
+
+  if (this->mControllingEntity == std::nullopt)
+    return;
+  auto &entity = this->mControllingEntity.value();
+  auto &registry = pGame.registry();
+  auto &movementVal = registry.get<movement>(entity);
+  auto &transformVal = registry.get<transform>(entity);
+
+  glm::quat rot = glm::identity<glm::quat>();
+  rot = glm::rotate(rot, -movementVal.yaw(), glm::vec3(0.0f, 1.0f, 0.0f));
+  auto worldDir = glm::rotate(rot, direction);
+  transformVal.translate(worldDir * pDelta * 5.0f);
+}
 
 void movement_system::mouse_pan(game &pGame, int pXRel, int pYRel) {
   if (this->mControllingEntity == std::nullopt)
@@ -94,7 +117,36 @@ void movement_system::handle_event(game &pGame, SDL_Event &pEvent) {
       this->mMouseLocked = false;
       SDL_SetRelativeMouseMode(SDL_FALSE);
       break;
+    default:
+      this->handle_key(pEvent.key.keysym.sym, true);
+      break;
     }
+    break;
+  case SDL_KEYUP:
+    this->handle_key(pEvent.key.keysym.sym, false);
+    break;
+  }
+}
+
+void movement_system::handle_key(SDL_Keycode &pKey, bool pState) {
+  switch (pKey) {
+  case SDLK_d:
+    this->mMovePressed[0] = pState;
+    break;
+  case SDLK_q:
+    this->mMovePressed[1] = pState;
+    break;
+  case SDLK_s:
+    this->mMovePressed[2] = pState;
+    break;
+  case SDLK_a:
+    this->mMovePressed[3] = pState;
+    break;
+  case SDLK_e:
+    this->mMovePressed[4] = pState;
+    break;
+  case SDLK_w:
+    this->mMovePressed[5] = pState;
     break;
   }
 }

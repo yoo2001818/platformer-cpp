@@ -5,6 +5,7 @@
 #include <SDL2/SDL_events.h>
 #include <SDL2/SDL_video.h>
 #include <ctime>
+#include <iostream>
 
 using namespace platformer;
 
@@ -32,9 +33,9 @@ void application::start() {
     this->update((beginTime - prevTime) / 1000.0f);
     uint64_t endTime = SDL_GetTicks64();
     int32_t deltaTime = static_cast<int32_t>(endTime - beginTime);
-    int32_t sleepTime = 12 - deltaTime;
+    int32_t sleepTime = 16 - deltaTime;
 
-    prevTime = endTime;
+    prevTime = beginTime;
     if (sleepTime > 0) {
       SDL_Delay(sleepTime);
     }

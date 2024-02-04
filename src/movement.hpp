@@ -1,8 +1,10 @@
 #ifndef __MOVEMENT_HPP__
 #define __MOVEMENT_HPP__
 #include "SDL_events.h"
+#include "SDL_keycode.h"
 #include "entt/entity/fwd.hpp"
 #include "transform.hpp"
+#include <bitset>
 #include <glm/fwd.hpp>
 #include <optional>
 
@@ -35,11 +37,10 @@ public:
 
 private:
   std::optional<entt::entity> mControllingEntity;
-  float mMoveForward;
-  float mMoveRight;
-  float mMoveUp;
+  std::bitset<6> mMovePressed;
   bool mMouseLocked = false;
   void mouse_pan(game &pGame, int pXRel, int pYRel);
+  void handle_key(SDL_Keycode &pKey, bool pState);
 };
 } // namespace platformer
 #endif // __MOVEMENT_HPP__

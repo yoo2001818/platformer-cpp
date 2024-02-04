@@ -4,6 +4,7 @@
 #include "SDL_events.h"
 #include "application.hpp"
 #include "entt/entity/fwd.hpp"
+#include "movement.hpp"
 #include <entt/entt.hpp>
 
 namespace platformer {
@@ -15,13 +16,14 @@ public:
   virtual void dispose() override;
   virtual void handle_event(application &pApplication,
                             SDL_Event &pEvent) override;
+  entt::registry &registry();
 
 private:
   entt::registry mRegistry;
   entt::entity mCamera;
   int mWindowWidth;
   int mWindowHeight;
-  bool mMouseLocked = false;
+  movement_system mMovement;
 };
 }; // namespace platformer
 

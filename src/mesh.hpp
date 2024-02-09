@@ -169,9 +169,18 @@ struct render_context_root {
 class material {
 public:
   material();
+  virtual ~material();
 
-  void render(const render_context &pContext);
-  void dispose();
+  virtual void render(const render_context &pContext) = 0;
+  virtual void dispose() = 0;
+};
+
+class shader_material : public material {
+public:
+  shader_material(std::string pVertex, std::string pFragment);
+
+  virtual void render(const render_context &pContext) override;
+  virtual void dispose() override;
 
 private:
   shader mShader;

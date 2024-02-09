@@ -1,4 +1,6 @@
 #include "entt/entity/fwd.hpp"
+#include <fstream>
+#include <sstream>
 #define GLM_ENABLE_EXPERIMENTAL
 #include "SDL_events.h"
 #include "SDL_keycode.h"
@@ -24,6 +26,13 @@ using namespace platformer;
 
 game::game() : mRegistry() {}
 
+std::string read_file(const std::string &pFilename) {
+  std::ifstream file(pFilename);
+  std::stringstream stream;
+  stream << file.rdbuf();
+  return stream.str();
+}
+
 void game::init(application &pApplication) {
   SDL_GetWindowSize(pApplication.window(), &(this->mWindowWidth),
                     &(this->mWindowHeight));
@@ -35,8 +44,10 @@ void game::init(application &pApplication) {
                              sin(i / 10.0f * 3.14f * 2) * 5.0f));
 
     std::vector<mesh::mesh_pair> meshes{};
-    meshes.push_back({std::make_shared<material>(),
-                      std::make_shared<geometry>(geometry::make_box())});
+    meshes.push_back(
+        {std::make_shared<shader_material>(read_file("res/normal.vert"),
+                                           read_file("res/normal.frag")),
+         std::make_shared<geometry>(geometry::make_box())});
 
     this->mRegistry.emplace<mesh>(cube, std::move(meshes));
   }

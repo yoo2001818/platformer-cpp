@@ -660,19 +660,14 @@ glm::mat4 camera::getProjection(float pAspect) {
   }
 }
 
-material::material() {
-  std::ifstream vsFile("res/normal.vert");
-  std::stringstream vsStream;
-  vsStream << vsFile.rdbuf();
-  std::ifstream fsFile("res/normal.frag");
-  std::stringstream fsStream;
-  fsStream << fsFile.rdbuf();
+material::material() {}
 
-  this->mShader.vertex(vsStream.str());
-  this->mShader.fragment(fsStream.str());
-}
+material::~material() {}
 
-void material::render(const render_context &pContext) {
+shader_material::shader_material(std::string pVertex, std::string pFragment)
+    : mShader(pVertex, pFragment) {}
+
+void shader_material::render(const render_context &pContext) {
   this->mShader.prepare();
   pContext.geometry.prepare(this->mShader);
   // Set up uniforms
@@ -686,7 +681,7 @@ void material::render(const render_context &pContext) {
   pContext.geometry.render();
 }
 
-void material::dispose() { this->mShader.dispose(); }
+void shader_material::dispose() { this->mShader.dispose(); }
 
 mesh::mesh() {}
 mesh::mesh(const std::vector<mesh_pair> &pMeshes) : mMeshes(pMeshes) {}

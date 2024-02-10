@@ -202,5 +202,12 @@ public:
 private:
   std::vector<mesh_pair> mMeshes;
 };
+
+class light {
+public:
+private:
+  glm::vec3 mColor;
+  float mIntensity;
+};
 };     // namespace platformer
 #endif // __MESH_HPP__

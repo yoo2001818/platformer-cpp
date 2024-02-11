@@ -135,6 +135,21 @@ public:
   glm::mat4 getProjection(float pAspect);
 };
 
+class light {
+public:
+  light();
+  glm::vec3 color;
+  float power;
+  float radius;
+  float range;
+};
+
+struct render_light {
+  glm::vec3 position;
+  glm::vec3 color;
+  glm::vec3 range;
+};
+
 struct render_context {
   // This contains all the information needed to render the object -
   // For example, the entity, the framebuffer to render to, the list of lights,
@@ -154,6 +169,8 @@ struct render_context {
   const entt::entity &camera_entity;
   platformer::transform &camera_transform;
   platformer::camera &camera_camera;
+
+  std::vector<render_light> &lights;
 };
 
 struct render_context_root {
@@ -164,6 +181,8 @@ struct render_context_root {
   const entt::entity &camera_entity;
   platformer::transform &camera_transform;
   platformer::camera &camera_camera;
+
+  std::vector<render_light> &lights;
 };
 
 class material {
@@ -203,11 +222,5 @@ private:
   std::vector<mesh_pair> mMeshes;
 };
 
-class light {
-public:
-private:
-  glm::vec3 mColor;
-  float mIntensity;
-};
 };     // namespace platformer
 #endif // __MESH_HPP__

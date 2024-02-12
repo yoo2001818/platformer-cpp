@@ -704,6 +704,7 @@ void mesh::render(entt::registry &pRegistry, const entt::entity &pEntity,
         .camera_entity = pRenderContextRoot.camera_entity,
         .camera_transform = pRenderContextRoot.camera_transform,
         .camera_camera = pRenderContextRoot.camera_camera,
+        .lights = pRenderContextRoot.lights,
     });
   }
 }

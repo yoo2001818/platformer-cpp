@@ -1,6 +1,7 @@
 #include "entt/entity/fwd.hpp"
 #include <fstream>
 #include <sstream>
+#include <vector>
 #define GLM_ENABLE_EXPERIMENTAL
 #include "SDL_events.h"
 #include "SDL_keycode.h"
@@ -74,23 +75,9 @@ void game::update(application &pApplication, float pDelta) {
   glEnable(GL_CULL_FACE);
 
   this->mMovement.update(*this, pDelta);
-
-  auto &cameraEntity = this->mCamera;
-  auto &cameraTransform = this->mRegistry.get<transform>(cameraEntity);
-  auto &cameraCamera = this->mRegistry.get<camera>(cameraEntity);
-  render_context_root renderContextRoot{
-      .registry = this->mRegistry,
-      .aspect = static_cast<float>(this->mWindowWidth) /
-                static_cast<float>(this->mWindowHeight),
-      .camera_entity = cameraEntity,
-      .camera_transform = cameraTransform,
-      .camera_camera = cameraCamera,
-  };
-  auto view = mRegistry.view<transform, mesh>();
-  for (auto entity : view) {
-    auto &meshVal = mRegistry.get<mesh>(entity);
-    meshVal.render(this->mRegistry, entity, renderContextRoot);
-  }
+  this->mRenderer.render(*this, this->mCamera,
+                         static_cast<float>(this->mWindowWidth) /
+                             static_cast<float>(this->mWindowHeight));
 }
 
 void game::dispose() {}

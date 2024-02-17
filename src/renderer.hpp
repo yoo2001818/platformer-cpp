@@ -1,11 +1,11 @@
 #ifndef __RENDERER_HPP__
 #define __RENDERER_HPP__
 
-#include "game.hpp"
 #include "mesh.hpp"
 #include <vector>
 
 namespace platformer {
+class game;
 class renderer {
 public:
   renderer();

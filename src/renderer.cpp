@@ -1,11 +1,28 @@
 #include "renderer.hpp"
 #include "game.hpp"
+#include "mesh.hpp"
+#include "transform.hpp"
+#include <vector>
 
 using namespace platformer;
 
 renderer::renderer() {}
 
-std::vector<render_light> renderer::get_lights(game &pGame) { return {}; }
+std::vector<render_light> renderer::get_lights(game &pGame) {
+  auto &registry = pGame.registry();
+  std::vector<render_light> lights;
+  auto view = registry.view<transform, light>();
+  for (auto entity : view) {
+    auto &lightVal = registry.get<light>(entity);
+    auto &transformVal = registry.get<transform>(entity);
+    render_light renderLight{
+        .position = transformVal.position_world(registry),
+        .color = lightVal.color,
+        .range = glm::vec3(lightVal.range, lightVal.power, lightVal.radius)};
+    lights.push_back(renderLight);
+  }
+  return lights;
+}
 
 void renderer::render(game &pGame, const entt::entity pCamera, float pAspect) {
   auto &registry = pGame.registry();

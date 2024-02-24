@@ -66,6 +66,16 @@ void game::init(application &pApplication) {
     this->mCamera = cam;
     this->mMovement.controlling_entity(cam);
   }
+  {
+    auto light = this->mRegistry.create();
+    auto &transformVal = this->mRegistry.emplace<transform>(light);
+    transformVal.position(glm::vec3(0.0, 0.0, 2.0));
+    auto &lightVal = this->mRegistry.emplace<platformer::light>(light);
+    lightVal.color = glm::vec3(1.0, 1.0, 1.0);
+    lightVal.power = 1.0f;
+    lightVal.radius = 0.1f;
+    lightVal.range = 100.0f;
+  }
 }
 
 void game::update(application &pApplication, float pDelta) {

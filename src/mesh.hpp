@@ -105,6 +105,14 @@ public:
   void set(const std::string &pName, const glm::mat3 &pValue);
   void set(const std::string &pName, const glm::mat4 &pValue);
 
+  void set(const std::string &pName, int pOffset, float pValue);
+  void set(const std::string &pName, int pOffset, const glm::vec2 &pValue);
+  void set(const std::string &pName, int pOffset, const glm::vec3 &pValue);
+  void set(const std::string &pName, int pOffset, const glm::vec4 &pValue);
+  void set(const std::string &pName, int pOffset, const glm::mat2 &pValue);
+  void set(const std::string &pName, int pOffset, const glm::mat3 &pValue);
+  void set(const std::string &pName, int pOffset, const glm::mat4 &pValue);
+
   void prepare();
   void dispose();
 
@@ -137,7 +145,6 @@ public:
 
 class light {
 public:
-  light();
   glm::vec3 color;
   float power;
   float radius;

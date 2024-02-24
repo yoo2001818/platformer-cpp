@@ -599,6 +599,55 @@ void shader::set(const std::string &pName, const glm::mat4 &pValue) {
   glUniformMatrix4fv(pos, 1, false, glm::value_ptr(pValue));
 }
 
+void shader::set(const std::string &pName, int pOffset, float pValue) {
+  auto pos = glGetUniformLocation(this->mProgramId, pName.c_str());
+  if (pos == -1)
+    return;
+  glUniform1f(pos + pOffset, pValue);
+}
+void shader::set(const std::string &pName, int pOffset,
+                 const glm::vec2 &pValue) {
+  auto pos = glGetUniformLocation(this->mProgramId, pName.c_str());
+  if (pos == -1)
+    return;
+  glUniform2fv(pos + pOffset, 1, glm::value_ptr(pValue));
+}
+void shader::set(const std::string &pName, int pOffset,
+                 const glm::vec3 &pValue) {
+  auto pos = glGetUniformLocation(this->mProgramId, pName.c_str());
+  if (pos == -1)
+    return;
+  glUniform3fv(pos + pOffset, 1, glm::value_ptr(pValue));
+}
+void shader::set(const std::string &pName, int pOffset,
+                 const glm::vec4 &pValue) {
+  auto pos = glGetUniformLocation(this->mProgramId, pName.c_str());
+  if (pos == -1)
+    return;
+  glUniform4fv(pos + pOffset, 1, glm::value_ptr(pValue));
+}
+void shader::set(const std::string &pName, int pOffset,
+                 const glm::mat2 &pValue) {
+  auto pos = glGetUniformLocation(this->mProgramId, pName.c_str());
+  if (pos == -1)
+    return;
+  glUniformMatrix2fv(pos + pOffset, 1, false, glm::value_ptr(pValue));
+}
+void shader::set(const std::string &pName, int pOffset,
+                 const glm::mat3 &pValue) {
+  auto pos = glGetUniformLocation(this->mProgramId, pName.c_str());
+  if (pos == -1)
+    return;
+  glUniformMatrix3fv(pos + pOffset, 1, false, glm::value_ptr(pValue));
+}
+void shader::set(const std::string &pName, int pOffset,
+                 const glm::mat4 &pValue) {
+  auto pos = glGetUniformLocation(this->mProgramId, pName.c_str());
+  if (pos == -1)
+    return;
+  glUniformMatrix4fv(pos + pOffset, 1, false, glm::value_ptr(pValue));
+}
+
 void shader::prepare() {
   if (this->mIsDirty) {
     this->dispose();
@@ -677,6 +726,16 @@ void shader_material::render(const render_context &pContext) {
                                  pContext.registry));
   this->mShader.set("uProjection",
                     pContext.camera_camera.getProjection(pContext.aspect));
+  int pos = 0;
+  for (auto &light : pContext.lights) {
+    this->mShader.set("uLightPositions", pos, light.position);
+    this->mShader.set("uLightColors", pos, light.color);
+    this->mShader.set("uLightRanges", pos, light.range);
+    pos += 1;
+    if (pos >= 8)
+      break;
+  }
+  this->mShader.set("uLightCount", pos);
   // Issue draw call
   pContext.geometry.render();
 }

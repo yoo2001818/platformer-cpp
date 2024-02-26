@@ -8,6 +8,7 @@
 #include "SDL_mouse.h"
 #include "SDL_video.h"
 #include "application.hpp"
+#include "file.hpp"
 #include "game.hpp"
 #include "mesh.hpp"
 #include "transform.hpp"
@@ -27,13 +28,6 @@ using namespace platformer;
 
 game::game() : mRegistry() {}
 
-std::string read_file(const std::string &pFilename) {
-  std::ifstream file(pFilename);
-  std::stringstream stream;
-  stream << file.rdbuf();
-  return stream.str();
-}
-
 void game::init(application &pApplication) {
   SDL_GetWindowSize(pApplication.window(), &(this->mWindowWidth),
                     &(this->mWindowHeight));
@@ -46,8 +40,7 @@ void game::init(application &pApplication) {
 
     std::vector<mesh::mesh_pair> meshes{};
     meshes.push_back(
-        {std::make_shared<shader_material>(read_file("res/normal.vert"),
-                                           read_file("res/normal.frag")),
+        {std::make_shared<standard_material>(glm::vec3(1.0f), 0.5f, 0.0f),
          std::make_shared<geometry>(geometry::make_box())});
 
     this->mRegistry.emplace<mesh>(cube, std::move(meshes));
@@ -69,7 +62,7 @@ void game::init(application &pApplication) {
   {
     auto light = this->mRegistry.create();
     auto &transformVal = this->mRegistry.emplace<transform>(light);
-    transformVal.position(glm::vec3(0.0, 0.0, 2.0));
+    transformVal.position(glm::vec3(0.0, 10.0, 2.0));
     auto &lightVal = this->mRegistry.emplace<platformer::light>(light);
     lightVal.color = glm::vec3(1.0, 1.0, 1.0);
     lightVal.power = 1.0f;

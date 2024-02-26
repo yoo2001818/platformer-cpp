@@ -152,7 +152,7 @@ public:
 };
 
 struct render_light {
-  glm::vec3 position;
+  glm::vec4 position;
   glm::vec3 color;
   glm::vec3 range;
 };
@@ -210,6 +210,24 @@ public:
 
 private:
   shader mShader;
+};
+
+class standard_material : public material {
+public:
+  standard_material();
+  standard_material(glm::vec3 pColor, float pRoughness, float pMetalic);
+
+  virtual void render(const render_context &pContext) override;
+  virtual void dispose() override;
+
+  float roughness;
+  float metalic;
+  glm::vec3 color;
+
+private:
+  shader mShader;
+
+  static shader create_shader();
 };
 
 class mesh {

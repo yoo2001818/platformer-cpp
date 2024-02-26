@@ -16,7 +16,7 @@ std::vector<render_light> renderer::get_lights(game &pGame) {
     auto &lightVal = registry.get<light>(entity);
     auto &transformVal = registry.get<transform>(entity);
     render_light renderLight{
-        .position = transformVal.position_world(registry),
+        .position = glm::vec4(transformVal.position_world(registry), 1.0f),
         .color = lightVal.color,
         .range = glm::vec3(lightVal.range, lightVal.power, lightVal.radius)};
     lights.push_back(renderLight);

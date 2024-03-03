@@ -1,7 +1,6 @@
 #ifndef __TRANSFORM_HPP__
 #define __TRANSFORM_HPP__
 
-#include "entt/entity/fwd.hpp"
 #include <entt/entt.hpp>
 #include <glm/fwd.hpp>
 #include <glm/glm.hpp>

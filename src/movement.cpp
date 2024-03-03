@@ -4,6 +4,7 @@
 #include "SDL_keycode.h"
 #include "SDL_mouse.h"
 #include "game.hpp"
+#include "physics.hpp"
 #include "transform.hpp"
 #include <glm/ext/matrix_transform.hpp>
 #include <glm/ext/quaternion_common.hpp>
@@ -55,6 +56,11 @@ void movement_system::init(game &pGame) {
 }
 
 void movement_system::update(game &pGame, float pDelta) {
+  this->update_movedir(pGame, pDelta);
+  this->update_jump(pGame, pDelta);
+}
+
+void movement_system::update_movedir(game &pGame, float pDelta) {
   glm::vec3 direction(0.0);
   for (int i = 0; i < 6; i += 1) {
     if (this->mMovePressed[i]) {
@@ -76,6 +82,23 @@ void movement_system::update(game &pGame, float pDelta) {
   rot = glm::rotate(rot, -movementVal.yaw(), glm::vec3(0.0f, 1.0f, 0.0f));
   auto worldDir = glm::rotate(rot, direction);
   transformVal.translate(worldDir * pDelta * 5.0f);
+}
+
+void movement_system::update_jump(game &pGame, float pDelta) {
+  if (!this->mMovePressed[6])
+    return;
+  if (this->mControllingEntity == std::nullopt)
+    return;
+  auto &entity = this->mControllingEntity.value();
+  auto &registry = pGame.registry();
+  auto &movementVal = registry.get<movement>(entity);
+  auto &transformVal = registry.get<transform>(entity);
+  auto physicsVal = registry.try_get<physics>(entity);
+  if (physicsVal == nullptr)
+    return;
+  if (physicsVal->on_ground() != 0)
+    return;
+  physicsVal->force() += glm::vec3(0.0f, 10.0f, 0.0f);
 }
 
 void movement_system::mouse_pan(game &pGame, int pXRel, int pYRel) {
@@ -148,6 +171,8 @@ void movement_system::handle_key(SDL_Keycode &pKey, bool pState) {
   case SDLK_w:
     this->mMovePressed[5] = pState;
     break;
+  case SDLK_SPACE:
+    this->mMovePressed[6] = pState;
   }
 }
 

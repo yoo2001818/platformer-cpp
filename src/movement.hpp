@@ -37,8 +37,10 @@ public:
 
 private:
   std::optional<entt::entity> mControllingEntity;
-  std::bitset<6> mMovePressed;
+  std::bitset<7> mMovePressed;
   bool mMouseLocked = false;
+  void update_movedir(game &pGame, float pDelta);
+  void update_jump(game &pGame, float pDelta);
   void mouse_pan(game &pGame, int pXRel, int pYRel);
   void handle_key(SDL_Keycode &pKey, bool pState);
 };

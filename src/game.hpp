@@ -5,6 +5,7 @@
 #include "application.hpp"
 #include "entt/entity/fwd.hpp"
 #include "movement.hpp"
+#include "physics.hpp"
 #include "renderer.hpp"
 #include <entt/entt.hpp>
 
@@ -25,6 +26,7 @@ private:
   int mWindowWidth;
   int mWindowHeight;
   movement_system mMovement;
+  physics_system mPhysics;
   renderer mRenderer;
 };
 }; // namespace platformer

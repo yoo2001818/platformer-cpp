@@ -7,6 +7,7 @@ namespace platformer {
 class game;
 class collision {
 public:
+  collision(){};
   collision(const glm::vec3 &pMin, const glm::vec3 &pMax);
 
   glm::vec3 &min();
@@ -23,17 +24,24 @@ private:
 };
 class physics {
 public:
+  physics(){};
   glm::vec3 &force();
   glm::vec3 &velocity();
+  int &on_ground();
 
 private:
   glm::vec3 mForce = glm::vec3(0.0f);
   glm::vec3 mVelocity = glm::vec3(0.0f);
+  // 0 means on ground, other values means number of frames since the entity
+  // started floating
+  int mOnGround = 0;
 };
 class physics_system {
 public:
+  physics_system();
   void update(game &pGame, float pDelta);
-  glm::vec3 mGravity = glm::vec3(0.0f, -1.0f, 0.0f);
+  glm::vec3 mGravity;
+  glm::vec3 mFriction;
 };
 } // namespace platformer
 

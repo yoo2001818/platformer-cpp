@@ -1,4 +1,5 @@
 #include "entt/entity/fwd.hpp"
+#include "physics.hpp"
 #include <fstream>
 #include <sstream>
 #include <vector>
@@ -44,11 +45,41 @@ void game::init(application &pApplication) {
          std::make_shared<geometry>(geometry::make_box())});
 
     this->mRegistry.emplace<mesh>(cube, std::move(meshes));
+    this->mRegistry.emplace<collision>(cube);
   }
+  {
+    auto cube = this->mRegistry.create();
+    auto &trans = this->mRegistry.emplace<transform>(cube);
+    trans.position(glm::vec3(0.0f, 0.0f, 0.0f));
+
+    std::vector<mesh::mesh_pair> meshes{};
+    meshes.push_back(
+        {std::make_shared<standard_material>(glm::vec3(1.0f), 0.5f, 0.0f),
+         std::make_shared<geometry>(geometry::make_box())});
+
+    this->mRegistry.emplace<mesh>(cube, std::move(meshes));
+    this->mRegistry.emplace<collision>(cube);
+  }
+  /*
+  {
+    auto cube = this->mRegistry.create();
+    auto &trans = this->mRegistry.emplace<transform>(cube);
+    trans.position(glm::vec3(0.5f, 3.0f, 0.5f));
+
+    std::vector<mesh::mesh_pair> meshes{};
+    meshes.push_back(
+        {std::make_shared<standard_material>(glm::vec3(1.0f), 0.5f, 0.0f),
+         std::make_shared<geometry>(geometry::make_box())});
+
+    this->mRegistry.emplace<mesh>(cube, std::move(meshes));
+    this->mRegistry.emplace<collision>(cube);
+    this->mRegistry.emplace<physics>(cube);
+  }
+  */
   {
     auto cam = this->mRegistry.create();
     auto &transformVal = this->mRegistry.emplace<transform>(cam);
-    transformVal.position(glm::vec3(0.0, 0.0, 5.0));
+    transformVal.position(glm::vec3(0.0, 5.0, 0.0));
     // transformVal.look_at(glm::vec3(0.0));
     auto &cameraVal = this->mRegistry.emplace<camera>(cam);
     cameraVal.type = camera::PERSPECTIVE;
@@ -56,6 +87,9 @@ void game::init(application &pApplication) {
     cameraVal.far = 100.0f;
     cameraVal.fov = glm::radians(90.0f);
     this->mRegistry.emplace<movement>(cam);
+    this->mRegistry.emplace<physics>(cam);
+    this->mRegistry.emplace<collision>(cam, glm::vec3(-0.1f, -1.0f, -0.1f),
+                                       glm::vec3(0.1f, 0.3f, 0.1f));
     this->mCamera = cam;
     this->mMovement.controlling_entity(cam);
   }
@@ -78,6 +112,7 @@ void game::update(application &pApplication, float pDelta) {
   glEnable(GL_CULL_FACE);
 
   this->mMovement.update(*this, pDelta);
+  this->mPhysics.update(*this, pDelta);
   this->mRenderer.render(*this, this->mCamera,
                          static_cast<float>(this->mWindowWidth) /
                              static_cast<float>(this->mWindowHeight));

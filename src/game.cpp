@@ -79,19 +79,33 @@ void game::init(application &pApplication) {
   {
     auto cam = this->mRegistry.create();
     auto &transformVal = this->mRegistry.emplace<transform>(cam);
-    transformVal.position(glm::vec3(0.0, 5.0, 0.0));
-    // transformVal.look_at(glm::vec3(0.0));
+    transformVal.position(glm::vec3(0.0, 10.0, 0.0));
+    transformVal.look_at(glm::vec3(0.0));
     auto &cameraVal = this->mRegistry.emplace<camera>(cam);
     cameraVal.type = camera::PERSPECTIVE;
     cameraVal.near = 0.1f;
     cameraVal.far = 100.0f;
     cameraVal.fov = glm::radians(90.0f);
-    this->mRegistry.emplace<movement>(cam);
-    this->mRegistry.emplace<physics>(cam);
     this->mRegistry.emplace<collision>(cam, glm::vec3(-0.1f, -1.0f, -0.1f),
                                        glm::vec3(0.1f, 0.3f, 0.1f));
     this->mCamera = cam;
-    this->mMovement.controlling_entity(cam);
+  }
+  {
+    auto player = this->mRegistry.create();
+    auto &transformVal = this->mRegistry.emplace<transform>(player);
+    transformVal.scale(glm::vec3(0.3f, 1.0f, 0.3f));
+    transformVal.position(glm::vec3(0.0, 5.0, 0.0));
+    // transformVal.look_at(glm::vec3(0.0));
+    std::vector<mesh::mesh_pair> meshes{};
+    meshes.push_back({std::make_shared<standard_material>(
+                          glm::vec3(1.0f, 0.1f, 0.1f), 0.5f, 0.0f),
+                      std::make_shared<geometry>(geometry::make_box())});
+
+    this->mRegistry.emplace<mesh>(player, std::move(meshes));
+    this->mRegistry.emplace<movement>(player);
+    this->mRegistry.emplace<physics>(player);
+    this->mRegistry.emplace<collision>(player);
+    this->mMovement.controlling_entity(player);
   }
   {
     auto light = this->mRegistry.create();

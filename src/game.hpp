@@ -23,6 +23,7 @@ public:
 private:
   entt::registry mRegistry;
   entt::entity mCamera;
+  entt::entity mPlayer;
   int mWindowWidth;
   int mWindowHeight;
   movement_system mMovement;

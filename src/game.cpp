@@ -133,17 +133,19 @@ void game::update(application &pApplication, float pDelta) {
         glm::vec3(glm::normalize(playerTransform.matrix_world(this->mRegistry) *
                                  glm::vec4(0.0, 0.0, 1.0, 0.0))) *
         glm::vec3(1.0f, 0.0f, 1.0f));
-    camTransform.translate((playerTransform.position() + eyeDir * 5.0f +
-                            glm::vec3(0.0f, 2.0f, 0.0f) -
-                            camTransform.position()) *
-                           0.1f);
-    glm::quat quat = glm::identity<glm::quat>();
-    glm::vec3 diff = camTransform.position() - playerTransform.position();
-    quat =
-        glm::rotate(quat, std::atan2(diff.x, diff.z), glm::vec3(0.0, 1.0, 0.0));
-    quat = glm::rotate(quat, -0.3f, glm::vec3(1.0, 0.0, 0.0));
-    camTransform.rotation(quat);
-    // camTransform.look_at(playerTransform.position());
+    if (!std::isnan(eyeDir.x)) {
+      camTransform.translate((playerTransform.position() + eyeDir * 5.0f +
+                              glm::vec3(0.0f, 2.0f, 0.0f) -
+                              camTransform.position()) *
+                             0.1f);
+      glm::quat quat = glm::identity<glm::quat>();
+      glm::vec3 diff = camTransform.position() - playerTransform.position();
+      quat = glm::rotate(quat, std::atan2(diff.x, diff.z),
+                         glm::vec3(0.0, 1.0, 0.0));
+      quat = glm::rotate(quat, -0.3f, glm::vec3(1.0, 0.0, 0.0));
+      camTransform.rotation(quat);
+      // camTransform.look_at(playerTransform.position());
+    }
   }
 
   this->mMovement.update(*this, pDelta);

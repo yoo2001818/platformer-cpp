@@ -101,7 +101,7 @@ void game::init(application &pApplication) {
                       std::make_shared<geometry>(geometry::make_box())});
 
     this->mRegistry.emplace<mesh>(player, std::move(meshes));
-    this->mRegistry.emplace<movement>(player);
+    this->mRegistry.emplace<fps_movement>(player);
     this->mRegistry.emplace<physics>(player);
     this->mRegistry.emplace<collision>(player);
     this->mMovement.controlling_entity(player);

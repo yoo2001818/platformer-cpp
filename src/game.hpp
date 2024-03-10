@@ -26,7 +26,7 @@ private:
   entt::entity mPlayer;
   int mWindowWidth;
   int mWindowHeight;
-  movement_system mMovement;
+  fps_movement_system mMovement;
   physics_system mPhysics;
   renderer mRenderer;
 };

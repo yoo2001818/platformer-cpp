@@ -17,22 +17,22 @@
 
 using namespace platformer;
 
-float movement::pitch() const { return this->mPitch; }
+float fps_movement::pitch() const { return this->mPitch; }
 
-void movement::pitch(float pValue) { this->mPitch = pValue; }
+void fps_movement::pitch(float pValue) { this->mPitch = pValue; }
 
-float movement::yaw() const { return this->mYaw; }
+float fps_movement::yaw() const { return this->mYaw; }
 
-void movement::yaw(float pValue) { this->mYaw = pValue; }
+void fps_movement::yaw(float pValue) { this->mYaw = pValue; }
 
-void movement::update(transform &pTransform) {
+void fps_movement::update(transform &pTransform) {
   glm::quat rot = glm::identity<glm::quat>();
   rot = glm::rotate(rot, -mYaw, glm::vec3(0.0f, 1.0f, 0.0f));
   rot = glm::rotate(rot, -mPitch, glm::vec3(1.0f, 0.0f, 0.0f));
   pTransform.rotation(rot);
 }
 
-void movement::update_from(transform &pTransform) {
+void fps_movement::update_from(transform &pTransform) {
   auto &rot = pTransform.rotation();
   auto eye = glm::rotate(rot, glm::vec3(0.0f, 0.0f, 1.0f));
   float yaw = atan2(eye.x, eye.z);
@@ -41,7 +41,7 @@ void movement::update_from(transform &pTransform) {
   this->mYaw = yaw;
 }
 
-glm::vec3 movement::eye() {
+glm::vec3 fps_movement::eye() {
   // FIXME: Maybe optimize this
   glm::quat rot = glm::identity<glm::quat>();
   rot = glm::rotate(rot, -mYaw, glm::vec3(0.0f, 1.0f, 0.0f));
@@ -50,17 +50,17 @@ glm::vec3 movement::eye() {
   return eye;
 }
 
-void movement_system::init(game &pGame) {
+void fps_movement_system::init(game &pGame) {
   this->mMovePressed.reset();
   this->mMouseLocked = false;
 }
 
-void movement_system::update(game &pGame, float pDelta) {
+void fps_movement_system::update(game &pGame, float pDelta) {
   this->update_movedir(pGame, pDelta);
   this->update_jump(pGame, pDelta);
 }
 
-void movement_system::update_movedir(game &pGame, float pDelta) {
+void fps_movement_system::update_movedir(game &pGame, float pDelta) {
   glm::vec3 direction(0.0);
   for (int i = 0; i < 6; i += 1) {
     if (this->mMovePressed[i]) {
@@ -75,7 +75,7 @@ void movement_system::update_movedir(game &pGame, float pDelta) {
     return;
   auto &entity = this->mControllingEntity.value();
   auto &registry = pGame.registry();
-  auto &movementVal = registry.get<movement>(entity);
+  auto &movementVal = registry.get<fps_movement>(entity);
   auto &transformVal = registry.get<transform>(entity);
 
   glm::quat rot = glm::identity<glm::quat>();
@@ -84,14 +84,14 @@ void movement_system::update_movedir(game &pGame, float pDelta) {
   transformVal.translate(worldDir * pDelta * 5.0f);
 }
 
-void movement_system::update_jump(game &pGame, float pDelta) {
+void fps_movement_system::update_jump(game &pGame, float pDelta) {
   if (!this->mMovePressed[6])
     return;
   if (this->mControllingEntity == std::nullopt)
     return;
   auto &entity = this->mControllingEntity.value();
   auto &registry = pGame.registry();
-  auto &movementVal = registry.get<movement>(entity);
+  auto &movementVal = registry.get<fps_movement>(entity);
   auto &transformVal = registry.get<transform>(entity);
   auto physicsVal = registry.try_get<physics>(entity);
   if (physicsVal == nullptr)
@@ -101,12 +101,12 @@ void movement_system::update_jump(game &pGame, float pDelta) {
   physicsVal->force() += glm::vec3(0.0f, 10.0f, 0.0f);
 }
 
-void movement_system::mouse_pan(game &pGame, int pXRel, int pYRel) {
+void fps_movement_system::mouse_pan(game &pGame, int pXRel, int pYRel) {
   if (this->mControllingEntity == std::nullopt)
     return;
   auto &entity = this->mControllingEntity.value();
   auto &registry = pGame.registry();
-  auto &movementVal = registry.get<movement>(entity);
+  auto &movementVal = registry.get<fps_movement>(entity);
   auto &transformVal = registry.get<transform>(entity);
 
   auto pitch = movementVal.pitch();
@@ -121,7 +121,7 @@ void movement_system::mouse_pan(game &pGame, int pXRel, int pYRel) {
   movementVal.update(transformVal);
 }
 
-void movement_system::handle_event(game &pGame, SDL_Event &pEvent) {
+void fps_movement_system::handle_event(game &pGame, SDL_Event &pEvent) {
   switch (pEvent.type) {
   case SDL_MOUSEMOTION:
     if (this->mMouseLocked) {
@@ -151,7 +151,7 @@ void movement_system::handle_event(game &pGame, SDL_Event &pEvent) {
   }
 }
 
-void movement_system::handle_key(SDL_Keycode &pKey, bool pState) {
+void fps_movement_system::handle_key(SDL_Keycode &pKey, bool pState) {
   switch (pKey) {
   case SDLK_d:
     this->mMovePressed[0] = pState;
@@ -176,11 +176,12 @@ void movement_system::handle_key(SDL_Keycode &pKey, bool pState) {
   }
 }
 
-void movement_system::controlling_entity(
+void fps_movement_system::controlling_entity(
     const std::optional<entt::entity> &pEntity) {
   this->mControllingEntity = pEntity;
 }
 
-const std::optional<entt::entity> &movement_system::controlling_entity() const {
+const std::optional<entt::entity> &
+fps_movement_system::controlling_entity() const {
   return this->mControllingEntity;
 }

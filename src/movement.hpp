@@ -10,7 +10,7 @@
 
 namespace platformer {
 class game;
-class movement {
+class fps_movement {
 public:
   float pitch() const;
   void pitch(float pValue);
@@ -26,7 +26,7 @@ private:
   float mYaw = 0.0f;
 };
 
-class movement_system {
+class fps_movement_system {
 public:
   void init(game &pGame);
   void update(game &pGame, float pDelta);

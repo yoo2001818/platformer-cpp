@@ -29,8 +29,19 @@ FetchContent_Declare(
   GIT_TAG        v3.12.2
 )
 
+FetchContent_Declare(
+  assimp
+  GIT_REPOSITORY https://github.com/assimp/assimp.git
+  GIT_TAG        v5.3.1
+)
+
 FetchContent_MakeAvailable(Catch2)
 FetchContent_MakeAvailable(EnTT)
+set(BUILD_SHARED_LIBS OFF CACHE BOOL "" FORCE)
+set(ASSIMP_BUILD_TESTS OFF CACHE BOOL "" FORCE)
+set(ASSIMP_INJECT_DEBUG_POSTFIX OFF CACHE BOOL "" FORCE)
+set(ASSIMP_INSTALL OFF CACHE BOOL "" FORCE)
+FetchContent_MakeAvailable(assimp)
 
 # add_compile_options(-fsanitize=address)
 # add_link_options(-fsanitize=address)
@@ -52,6 +63,7 @@ target_link_libraries(PlatformerCpp ${SDL2_TTF_LIBRARIES})
 target_link_libraries(PlatformerCpp ${OPENGL_LIBRARIES})
 target_link_libraries(PlatformerCpp ${GLEW_LIBRARIES})
 target_link_libraries(PlatformerCpp EnTT::EnTT)
+target_link_libraries(PlatformerCpp assimp)
 
 file(GLOB TEST_SOURCES ${PROJECT_SOURCE_DIR}/src/*.cpp ${PROJECT_SOURCE_DIR}/test/*.cpp)
 add_executable(tests ${TEST_SOURCES})
@@ -62,3 +74,4 @@ target_link_libraries(tests ${OPENGL_LIBRARIES})
 target_link_libraries(tests ${GLEW_LIBRARIES})
 target_link_libraries(tests EnTT::EnTT)
 target_link_libraries(tests Catch2::Catch2WithMain)
+target_link_libraries(tests assimp)

@@ -4,6 +4,7 @@
 #include "file.hpp"
 #include "transform.hpp"
 #include <GL/glew.h>
+#include <assimp/Importer.hpp>
 #include <fstream>
 #include <glm/gtc/type_ptr.hpp>
 #include <glm/gtx/string_cast.hpp>

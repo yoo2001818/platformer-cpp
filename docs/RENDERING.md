@@ -29,3 +29,23 @@ rendering is not possible anyway.
 The renderer pipeline should be responsible for making draw calls, preparements
 and shaders. It should assemble various requests from materials, lights, etc and
 orchestrate everything.
+
+In a nutshell, it should do the following:
+
+- Set up common VBOs (camera positions, etc)
+- Set up framebuffers to render onto (for deferred rendering)
+- Set up material shaders as needed
+- Set up instancing if possible to do so
+- Prepare skeletal animation data and upload as UBO
+- Render meshes
+- Set up lights
+- Prepare shadow maps if needed
+- Draw shadow maps, repeating rendering meshes
+- Render lights onto final render target
+- Render transparent objects onto final render target
+- Apply post-process filters
+- Present the final texture on the screen
+
+This is quite a handful amount of code. The mesh rendering procedure should
+account for various types of rendering modes - skeletal animations, forward,
+deferred, instancing, shadow maps, LoDs, etc.

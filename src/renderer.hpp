@@ -1,7 +1,8 @@
 #ifndef __RENDERER_HPP__
 #define __RENDERER_HPP__
 
-#include "mesh.hpp"
+#include "render/render.hpp"
+#include <entt/entt.hpp>
 #include <vector>
 
 namespace platformer {

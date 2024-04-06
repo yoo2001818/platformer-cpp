@@ -12,7 +12,8 @@
 #include "application.hpp"
 #include "file.hpp"
 #include "game.hpp"
-#include "mesh.hpp"
+#include "render/material.hpp"
+#include "render/mesh.hpp"
 #include "transform.hpp"
 #include <GL/glew.h>
 #include <algorithm>

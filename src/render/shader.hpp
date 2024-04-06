@@ -7,6 +7,11 @@
 namespace platformer {
 class geometry;
 
+class texture {
+public:
+  int placeholder;
+};
+
 class shader {
 public:
   shader();
@@ -51,11 +56,6 @@ private:
   unsigned int mProgramId = -1;
   bool mIsDirty = true;
   friend geometry;
-};
-
-class texture {
-public:
-  int placeholder;
 };
 
 } // namespace platformer

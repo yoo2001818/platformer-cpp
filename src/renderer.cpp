@@ -1,6 +1,6 @@
 #include "renderer.hpp"
 #include "game.hpp"
-#include "mesh.hpp"
+#include "render/mesh.hpp"
 #include "transform.hpp"
 #include <vector>
 

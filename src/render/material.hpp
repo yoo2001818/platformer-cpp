@@ -43,5 +43,20 @@ private:
 
   static shader create_shader();
 };
+
+class armature_material : public material {
+public:
+  // This should be supported outside materials, but pipeline is not implemented
+  // yet
+  armature_material();
+
+  virtual void render(const render_context &pContext) override;
+  virtual void dispose() override;
+
+private:
+  shader mShader;
+
+  static shader create_shader();
+};
 } // namespace platformer
 #endif

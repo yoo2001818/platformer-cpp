@@ -12,6 +12,7 @@
 #include "application.hpp"
 #include "file.hpp"
 #include "game.hpp"
+#include "render/load.hpp"
 #include "render/material.hpp"
 #include "render/mesh.hpp"
 #include "transform.hpp"
@@ -54,12 +55,8 @@ void game::init(application &pApplication) {
     auto &trans = this->mRegistry.emplace<transform>(cube);
     trans.position(glm::vec3(0.0f, 0.0f, 0.0f));
 
-    std::vector<mesh::mesh_pair> meshes{};
-    meshes.push_back(
-        {std::make_shared<standard_material>(glm::vec3(1.0f), 0.5f, 0.0f),
-         std::make_shared<geometry>(geometry::make_box())});
-
-    this->mRegistry.emplace<mesh>(cube, std::move(meshes));
+    mesh model = load_file_to_mesh("res/bunny.gltf");
+    this->mRegistry.emplace<mesh>(cube, model);
     this->mRegistry.emplace<collision>(cube);
   }
   /*

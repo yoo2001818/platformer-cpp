@@ -7,11 +7,6 @@
 namespace platformer {
 class geometry;
 
-class texture {
-public:
-  int placeholder;
-};
-
 class shader {
 public:
   shader();
@@ -31,6 +26,7 @@ public:
   void fragment(const std::string &pCode);
   void fragment(std::string &&pCode);
 
+  void set(const std::string &pName, int pValue);
   void set(const std::string &pName, float pValue);
   void set(const std::string &pName, const glm::vec2 &pValue);
   void set(const std::string &pName, const glm::vec3 &pValue);
@@ -39,6 +35,7 @@ public:
   void set(const std::string &pName, const glm::mat3 &pValue);
   void set(const std::string &pName, const glm::mat4 &pValue);
 
+  void set(const std::string &pName, int pOffset, int pValue);
   void set(const std::string &pName, int pOffset, float pValue);
   void set(const std::string &pName, int pOffset, const glm::vec2 &pValue);
   void set(const std::string &pName, int pOffset, const glm::vec3 &pValue);

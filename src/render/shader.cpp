@@ -59,6 +59,12 @@ void shader::fragment(std::string &&pCode) {
   this->mIsDirty = true;
 }
 
+void shader::set(const std::string &pName, int pValue) {
+  auto pos = glGetUniformLocation(this->mProgramId, pName.c_str());
+  if (pos == -1)
+    return;
+  glUniform1i(pos, pValue);
+}
 void shader::set(const std::string &pName, float pValue) {
   auto pos = glGetUniformLocation(this->mProgramId, pName.c_str());
   if (pos == -1)
@@ -102,6 +108,12 @@ void shader::set(const std::string &pName, const glm::mat4 &pValue) {
   glUniformMatrix4fv(pos, 1, false, glm::value_ptr(pValue));
 }
 
+void shader::set(const std::string &pName, int pOffset, int pValue) {
+  auto pos = glGetUniformLocation(this->mProgramId, pName.c_str());
+  if (pos == -1)
+    return;
+  glUniform1i(pos + pOffset, pValue);
+}
 void shader::set(const std::string &pName, int pOffset, float pValue) {
   auto pos = glGetUniformLocation(this->mProgramId, pName.c_str());
   if (pos == -1)

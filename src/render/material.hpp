@@ -1,7 +1,9 @@
 #ifndef __RENDER_MATERIAL_HPP__
 #define __RENDER_MATERIAL_HPP__
 #include "render/shader.hpp"
+#include "render/texture.hpp"
 #include <glm/glm.hpp>
+#include <memory>
 #include <string>
 
 namespace platformer {
@@ -37,6 +39,7 @@ public:
   float roughness;
   float metalic;
   glm::vec3 color;
+  std::shared_ptr<texture> diffuseTexture = nullptr;
 
 private:
   shader mShader;

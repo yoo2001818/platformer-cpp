@@ -16,14 +16,14 @@ public:
 
   virtual ~texture();
 
-  void prepare(int &pSlot);
+  void prepare(int pSlot);
   void dispose();
 
 protected:
   virtual void init();
 
 private:
-  unsigned int pTexture;
+  unsigned int pTexture = -1;
 };
 
 class buffer_texture : public texture {

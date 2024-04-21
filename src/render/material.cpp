@@ -31,12 +31,12 @@ void shader_material::dispose() { this->mShader.dispose(); }
 
 standard_material::standard_material()
     : mShader(standard_material::create_shader()), roughness(0.5), metalic(0.0),
-      color(glm::vec3(1.0)) {}
+      color(glm::vec3(1.0)), diffuseTexture() {}
 
 standard_material::standard_material(glm::vec3 pColor, float pRoughness,
                                      float pMetalic)
     : mShader(standard_material::create_shader()), roughness(pRoughness),
-      metalic(pMetalic), color(pColor) {}
+      metalic(pMetalic), color(pColor), diffuseTexture() {}
 
 void standard_material::render(const render_context &pContext) {
   this->mShader.prepare();
@@ -61,6 +61,9 @@ void standard_material::render(const render_context &pContext) {
       break;
   }
   this->mShader.set("uLightCount", pos);
+
+  this->diffuseTexture.prepare(0);
+  this->mShader.set("uDiffuse", 0);
   // Issue draw call
   pContext.geometry.render();
 }

@@ -4,13 +4,24 @@
 using namespace platformer;
 
 texture::texture() {}
-texture::texture(const texture &pValue) {}
-texture::texture(texture &&pValue) {}
+texture::texture(const texture &pValue) { this->pTexture = pValue.pTexture; }
+texture::texture(texture &&pValue) {
+  this->pTexture = pValue.pTexture;
+  pValue.pTexture = -1;
+}
 
-texture &texture::operator=(const texture &pValue) {}
-texture &texture::operator=(texture &&pValue) {}
+texture &texture::operator=(const texture &pValue) {
+  this->pTexture = pValue.pTexture;
+  return *this;
+}
 
-texture::~texture() {}
+texture &texture::operator=(texture &&pValue) {
+  this->pTexture = pValue.pTexture;
+  pValue.pTexture = -1;
+  return *this;
+}
+
+texture::~texture() { this->dispose(); }
 
 void texture::prepare(int pSlot) {
   if (this->pTexture == -1) {
@@ -30,5 +41,7 @@ void texture::dispose() {
 }
 
 void texture::init() {
-  glTexImage2D(GL_TEXTURE_2D, 0, 0, 0, 0, 0, 0, 0, nullptr);
+  uint8_t dummy[3] = {255, 0, 255};
+  glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, 1, 1, 0, GL_RGB, GL_UNSIGNED_BYTE,
+               &dummy);
 }

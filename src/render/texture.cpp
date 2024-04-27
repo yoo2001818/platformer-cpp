@@ -45,3 +45,8 @@ void texture::init() {
   glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, 1, 1, 0, GL_RGB, GL_UNSIGNED_BYTE,
                &dummy);
 }
+
+void buffer_texture::init() {
+  glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, this->pWidth, this->pHeight, 0, GL_RGB,
+               GL_UNSIGNED_BYTE, this->pBuffer.data());
+}

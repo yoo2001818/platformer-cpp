@@ -2,6 +2,7 @@
 #define __RENDER_TEXTURE_HPP__
 
 #include <cstdint>
+#include <string>
 #include <vector>
 
 namespace platformer {
@@ -23,7 +24,7 @@ protected:
   virtual void init();
 
 private:
-  unsigned int pTexture = -1;
+  unsigned int mTexture = -1;
 };
 
 class buffer_texture : public texture {
@@ -36,9 +37,22 @@ protected:
   virtual void init() override;
 
 private:
-  unsigned int pWidth;
-  unsigned int pHeight;
-  std::vector<std::uint8_t> pBuffer;
+  unsigned int mWidth;
+  unsigned int mHeight;
+  std::vector<std::uint8_t> mBuffer;
+};
+
+class image_texture : public texture {
+public:
+  image_texture(const std::string &pSource);
+
+  virtual ~image_texture();
+
+protected:
+  virtual void init() override;
+
+private:
+  std::string mSource;
 };
 } // namespace platformer
 

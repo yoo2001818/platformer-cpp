@@ -3,6 +3,8 @@
 #include "render/geometry.hpp"
 #include "render/render.hpp"
 #include "render/shader.hpp"
+#include "render/texture.hpp"
+#include <memory>
 
 using namespace platformer;
 
@@ -31,12 +33,14 @@ void shader_material::dispose() { this->mShader.dispose(); }
 
 standard_material::standard_material()
     : mShader(standard_material::create_shader()), roughness(0.5), metalic(0.0),
-      color(glm::vec3(1.0)), diffuseTexture() {}
+      color(glm::vec3(1.0)),
+      diffuseTexture(std::make_shared<image_texture>("res/uv.png")) {}
 
 standard_material::standard_material(glm::vec3 pColor, float pRoughness,
                                      float pMetalic)
     : mShader(standard_material::create_shader()), roughness(pRoughness),
-      metalic(pMetalic), color(pColor), diffuseTexture() {}
+      metalic(pMetalic), color(pColor),
+      diffuseTexture(std::make_shared<image_texture>("res/uv.png")) {}
 
 void standard_material::render(const render_context &pContext) {
   this->mShader.prepare();
@@ -62,7 +66,9 @@ void standard_material::render(const render_context &pContext) {
   }
   this->mShader.set("uLightCount", pos);
 
-  this->diffuseTexture.prepare(0);
+  if (this->diffuseTexture != nullptr) {
+    this->diffuseTexture->prepare(0);
+  }
   this->mShader.set("uDiffuse", 0);
   // Issue draw call
   pContext.geometry.render();

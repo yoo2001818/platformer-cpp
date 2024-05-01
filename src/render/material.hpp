@@ -3,6 +3,7 @@
 #include "render/shader.hpp"
 #include "render/texture.hpp"
 #include <glm/glm.hpp>
+#include <memory>
 #include <string>
 
 namespace platformer {
@@ -38,7 +39,7 @@ public:
   float roughness;
   float metalic;
   glm::vec3 color;
-  texture diffuseTexture{};
+  std::shared_ptr<texture> diffuseTexture;
 
 private:
   shader mShader;

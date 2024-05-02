@@ -33,8 +33,7 @@ void shader_material::dispose() { this->mShader.dispose(); }
 
 standard_material::standard_material()
     : mShader(standard_material::create_shader()), roughness(0.5), metalic(0.0),
-      color(glm::vec3(1.0)),
-      diffuseTexture(std::make_shared<image_texture>("res/uv.png")) {}
+      color(glm::vec3(1.0)) {}
 
 standard_material::standard_material(glm::vec3 pColor, float pRoughness,
                                      float pMetalic)
@@ -68,8 +67,8 @@ void standard_material::render(const render_context &pContext) {
 
   if (this->diffuseTexture != nullptr) {
     this->diffuseTexture->prepare(0);
+    this->mShader.set("uDiffuse", 0);
   }
-  this->mShader.set("uDiffuse", 0);
   // Issue draw call
   pContext.geometry.render();
 }
@@ -77,6 +76,10 @@ void standard_material::render(const render_context &pContext) {
 void standard_material::dispose() { this->mShader.dispose(); }
 
 shader standard_material::create_shader() {
+  // TODO: We have to dynamically choose which shader to use, and possibly use
+  // #define to determine the feature flags. This also needs to be shared
+  // between instances of standard_material, necessitating some kind of
+  // asset management.
   auto vert = read_file_str("res/phong.vert");
   auto frag = read_file_str("res/phong.frag");
   return shader(vert, frag);

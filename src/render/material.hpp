@@ -39,7 +39,7 @@ public:
   float roughness;
   float metalic;
   glm::vec3 color;
-  std::shared_ptr<texture> diffuseTexture;
+  std::shared_ptr<texture> diffuseTexture = nullptr;
 
 private:
   shader mShader;

@@ -11,10 +11,18 @@ uniform int uLightCount;
 uniform float uRoughness;
 uniform float uMetalic;
 uniform mat4 uView;
+
+#ifdef USE_DIFFUSE_TEXTURE
 uniform sampler2D uDiffuse;
+#endif
+
 void main()
 {
+    #ifdef USE_DIFFUSE_TEXTURE
     vec3 color = texture2D(uDiffuse, vTexCoord).rgb;
+    #else
+    vec3 color = uColor;
+    #endif
     vec3 result = vec3(0.0);
     vec3 ambient = vec3(0.1);
     result += ambient * color;

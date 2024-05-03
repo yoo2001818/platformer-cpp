@@ -82,5 +82,11 @@ shader standard_material::create_shader() {
   // asset management.
   auto vert = read_file_str("res/phong.vert");
   auto frag = read_file_str("res/phong.frag");
+  int vertPos = vert.find('\n');
+  int fragPos = frag.find('\n');
+  vert = vert.substr(0, fragPos + 1) + "#define USE_DIFFUSE_TEXTURE\n" +
+         vert.substr(fragPos + 1);
+  frag = frag.substr(0, fragPos + 1) + "#define USE_DIFFUSE_TEXTURE\n" +
+         frag.substr(fragPos + 1);
   return shader(vert, frag);
 }

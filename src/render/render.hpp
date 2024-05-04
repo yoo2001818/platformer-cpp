@@ -2,9 +2,11 @@
 #define __RENDER_RENDER_HPP__
 #include "render/geometry.hpp"
 #include "transform.hpp"
+#include <any>
 #include <entt/entt.hpp>
 #include <glm/fwd.hpp>
 #include <glm/glm.hpp>
+#include <map>
 namespace platformer {
 class mesh;
 
@@ -26,6 +28,15 @@ public:
   float power;
   float radius;
   float range;
+};
+
+class asset_manager {
+public:
+  template <typename T>
+  T get(const std::string &pName, const std::function<T> &pExec);
+
+private:
+  std::map<std::string, std::any> mMap;
 };
 
 struct render_light {

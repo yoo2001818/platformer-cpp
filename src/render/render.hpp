@@ -7,6 +7,7 @@
 #include <glm/fwd.hpp>
 #include <glm/glm.hpp>
 #include <map>
+#include <unordered_map>
 namespace platformer {
 class mesh;
 
@@ -33,10 +34,17 @@ public:
 class asset_manager {
 public:
   template <typename T>
-  T get(const std::string &pName, const std::function<T> &pExec);
+  T get(const std::string &pName, const std::function<T> &pExec) {
+    auto cursor = mMap.find(pName);
+    if (cursor == mMap.end()) {
+      auto result = pExec();
+      mMap.insert_or_assign(pName, result);
+    }
+    return std::any_cast<T>(cursor->second);
+  }
 
 private:
-  std::map<std::string, std::any> mMap;
+  std::unordered_map<std::string, std::any> mMap;
 };
 
 struct render_light {
@@ -54,6 +62,7 @@ struct render_context {
   // The current structure necessitiates for material to be aware of armatures,
   // but that is simply unavoidable at this point.
   entt::registry &registry;
+  asset_manager &asset_manager;
   float aspect;
 
   const entt::entity &entity;
@@ -71,6 +80,7 @@ struct render_context {
 struct render_context_root {
   // Root-level render context.
   entt::registry &registry;
+  asset_manager &asset_manager;
   float aspect;
 
   const entt::entity &camera_entity;

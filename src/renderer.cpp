@@ -32,6 +32,7 @@ void renderer::render(game &pGame, const entt::entity pCamera, float pAspect) {
   std::vector<render_light> lights = this->get_lights(pGame);
   render_context_root renderContextRoot{
       .registry = registry,
+      .asset_manager = mAssetManager,
       .aspect = pAspect,
       .camera_entity = cameraEntity,
       .camera_transform = cameraTransform,

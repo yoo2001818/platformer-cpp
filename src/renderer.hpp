@@ -12,6 +12,9 @@ public:
   renderer();
   std::vector<render_light> get_lights(game &pGame);
   void render(game &pGame, const entt::entity pCamera, float pAspect);
+
+private:
+  asset_manager mAssetManager{};
 };
 } // namespace platformer
 

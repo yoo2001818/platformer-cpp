@@ -15,6 +15,7 @@ void mesh::render(entt::registry &pRegistry, const entt::entity &pEntity,
   for (auto &[materialVal, geometryVal] : this->mMeshes) {
     materialVal->render({
         .registry = pRegistry,
+        .asset_manager = pRenderContextRoot.asset_manager,
         .aspect = pRenderContextRoot.aspect,
         .entity = pEntity,
         .transform = transformVal,

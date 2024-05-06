@@ -35,6 +35,7 @@ game::game() : mRegistry() {}
 void game::init(application &pApplication) {
   SDL_GetWindowSize(pApplication.window(), &(this->mWindowWidth),
                     &(this->mWindowHeight));
+  this->mTransform.init(this->mRegistry);
   this->mMovement.init(*this);
   for (int i = 0; i < 10; i++) {
     auto cube = this->mRegistry.create();

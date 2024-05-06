@@ -1,8 +1,8 @@
+#include <algorithm>
 #define GLM_ENABLE_EXPERIMENTAL
-#include "transform.hpp"
 #include "entt/entity/fwd.hpp"
+#include "transform.hpp"
 #include <cmath>
-#include <exception>
 #include <glm/ext/matrix_transform.hpp>
 #include <glm/ext/quaternion_common.hpp>
 #include <glm/ext/quaternion_geometric.hpp>
@@ -12,9 +12,54 @@
 #include <glm/gtx/matrix_decompose.hpp>
 #include <glm/matrix.hpp>
 #include <optional>
-#include <stdexcept>
 
 using namespace platformer;
+
+void transform_system::init(entt::registry &pRegistry) {
+  pRegistry.on_construct<transform>().connect<&transform_system::on_construct>(
+      *this);
+  pRegistry.on_update<transform>().connect<&transform_system::on_update>(*this);
+  pRegistry.on_destroy<transform>().connect<&transform_system::on_destroy>(
+      *this);
+};
+
+void transform_system::on_construct(entt::registry &pRegistry,
+                                    entt::entity pEntity) {
+  this->handle_change(pRegistry, pEntity);
+}
+void transform_system::on_update(entt::registry &pRegistry,
+                                 entt::entity pEntity) {
+  this->handle_change(pRegistry, pEntity);
+}
+void transform_system::on_destroy(entt::registry &pRegistry,
+                                  entt::entity pEntity) {
+  auto &transformVal = pRegistry.get<transform>(pEntity);
+  transformVal.mParent = std::nullopt;
+  this->handle_change(pRegistry, pEntity);
+}
+void transform_system::handle_change(entt::registry &pRegistry,
+                                     entt::entity pEntity) {
+  auto &transformVal = pRegistry.get<transform>(pEntity);
+  auto prev_parent = transformVal.mPreviousParent;
+  auto parent = transformVal.parent();
+  if (prev_parent != parent) {
+    if (prev_parent != std::nullopt) {
+      auto prevTransform = pRegistry.try_get<transform>(prev_parent.value());
+      if (prevTransform != nullptr) {
+        prevTransform->mChildren.erase(
+            std::remove(prevTransform->mChildren.begin(),
+                        prevTransform->mChildren.end(), pEntity));
+      }
+    }
+    if (parent != std::nullopt) {
+      auto parentTransform = pRegistry.try_get<transform>(parent.value());
+      if (parentTransform != nullptr) {
+        parentTransform->mChildren.push_back(pEntity);
+      }
+    }
+    transformVal.mark_parent_indexed();
+  }
+}
 
 transform::transform(){};
 transform::transform(const entt::entity &pParent) : mParent(pParent){};
@@ -76,6 +121,10 @@ void transform::parent(const std::optional<entt::entity> &pParent) {
   this->mParent = pParent;
   // Reset parent versions to force invalidation
   this->mWorldParentVersion = -1;
+}
+
+const std::vector<entt::entity> &transform::children() const {
+  return this->mChildren;
 }
 
 const glm::mat4 &transform::matrix_world(entt::registry &pRegistry) {
@@ -312,3 +361,5 @@ void transform::update_world_inverse_matrix(entt::registry &pRegistry) {
 void transform::mark_component_changed() { this->mComponentVersion += 1; }
 
 void transform::mark_matrix_changed() { this->mMatrixVersion += 1; }
+
+void transform::mark_parent_indexed() { this->mPreviousParent = this->mParent; }

@@ -7,6 +7,7 @@
 #include "movement.hpp"
 #include "physics.hpp"
 #include "renderer.hpp"
+#include "transform.hpp"
 #include <entt/entt.hpp>
 
 namespace platformer {
@@ -26,6 +27,7 @@ private:
   entt::entity mPlayer;
   int mWindowWidth;
   int mWindowHeight;
+  transform_system mTransform;
   fps_movement_system mMovement;
   physics_system mPhysics;
   renderer mRenderer;

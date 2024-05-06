@@ -17,14 +17,17 @@ TEST_CASE("Basic use cases", "[transform]") {
 
 TEST_CASE("Object hierarchy", "[transform]") {
   entt::registry registry;
+  platformer::transform_system transformSystem;
+  transformSystem.init(registry);
   auto parent = registry.create();
   auto &parentTransform = registry.emplace<platformer::transform>(parent);
   auto child = registry.create();
-  auto &childTransform = registry.emplace<platformer::transform>(child);
+  auto &childTransform = registry.emplace<platformer::transform>(child, parent);
 
-  childTransform.parent(parent);
   parentTransform.rotate_y(std::numbers::pi / 2.0f);
   childTransform.translate(glm::vec3(1.0, 0.0, 0.0));
   REQUIRE(glm::to_string(childTransform.position_world(registry)) ==
           glm::to_string(glm::vec3(0.0, 0.0, -1.0)));
+  REQUIRE(childTransform.children().size() == 0);
+  REQUIRE(parentTransform.children().size() == 1);
 }

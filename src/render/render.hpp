@@ -62,7 +62,7 @@ struct render_context {
   // The current structure necessitiates for material to be aware of armatures,
   // but that is simply unavoidable at this point.
   entt::registry &registry;
-  asset_manager &asset_manager;
+  platformer::asset_manager &asset_manager;
   float aspect;
 
   const entt::entity &entity;
@@ -80,7 +80,7 @@ struct render_context {
 struct render_context_root {
   // Root-level render context.
   entt::registry &registry;
-  asset_manager &asset_manager;
+  platformer::asset_manager &asset_manager;
   float aspect;
 
   const entt::entity &camera_entity;

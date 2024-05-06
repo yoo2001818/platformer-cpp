@@ -1,13 +1,26 @@
 #ifndef __TRANSFORM_HPP__
 #define __TRANSFORM_HPP__
 
+#include "entt/entity/fwd.hpp"
 #include <entt/entt.hpp>
 #include <glm/fwd.hpp>
 #include <glm/glm.hpp>
 #include <glm/gtc/quaternion.hpp>
 #include <optional>
+#include <vector>
 
 namespace platformer {
+class transform;
+class transform_system {
+public:
+  void init(entt::registry &pRegistry);
+  void on_construct(entt::registry &pRegistry, entt::entity pEntity);
+  void on_update(entt::registry &pRegistry, entt::entity pEntity);
+  void on_destroy(entt::registry &pRegistry, entt::entity pEntity);
+
+private:
+  void handle_change(entt::registry &pRegistry, entt::entity pEntity);
+};
 class transform {
 public:
   transform();
@@ -24,7 +37,15 @@ public:
   const glm::mat4 &matrix_local();
   void matrix_local(const glm::mat4 &pValue);
   const std::optional<entt::entity> &parent() const;
+  /**
+   * @brief Updates the entity's parent to the new parent, or none.
+   * @note You're responsible for calling `registry.patch<transform>(entity)`
+   * after calling this method, and the transform_system must be
+   * present to use children().
+   * @param pParent The new parent to set.
+   */
   void parent(const std::optional<entt::entity> &pParent);
+  const std::vector<entt::entity> &children() const;
   // FIXME: Is this a good idea? Arguably this is better than storing a pointer
   // to the registry.
   const glm::mat4 &matrix_world(entt::registry &pRegistry);
@@ -47,6 +68,10 @@ public:
   void rotate_axis(const glm::vec3 &pAxis, float pRad);
 
   void look_at(const glm::vec3 &pTarget);
+
+protected:
+  friend transform_system;
+  void mark_parent_indexed();
 
 private:
   void update_component();
@@ -75,7 +100,9 @@ private:
   int mWorldInverseVersion = 0;
   glm::mat4 mMatrixWorld{1.0};
   glm::mat4 mMatrixWorldInverse{1.0};
+  std::optional<entt::entity> mPreviousParent = std::nullopt;
   std::optional<entt::entity> mParent = std::nullopt;
+  std::vector<entt::entity> mChildren{};
 };
 } // namespace platformer
 

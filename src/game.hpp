@@ -5,6 +5,7 @@
 #include "application.hpp"
 #include "entt/entity/fwd.hpp"
 #include "movement.hpp"
+#include "name.hpp"
 #include "physics.hpp"
 #include "renderer.hpp"
 #include "transform.hpp"
@@ -27,6 +28,7 @@ private:
   entt::entity mPlayer;
   int mWindowWidth;
   int mWindowHeight;
+  name_system mName;
   transform_system mTransform;
   fps_movement_system mMovement;
   physics_system mPhysics;

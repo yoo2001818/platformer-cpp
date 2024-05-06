@@ -1,7 +1,11 @@
 #include "render/load.hpp"
+#include "entt/entity/entity.hpp"
+#include "entt/entt.hpp"
+#include "name.hpp"
 #include "render/geometry.hpp"
 #include "render/material.hpp"
 #include "render/mesh.hpp"
+#include "transform.hpp"
 #include <assimp/Importer.hpp>
 #include <assimp/postprocess.h>
 #include <assimp/scene.h>
@@ -69,4 +73,44 @@ mesh platformer::load_file_to_mesh(const std::string &pFilename) {
   }
 
   return mesh(pairs);
+}
+
+void iterate_entity(const aiScene *pScene, entt::registry &pRegistry,
+                    aiNode *pNode, entt::entity pParent) {
+  auto entity = pRegistry.create();
+  pRegistry.emplace<name>(entity, pNode->mName);
+  if (pParent != entt::null) {
+    pRegistry.emplace<transform>(entity, pParent, pNode->mTransformation);
+  } else {
+    pRegistry.emplace<transform>(entity, pNode->mTransformation);
+  }
+
+  if (pNode->mNumMeshes > 0) {
+    // TODO: Create mesh, and attach it
+    for (int i = 0; i < pNode->mNumMeshes; i += 1) {
+    }
+  }
+
+  // TODO: scan animation / lights / camera and attach it (perhaps it'd be
+  // better to do it afterwards, as the index is already formed after creating
+  // the tree)
+
+  for (int i = 0; i < pNode->mNumChildren; i += 1) {
+    auto childNode = pNode->mChildren[i];
+    iterate_entity(pScene, pRegistry, childNode, entity);
+  }
+}
+
+void load_file_to_entity(const std::string &pFilename,
+                         entt::registry &pRegistry) {
+  Assimp::Importer importer;
+
+  const aiScene *scene = importer.ReadFile(
+      pFilename, aiProcess_Triangulate | aiProcess_JoinIdenticalVertices |
+                     aiProcess_GenNormals | aiProcess_CalcTangentSpace);
+  if (scene == nullptr) {
+    throw std::runtime_error(importer.GetErrorString());
+  }
+
+  iterate_entity(scene, pRegistry, scene->mRootNode, entt::null);
 }

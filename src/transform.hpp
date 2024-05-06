@@ -14,11 +14,11 @@ class transform;
 class transform_system {
 public:
   void init(entt::registry &pRegistry);
+
+private:
   void on_construct(entt::registry &pRegistry, entt::entity pEntity);
   void on_update(entt::registry &pRegistry, entt::entity pEntity);
   void on_destroy(entt::registry &pRegistry, entt::entity pEntity);
-
-private:
   void handle_change(entt::registry &pRegistry, entt::entity pEntity);
 };
 class transform {

@@ -1,4 +1,5 @@
 #include "render/load.hpp"
+#include "assimp/mesh.h"
 #include "entt/entity/entity.hpp"
 #include "entt/entt.hpp"
 #include "name.hpp"
@@ -11,11 +12,33 @@
 #include <assimp/scene.h>
 #include <memory>
 #include <stdexcept>
+#include <utility>
 
 using namespace platformer;
 
 glm::vec3 convert_ai_to_glm(aiVector3D pValue) {
   return glm::vec3(pValue.x, pValue.y, pValue.z);
+}
+
+glm::mat4 convert_ai_to_glm(const aiMatrix4x4 &from) {
+  glm::mat4 to;
+  to[0][0] = from.a1;
+  to[1][0] = from.a2;
+  to[2][0] = from.a3;
+  to[3][0] = from.a4;
+  to[0][1] = from.b1;
+  to[1][1] = from.b2;
+  to[2][1] = from.b3;
+  to[3][1] = from.b4;
+  to[0][2] = from.c1;
+  to[1][2] = from.c2;
+  to[2][2] = from.c3;
+  to[3][2] = from.c4;
+  to[0][3] = from.d1;
+  to[1][3] = from.d2;
+  to[2][3] = from.d3;
+  to[3][3] = from.d4;
+  return to;
 }
 
 mesh platformer::load_file_to_mesh(const std::string &pFilename) {
@@ -75,20 +98,72 @@ mesh platformer::load_file_to_mesh(const std::string &pFilename) {
   return mesh(pairs);
 }
 
+mesh::mesh_pair read_mesh(const aiScene *pScene, aiMesh *pMesh) {
+  // Create geometry
+  std::shared_ptr<geometry> geom = std::make_shared<geometry>();
+
+  std::vector<glm::vec3> positions(pMesh->mNumVertices);
+  for (int j = 0; j < pMesh->mNumVertices; j += 1) {
+    positions[j] = convert_ai_to_glm(pMesh->mVertices[j]);
+  }
+  geom->positions(std::move(positions));
+
+  std::vector<glm::vec3> normals(pMesh->mNumVertices);
+  for (int j = 0; j < pMesh->mNumVertices; j += 1) {
+    normals[j] = convert_ai_to_glm(pMesh->mNormals[j]);
+  }
+  geom->normals(std::move(normals));
+
+  if (pMesh->mTextureCoords[0] != nullptr) {
+    std::vector<glm::vec2> texCoords(pMesh->mNumVertices);
+    for (int j = 0; j < pMesh->mNumVertices; j += 1) {
+      texCoords[j] = convert_ai_to_glm(pMesh->mTextureCoords[0][j]);
+    }
+    geom->texCoords(std::move(texCoords));
+  }
+
+  std::vector<unsigned int> indices;
+  for (int j = 0; j < pMesh->mNumFaces; j += 1) {
+    auto &face = pMesh->mFaces[j];
+    for (int k = 0; k < face.mNumIndices; k += 1) {
+      // We expect that the data is triangulated
+      indices.push_back(face.mIndices[k]);
+    }
+  }
+  geom->indices(std::move(indices));
+
+  // Create material
+  auto origMat = pScene->mMaterials[pMesh->mMaterialIndex];
+
+  // Since material is very weird to parse out, let's resort to nothing for now
+  std::shared_ptr<material> mat = std::make_shared<standard_material>();
+
+  return std::make_pair(mat, geom);
+}
+
 void iterate_entity(const aiScene *pScene, entt::registry &pRegistry,
                     aiNode *pNode, entt::entity pParent) {
   auto entity = pRegistry.create();
-  pRegistry.emplace<name>(entity, pNode->mName);
+  pRegistry.emplace<name>(entity, std::string{pNode->mName.C_Str()});
   if (pParent != entt::null) {
-    pRegistry.emplace<transform>(entity, pParent, pNode->mTransformation);
+    pRegistry.emplace<transform>(entity, pParent,
+                                 convert_ai_to_glm(pNode->mTransformation));
   } else {
-    pRegistry.emplace<transform>(entity, pNode->mTransformation);
+    pRegistry.emplace<transform>(entity,
+                                 convert_ai_to_glm(pNode->mTransformation));
   }
 
   if (pNode->mNumMeshes > 0) {
-    // TODO: Create mesh, and attach it
+    std::vector<mesh::mesh_pair> pairs;
     for (int i = 0; i < pNode->mNumMeshes; i += 1) {
+      int meshIndex = pNode->mMeshes[i];
+      auto origMesh = pScene->mMeshes[meshIndex];
+
+      // Read out mesh and convert it to the mesh object
+      auto mesh_pair = read_mesh(pScene, origMesh);
+      pairs.push_back(mesh_pair);
     }
+    pRegistry.emplace<mesh>(entity, pairs);
   }
 
   // TODO: scan animation / lights / camera and attach it (perhaps it'd be
@@ -101,8 +176,8 @@ void iterate_entity(const aiScene *pScene, entt::registry &pRegistry,
   }
 }
 
-void load_file_to_entity(const std::string &pFilename,
-                         entt::registry &pRegistry) {
+void platformer::load_file_to_entity(const std::string &pFilename,
+                                     entt::registry &pRegistry) {
   Assimp::Importer importer;
 
   const aiScene *scene = importer.ReadFile(

@@ -38,6 +38,7 @@ void game::init(application &pApplication) {
   this->mName.init(this->mRegistry);
   this->mTransform.init(this->mRegistry);
   this->mMovement.init(*this);
+  load_file_to_entity("res/boxes.gltf", this->mRegistry);
   for (int i = 0; i < 10; i++) {
     auto cube = this->mRegistry.create();
     auto &trans = this->mRegistry.emplace<transform>(cube);

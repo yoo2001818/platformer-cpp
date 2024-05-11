@@ -40,11 +40,6 @@ public:
   float metalic;
   glm::vec3 color;
   std::shared_ptr<texture> diffuseTexture = nullptr;
-
-private:
-  shader mShader;
-
-  static shader create_shader();
 };
 
 class armature_material : public material {

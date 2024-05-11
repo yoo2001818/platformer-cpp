@@ -6,7 +6,6 @@
 #include <entt/entt.hpp>
 #include <glm/fwd.hpp>
 #include <glm/glm.hpp>
-#include <map>
 #include <unordered_map>
 namespace platformer {
 class mesh;
@@ -34,11 +33,12 @@ public:
 class asset_manager {
 public:
   template <typename T>
-  T get(const std::string &pName, const std::function<T> &pExec) {
+  T get(const std::string &pName, const std::function<T()> &pExec) {
     auto cursor = mMap.find(pName);
     if (cursor == mMap.end()) {
       auto result = pExec();
       mMap.insert_or_assign(pName, result);
+      return result;
     }
     return std::any_cast<T>(cursor->second);
   }

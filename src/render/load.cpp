@@ -1,5 +1,7 @@
 #include "render/load.hpp"
+#include "assimp/material.h"
 #include "assimp/mesh.h"
+#include "assimp/types.h"
 #include "entt/entity/entity.hpp"
 #include "entt/entt.hpp"
 #include "name.hpp"
@@ -18,6 +20,10 @@ using namespace platformer;
 
 glm::vec3 convert_ai_to_glm(aiVector3D pValue) {
   return glm::vec3(pValue.x, pValue.y, pValue.z);
+}
+
+glm::vec3 convert_ai_to_glm(aiColor3D pValue) {
+  return glm::vec3(pValue.r, pValue.g, pValue.b);
 }
 
 glm::mat4 convert_ai_to_glm(const aiMatrix4x4 &from) {
@@ -134,9 +140,18 @@ mesh::mesh_pair read_mesh(const aiScene *pScene, aiMesh *pMesh) {
 
   // Create material
   auto origMat = pScene->mMaterials[pMesh->mMaterialIndex];
+  std::shared_ptr<standard_material> mat =
+      std::make_shared<standard_material>();
+  aiColor3D base;
+  float metalic;
+  float roughness;
 
-  // Since material is very weird to parse out, let's resort to nothing for now
-  std::shared_ptr<material> mat = std::make_shared<standard_material>();
+  origMat->Get(AI_MATKEY_BASE_COLOR, base);
+  origMat->Get(AI_MATKEY_METALLIC_FACTOR, metalic);
+  origMat->Get(AI_MATKEY_ROUGHNESS_FACTOR, roughness);
+  mat->color = convert_ai_to_glm(base);
+  mat->metalic = metalic;
+  mat->roughness = roughness;
 
   return std::make_pair(mat, geom);
 }

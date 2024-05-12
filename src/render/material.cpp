@@ -3,7 +3,6 @@
 #include "render/geometry.hpp"
 #include "render/render.hpp"
 #include "render/shader.hpp"
-#include "render/texture.hpp"
 #include <memory>
 #include <string>
 

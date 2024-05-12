@@ -5,6 +5,7 @@
 #include "render/shader.hpp"
 #include "render/texture.hpp"
 #include <memory>
+#include <string>
 
 using namespace platformer;
 
@@ -36,12 +37,15 @@ standard_material::standard_material()
 
 standard_material::standard_material(glm::vec3 pColor, float pRoughness,
                                      float pMetalic)
-    : roughness(pRoughness), metalic(pMetalic), color(pColor),
-      diffuseTexture(std::make_shared<image_texture>("res/uv.png")) {}
+    : roughness(pRoughness), metalic(pMetalic), color(pColor) {}
 
 void standard_material::render(const render_context &pContext) {
+  int featureFlags = 0;
+  if (this->diffuseTexture != nullptr) {
+    featureFlags |= 1;
+  }
   auto shaderVal = pContext.asset_manager.get<std::shared_ptr<shader>>(
-      "standard_material", []() {
+      "standard_material:" + std::to_string(featureFlags), [&]() {
         // TODO: We have to dynamically choose which shader to use, and possibly
         // use #define to determine the feature flags. This also needs to be
         // shared between instances of standard_material, necessitating some
@@ -50,10 +54,12 @@ void standard_material::render(const render_context &pContext) {
         auto frag = read_file_str("res/phong.frag");
         int vertPos = vert.find('\n');
         int fragPos = frag.find('\n');
-        vert = vert.substr(0, fragPos + 1) + "#define USE_DIFFUSE_TEXTURE\n" +
-               vert.substr(fragPos + 1);
-        frag = frag.substr(0, fragPos + 1) + "#define USE_DIFFUSE_TEXTURE\n" +
-               frag.substr(fragPos + 1);
+        std::string defines = "";
+        if (featureFlags & 1) {
+          defines += "#define USE_DIFFUSE_TEXTURE\n";
+        }
+        vert = vert.substr(0, fragPos + 1) + defines + vert.substr(fragPos + 1);
+        frag = frag.substr(0, fragPos + 1) + defines + frag.substr(fragPos + 1);
         return std::make_shared<shader>(vert, frag);
       });
   shaderVal->prepare();

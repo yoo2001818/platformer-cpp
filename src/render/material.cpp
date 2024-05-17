@@ -67,6 +67,8 @@ void standard_material::render(const render_context &pContext) {
   shaderVal->set("uModel", pContext.transform.matrix_world(pContext.registry));
   shaderVal->set("uView", pContext.camera_transform.matrix_world_inverse(
                               pContext.registry));
+  shaderVal->set("uViewPos",
+                 pContext.camera_transform.position_world(pContext.registry));
   shaderVal->set("uProjection",
                  pContext.camera_camera.getProjection(pContext.aspect));
   shaderVal->set("uColor", this->color);

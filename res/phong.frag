@@ -11,6 +11,7 @@ uniform int uLightCount;
 uniform float uRoughness;
 uniform float uMetalic;
 uniform mat4 uView;
+uniform vec3 uViewPos;
 
 #ifdef USE_DIFFUSE_TEXTURE
 uniform sampler2D uDiffuse;
@@ -173,13 +174,34 @@ void main()
     vec3 normal = normalize(vNormal);
     for (int i = 0; i < 8; i += 1) {
         if (i > uLightCount) break;
-        vec3 lightPos = (uView * vec4(uLightPositions[i].xyz, 1.0)).xyz;
-        vec3 lightDir = normalize(lightPos - vPosition);
-        result += max(dot(vNormal, lightDir), 0.0)* uLightColors[i] * color;
-        vec3 viewDir = normalize(-vPosition);
-        vec3 reflectDir = reflect(-lightDir, normal);
-        float spec = pow(max(dot(viewDir, reflectDir), 0.0), 32);
-        result += 0.5 * spec * uLightColors[i];
+        vec3 L;
+        vec3 V = normalize(uViewPos - vPosition);
+        vec3 N = vNormal;
+
+        L = uLightPositions[i].xyz - vPosition;
+
+        vec3 R = reflect(V, N);
+        vec3 centerToRay = dot(L, R) * R - L;
+        vec3 closestPos = L +
+        centerToRay * clamp(0.01 / length(centerToRay), 0.0, 1.0);
+        L = closestPos;
+
+        float lightDist = length(L);
+        L = L / lightDist;
+
+        float attenuation = 60.0 / (0.0001 + (lightDist * lightDist));
+        
+        float dotNL = max(dot(N, L), 0.0);
+
+        vec3 lightValue = attenuation * dotNL * uLightColors[i];
+        
+        float roughness = uRoughness * uRoughness;
+        vec3 albedo = mix(color, vec3(0.0), uMetalic);
+        vec3 fresnel = mix(vec3(0.04), color, uMetalic);
+
+        vec3 brdfValue = brdfCookTorr(L, V, N, max(roughness, 0.000001), albedo, fresnel);
+
+        result += lightValue * brdfValue;
     }
     FragColor = vec4(result, 1.0f);
 }

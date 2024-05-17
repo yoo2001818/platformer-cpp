@@ -13,7 +13,7 @@ uniform mat4 uProjection;
 void main()
 {
    gl_Position = uProjection * uView * uModel * vec4(aPosition, 1.0);
-   vNormal = normalize((uView * uModel * vec4(aNormal, 0.0)).xyz);
-   vPosition = (uView * uModel * vec4(aPosition, 1.0)).xyz;
+   vNormal = (uModel * vec4(aNormal, 0.0)).xyz;
+   vPosition = (uModel * vec4(aPosition, 1.0)).xyz;
    vTexCoord = aTexCoord;
 }

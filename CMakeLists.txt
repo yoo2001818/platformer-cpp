@@ -56,7 +56,7 @@ include_directories(${GLEW_INCLUDE_DIRS})
 
 include_directories(${PROJECT_SOURCE_DIR}/imgui)
 include_directories(${PROJECT_SOURCE_DIR}/src ${PROJECT_SOURCE_DIR}/main)
-file(GLOB IMGUI_SOURCES ${PROJECT_SOURCE_DIR}/imgui/*.cpp ${PROJECT_SOURCE_DIR}/imgui/backends/imgui_impl_opengl3.cpp)
+file(GLOB IMGUI_SOURCES ${PROJECT_SOURCE_DIR}/imgui/*.cpp ${PROJECT_SOURCE_DIR}/imgui/backends/imgui_impl_sdl2.cpp ${PROJECT_SOURCE_DIR}/imgui/backends/imgui_impl_opengl3.cpp)
 file(GLOB_RECURSE SOURCES ${PROJECT_SOURCE_DIR}/src/*.cpp ${PROJECT_SOURCE_DIR}/main/*.cpp)
 add_executable(PlatformerCpp ${SOURCES} ${IMGUI_SOURCES})
 target_link_libraries(PlatformerCpp ${SDL2_LIBRARIES})

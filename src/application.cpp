@@ -1,11 +1,13 @@
 #include "application.hpp"
 #include "SDL_timer.h"
+#include "backends/imgui_impl_opengl3.h"
+#include "backends/imgui_impl_sdl2.h"
+#include "imgui.h"
 #include <GL/glew.h>
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_events.h>
 #include <SDL2/SDL_video.h>
 #include <ctime>
-#include <iostream>
 
 using namespace platformer;
 
@@ -24,6 +26,7 @@ void application::start() {
         exit = true;
         break;
       }
+      ImGui_ImplSDL2_ProcessEvent(&event);
       this->mApplet->handle_event(*this, event);
     }
     if (exit)
@@ -71,17 +74,37 @@ int application::init() {
     return 1;
   }
 
+  IMGUI_CHECKVERSION();
+  ImGui::CreateContext();
+  ImGuiIO &io = ImGui::GetIO();
+  io.ConfigFlags |=
+      ImGuiConfigFlags_NavEnableKeyboard; // Enable Keyboard Controls
+  io.ConfigFlags |=
+      ImGuiConfigFlags_NavEnableGamepad; // Enable Gamepad Controls
+
+  ImGui_ImplSDL2_InitForOpenGL(this->mWindow, this->mGLContext);
+  ImGui_ImplOpenGL3_Init();
+
   this->mApplet->init(*this);
   return 0;
 }
 
 void application::update(float pDelta) {
+  ImGui_ImplOpenGL3_NewFrame();
+  ImGui_ImplSDL2_NewFrame();
+  ImGui::NewFrame();
+  ImGui::ShowDemoWindow();
   this->mApplet->update(*this, pDelta);
+  ImGui::Render();
+  ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
   SDL_GL_SwapWindow(this->mWindow);
 }
 
 void application::dispose() {
   this->mApplet->dispose();
+  ImGui_ImplOpenGL3_Shutdown();
+  ImGui_ImplSDL2_Shutdown();
+  ImGui::DestroyContext();
   SDL_GL_DeleteContext(this->mGLContext);
   SDL_DestroyWindow(this->mWindow);
   SDL_Quit();

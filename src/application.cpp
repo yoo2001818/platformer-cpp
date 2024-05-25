@@ -26,8 +26,11 @@ void application::start() {
         exit = true;
         break;
       }
+      ImGuiIO &io = ImGui::GetIO();
       ImGui_ImplSDL2_ProcessEvent(&event);
-      this->mApplet->handle_event(*this, event);
+      if (!io.WantCaptureMouse && !io.WantCaptureKeyboard) {
+        this->mApplet->handle_event(*this, event);
+      }
     }
     if (exit)
       break;

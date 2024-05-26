@@ -96,7 +96,6 @@ void application::update(float pDelta) {
   ImGui_ImplOpenGL3_NewFrame();
   ImGui_ImplSDL2_NewFrame();
   ImGui::NewFrame();
-  ImGui::ShowDemoWindow();
   this->mApplet->update(*this, pDelta);
   ImGui::Render();
   ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());

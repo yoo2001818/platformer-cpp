@@ -3,6 +3,7 @@
 
 #include "SDL_events.h"
 #include "application.hpp"
+#include "debug_ui.hpp"
 #include "entt/entity/fwd.hpp"
 #include "movement.hpp"
 #include "name.hpp"
@@ -32,6 +33,7 @@ private:
   transform_system mTransform;
   fps_movement_system mMovement;
   physics_system mPhysics;
+  debug_ui_system mDebugUi;
   renderer mRenderer;
 };
 }; // namespace platformer

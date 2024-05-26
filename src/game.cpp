@@ -1,4 +1,5 @@
 #include "entt/entity/fwd.hpp"
+#include "name.hpp"
 #include "physics.hpp"
 #include <fstream>
 #include <glm/geometric.hpp>
@@ -10,6 +11,7 @@
 #include "SDL_mouse.h"
 #include "SDL_video.h"
 #include "application.hpp"
+#include "debug_ui.hpp"
 #include "file.hpp"
 #include "game.hpp"
 #include "render/load.hpp"
@@ -52,6 +54,7 @@ void game::init(application &pApplication) {
 
     this->mRegistry.emplace<mesh>(cube, std::move(meshes));
     this->mRegistry.emplace<collision>(cube);
+    this->mRegistry.emplace<name>(cube, "cube");
   }
   {
     auto cube = this->mRegistry.create();
@@ -61,6 +64,7 @@ void game::init(application &pApplication) {
     mesh model = load_file_to_mesh("res/bunny.gltf");
     this->mRegistry.emplace<mesh>(cube, model);
     this->mRegistry.emplace<collision>(cube);
+    this->mRegistry.emplace<name>(cube, "bunny");
   }
   /*
   {
@@ -89,6 +93,7 @@ void game::init(application &pApplication) {
     cameraVal.far = 100.0f;
     cameraVal.fov = glm::radians(90.0f);
     this->mCamera = cam;
+    this->mRegistry.emplace<name>(cam, "camera");
   }
   {
     auto player = this->mRegistry.create();
@@ -105,6 +110,7 @@ void game::init(application &pApplication) {
     this->mRegistry.emplace<fps_movement>(player);
     this->mRegistry.emplace<physics>(player);
     this->mRegistry.emplace<collision>(player);
+    this->mRegistry.emplace<name>(player, "player");
     this->mMovement.controlling_entity(player);
     this->mPlayer = player;
   }
@@ -117,6 +123,7 @@ void game::init(application &pApplication) {
     lightVal.power = 1.0f;
     lightVal.radius = 0.1f;
     lightVal.range = 100.0f;
+    this->mRegistry.emplace<name>(light, "light");
   }
 }
 
@@ -151,6 +158,7 @@ void game::update(application &pApplication, float pDelta) {
 
   this->mMovement.update(*this, pDelta);
   this->mPhysics.update(*this, pDelta);
+  this->mDebugUi.update(*this, pDelta);
   this->mRenderer.render(*this, this->mCamera,
                          static_cast<float>(this->mWindowWidth) /
                              static_cast<float>(this->mWindowHeight));

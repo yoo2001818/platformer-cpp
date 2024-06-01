@@ -116,7 +116,7 @@ void fps_movement_system::mouse_pan(game &pGame, int pXRel, int pYRel) {
   auto yaw = movementVal.yaw();
   yaw += static_cast<float>(pXRel) / 400.0f * std::numbers::pi;
 
-  movementVal.pitch(pitch);
+  // movementVal.pitch(pitch);
   movementVal.yaw(yaw);
   movementVal.update(transformVal);
 }

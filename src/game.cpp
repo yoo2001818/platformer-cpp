@@ -111,7 +111,7 @@ void game::init(application &pApplication) {
     this->mRegistry.emplace<physics>(player);
     this->mRegistry.emplace<collision>(player);
     this->mRegistry.emplace<name>(player, "player");
-    this->mMovement.controlling_entity(player);
+    this->mMovement.body_entity(player);
     this->mPlayer = player;
   }
   {

@@ -71,9 +71,9 @@ void fps_movement_system::update_movedir(game &pGame, float pDelta) {
     return;
   direction = glm::normalize(direction);
 
-  if (this->mControllingEntity == std::nullopt)
+  if (this->mBodyEntity == std::nullopt)
     return;
-  auto &entity = this->mControllingEntity.value();
+  auto &entity = this->mBodyEntity.value();
   auto &registry = pGame.registry();
   auto &movementVal = registry.get<fps_movement>(entity);
   auto &transformVal = registry.get<transform>(entity);
@@ -87,9 +87,9 @@ void fps_movement_system::update_movedir(game &pGame, float pDelta) {
 void fps_movement_system::update_jump(game &pGame, float pDelta) {
   if (!this->mMovePressed[6])
     return;
-  if (this->mControllingEntity == std::nullopt)
+  if (this->mBodyEntity == std::nullopt)
     return;
-  auto &entity = this->mControllingEntity.value();
+  auto &entity = this->mBodyEntity.value();
   auto &registry = pGame.registry();
   auto &movementVal = registry.get<fps_movement>(entity);
   auto &transformVal = registry.get<transform>(entity);
@@ -102,9 +102,9 @@ void fps_movement_system::update_jump(game &pGame, float pDelta) {
 }
 
 void fps_movement_system::mouse_pan(game &pGame, int pXRel, int pYRel) {
-  if (this->mControllingEntity == std::nullopt)
+  if (this->mBodyEntity == std::nullopt)
     return;
-  auto &entity = this->mControllingEntity.value();
+  auto &entity = this->mBodyEntity.value();
   auto &registry = pGame.registry();
   auto &movementVal = registry.get<fps_movement>(entity);
   auto &transformVal = registry.get<transform>(entity);
@@ -176,12 +176,20 @@ void fps_movement_system::handle_key(SDL_Keycode &pKey, bool pState) {
   }
 }
 
-void fps_movement_system::controlling_entity(
+void fps_movement_system::body_entity(
     const std::optional<entt::entity> &pEntity) {
-  this->mControllingEntity = pEntity;
+  this->mBodyEntity = pEntity;
 }
 
-const std::optional<entt::entity> &
-fps_movement_system::controlling_entity() const {
-  return this->mControllingEntity;
+const std::optional<entt::entity> &fps_movement_system::body_entity() const {
+  return this->mBodyEntity;
+}
+
+void fps_movement_system::head_entity(
+    const std::optional<entt::entity> &pEntity) {
+  this->mHeadEntity = pEntity;
+}
+
+const std::optional<entt::entity> &fps_movement_system::head_entity() const {
+  return this->mHeadEntity;
 }

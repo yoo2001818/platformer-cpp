@@ -32,11 +32,15 @@ public:
   void update(game &pGame, float pDelta);
   void handle_event(game &pGame, SDL_Event &pEvent);
 
-  void controlling_entity(const std::optional<entt::entity> &pEntity);
-  const std::optional<entt::entity> &controlling_entity() const;
+  void body_entity(const std::optional<entt::entity> &pEntity);
+  const std::optional<entt::entity> &body_entity() const;
+
+  void head_entity(const std::optional<entt::entity> &pEntity);
+  const std::optional<entt::entity> &head_entity() const;
 
 private:
-  std::optional<entt::entity> mControllingEntity;
+  std::optional<entt::entity> mBodyEntity;
+  std::optional<entt::entity> mHeadEntity;
   std::bitset<7> mMovePressed;
   bool mMouseLocked = false;
   void update_movedir(game &pGame, float pDelta);

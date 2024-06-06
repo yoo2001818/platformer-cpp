@@ -27,6 +27,7 @@ private:
   entt::registry mRegistry;
   entt::entity mCamera;
   entt::entity mPlayer;
+  entt::entity mPlayerHead;
   int mWindowWidth;
   int mWindowHeight;
   name_system mName;

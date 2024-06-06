@@ -105,20 +105,30 @@ void fps_movement_system::mouse_pan(game &pGame, int pXRel, int pYRel) {
   if (this->mBodyEntity == std::nullopt)
     return;
   auto &entity = this->mBodyEntity.value();
+  auto &headEntity = this->mHeadEntity.value();
   auto &registry = pGame.registry();
-  auto &movementVal = registry.get<fps_movement>(entity);
-  auto &transformVal = registry.get<transform>(entity);
+  {
+    auto &movementVal = registry.get<fps_movement>(entity);
+    auto &transformVal = registry.get<transform>(entity);
 
-  auto pitch = movementVal.pitch();
-  pitch += static_cast<float>(pYRel) / 400.0f * std::numbers::pi;
-  pitch = std::min(static_cast<float>(std::numbers::pi) / 2.0f, pitch);
-  pitch = std::max(-static_cast<float>(std::numbers::pi) / 2.0f, pitch);
-  auto yaw = movementVal.yaw();
-  yaw += static_cast<float>(pXRel) / 400.0f * std::numbers::pi;
+    auto yaw = movementVal.yaw();
+    yaw += static_cast<float>(pXRel) / 400.0f * std::numbers::pi;
 
-  // movementVal.pitch(pitch);
-  movementVal.yaw(yaw);
-  movementVal.update(transformVal);
+    movementVal.yaw(yaw);
+    movementVal.update(transformVal);
+  }
+  {
+    auto &movementVal = registry.get<fps_movement>(headEntity);
+    auto &transformVal = registry.get<transform>(headEntity);
+
+    auto pitch = movementVal.pitch();
+    pitch += static_cast<float>(pYRel) / 400.0f * std::numbers::pi;
+    pitch = std::min(static_cast<float>(std::numbers::pi) / 2.0f, pitch);
+    pitch = std::max(-static_cast<float>(std::numbers::pi) / 2.0f, pitch);
+
+    movementVal.pitch(pitch);
+    movementVal.update(transformVal);
+  }
 }
 
 void fps_movement_system::handle_event(game &pGame, SDL_Event &pEvent) {

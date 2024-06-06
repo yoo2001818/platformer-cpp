@@ -97,22 +97,48 @@ void game::init(application &pApplication) {
   }
   {
     auto player = this->mRegistry.create();
-    auto &transformVal = this->mRegistry.emplace<transform>(player);
-    transformVal.scale(glm::vec3(0.3f, 1.0f, 0.3f));
-    transformVal.position(glm::vec3(0.0, 5.0, 0.0));
-    // transformVal.look_at(glm::vec3(0.0));
-    std::vector<mesh::mesh_pair> meshes{};
-    meshes.push_back({std::make_shared<standard_material>(
-                          glm::vec3(1.0f, 0.1f, 0.1f), 0.5f, 0.0f),
-                      std::make_shared<geometry>(geometry::make_box())});
+    {
+      auto &transformVal = this->mRegistry.emplace<transform>(player);
+      transformVal.position(glm::vec3(0.0, 5.0, 0.0));
 
-    this->mRegistry.emplace<mesh>(player, std::move(meshes));
-    this->mRegistry.emplace<fps_movement>(player);
-    this->mRegistry.emplace<physics>(player);
-    this->mRegistry.emplace<collision>(player);
-    this->mRegistry.emplace<name>(player, "player");
-    this->mMovement.body_entity(player);
-    this->mPlayer = player;
+      auto playerBody = this->mRegistry.create();
+      auto &transformBodyVal = this->mRegistry.emplace<transform>(playerBody);
+      transformBodyVal.scale(glm::vec3(0.3f, 1.0f, 0.3f));
+      transformBodyVal.parent(player);
+      std::vector<mesh::mesh_pair> meshes{};
+      meshes.push_back({std::make_shared<standard_material>(
+                            glm::vec3(1.0f, 0.1f, 0.1f), 0.5f, 0.0f),
+                        std::make_shared<geometry>(geometry::make_box())});
+
+      this->mRegistry.emplace<mesh>(playerBody, std::move(meshes));
+      this->mRegistry.emplace<name>(playerBody, "playerBody");
+
+      this->mRegistry.emplace<fps_movement>(player);
+      this->mRegistry.emplace<physics>(player);
+      this->mRegistry.emplace<collision>(player, glm::vec3(-0.15, -1.0, -0.15),
+                                         glm::vec3(0.15, 1.0, 0.15));
+      this->mRegistry.emplace<name>(player, "player");
+      this->mMovement.body_entity(player);
+      this->mPlayer = player;
+    }
+
+    auto playerHead = this->mRegistry.create();
+    {
+      auto &transformVal = this->mRegistry.emplace<transform>(playerHead);
+      transformVal.scale(glm::vec3(0.3f, 0.3f, 0.3f));
+      transformVal.position(glm::vec3(0.0, 1.0, 0.0));
+      transformVal.parent(player);
+      std::vector<mesh::mesh_pair> meshes{};
+      meshes.push_back({std::make_shared<standard_material>(
+                            glm::vec3(1.0f, 0.1f, 0.1f), 0.5f, 0.0f),
+                        std::make_shared<geometry>(geometry::make_box())});
+
+      this->mRegistry.emplace<mesh>(playerHead, std::move(meshes));
+      this->mRegistry.emplace<fps_movement>(playerHead);
+      this->mRegistry.emplace<name>(playerHead, "playerHead");
+      this->mMovement.head_entity(playerHead);
+      this->mPlayerHead = playerHead;
+    }
   }
   {
     auto light = this->mRegistry.create();

@@ -35,46 +35,27 @@ public:
   void body_entity(const std::optional<entt::entity> &pEntity);
   const std::optional<entt::entity> &body_entity() const;
 
+  void body_mesh_entity(const std::optional<entt::entity> &pEntity);
+  const std::optional<entt::entity> &body_mesh_entity() const;
+
   void head_entity(const std::optional<entt::entity> &pEntity);
   const std::optional<entt::entity> &head_entity() const;
-
-private:
-  std::optional<entt::entity> mBodyEntity;
-  std::optional<entt::entity> mHeadEntity;
-  std::bitset<7> mMovePressed;
-  bool mMouseLocked = false;
-  void update_movedir(game &pGame, float pDelta);
-  void update_jump(game &pGame, float pDelta);
-  void mouse_pan(game &pGame, int pXRel, int pYRel);
-  void handle_key(SDL_Keycode &pKey, bool pState);
-};
-
-class tps_movement {
-public:
-};
-
-class tps_movement_system {
-public:
-  void init(game &pGame);
-  void update(game &pGame, float pDelta);
-  void handle_event(game &pGame, SDL_Event &pEvent);
-
-  void controlling_entity(const std::optional<entt::entity> &pEntity);
-  const std::optional<entt::entity> &controlling_entity() const;
 
   void camera_entity(const std::optional<entt::entity> &pEntity);
   const std::optional<entt::entity> &camera_entity() const;
 
 private:
-  std::optional<entt::entity> mControllingEntity;
+  std::optional<entt::entity> mBodyMeshEntity;
+  std::optional<entt::entity> mBodyEntity;
+  std::optional<entt::entity> mHeadEntity;
   std::optional<entt::entity> mCameraEntity;
-  float mPitch = 0.0f;
-  float mYaw = 0.0f;
   std::bitset<7> mMovePressed;
   bool mMouseLocked = false;
+  bool mThirdPerson = false;
   void update_movedir(game &pGame, float pDelta);
   void update_jump(game &pGame, float pDelta);
   void mouse_pan(game &pGame, int pXRel, int pYRel);
+  void sync_camera(game &pGame);
   void handle_key(SDL_Keycode &pKey, bool pState);
 };
 } // namespace platformer

@@ -5,6 +5,7 @@
 #include "SDL_mouse.h"
 #include "game.hpp"
 #include "physics.hpp"
+#include "render/mesh.hpp"
 #include "transform.hpp"
 #include <glm/ext/matrix_transform.hpp>
 #include <glm/ext/quaternion_common.hpp>
@@ -58,6 +59,7 @@ void fps_movement_system::init(game &pGame) {
 void fps_movement_system::update(game &pGame, float pDelta) {
   this->update_movedir(pGame, pDelta);
   this->update_jump(pGame, pDelta);
+  this->sync_camera(pGame);
 }
 
 void fps_movement_system::update_movedir(game &pGame, float pDelta) {
@@ -105,7 +107,6 @@ void fps_movement_system::mouse_pan(game &pGame, int pXRel, int pYRel) {
   if (this->mBodyEntity == std::nullopt)
     return;
   auto &entity = this->mBodyEntity.value();
-  auto &headEntity = this->mHeadEntity.value();
   auto &registry = pGame.registry();
   {
     auto &movementVal = registry.get<fps_movement>(entity);
@@ -117,7 +118,8 @@ void fps_movement_system::mouse_pan(game &pGame, int pXRel, int pYRel) {
     movementVal.yaw(yaw);
     movementVal.update(transformVal);
   }
-  {
+  if (this->mHeadEntity.has_value()) {
+    auto &headEntity = this->mHeadEntity.value();
     auto &movementVal = registry.get<fps_movement>(headEntity);
     auto &transformVal = registry.get<transform>(headEntity);
 
@@ -128,6 +130,51 @@ void fps_movement_system::mouse_pan(game &pGame, int pXRel, int pYRel) {
 
     movementVal.pitch(pitch);
     movementVal.update(transformVal);
+  }
+}
+
+void fps_movement_system::sync_camera(game &pGame) {
+  if (this->mBodyEntity == std::nullopt || this->mHeadEntity == std::nullopt ||
+      this->mCameraEntity == std::nullopt)
+    return;
+  auto &bodyEntity = this->mBodyEntity.value();
+  auto &bodyMeshEntity = this->mBodyMeshEntity.value();
+  auto &headEntity = this->mHeadEntity.value();
+  auto &cameraEntity = this->mCameraEntity.value();
+  auto &registry = pGame.registry();
+
+  auto headMesh = registry.try_get<mesh>(headEntity);
+  auto bodyMesh = registry.try_get<mesh>(bodyMeshEntity);
+  auto &headTransform = registry.get<transform>(headEntity);
+  auto &cameraTransform = registry.get<transform>(cameraEntity);
+  if (this->mThirdPerson) {
+    auto &camTransform = registry.get<transform>(cameraEntity);
+    auto &playerTransform = registry.get<transform>(bodyEntity);
+    glm::vec3 eyeDir = glm::normalize(
+        glm::vec3(glm::normalize(playerTransform.matrix_world(registry) *
+                                 glm::vec4(0.0, 0.0, 1.0, 0.0))) *
+        glm::vec3(1.0f, 0.0f, 1.0f));
+    if (!std::isnan(eyeDir.x)) {
+      camTransform.position((playerTransform.position() + eyeDir * 5.0f +
+                             glm::vec3(0.0f, 2.0f, 0.0f)));
+      glm::quat quat = glm::identity<glm::quat>();
+      glm::vec3 diff = camTransform.position() - playerTransform.position();
+      quat = glm::rotate(quat, std::atan2(diff.x, diff.z),
+                         glm::vec3(0.0, 1.0, 0.0));
+      quat = glm::rotate(quat, -0.3f, glm::vec3(1.0, 0.0, 0.0));
+      camTransform.rotation(quat);
+      // camTransform.look_at(playerTransform.position());
+    }
+  } else {
+    cameraTransform.matrix_world(registry,
+                                 headTransform.matrix_world(registry));
+  }
+
+  if (headMesh != nullptr) {
+    headMesh->shouldRender(this->mThirdPerson);
+  }
+  if (bodyMesh != nullptr) {
+    bodyMesh->shouldRender(this->mThirdPerson);
   }
 }
 
@@ -183,6 +230,11 @@ void fps_movement_system::handle_key(SDL_Keycode &pKey, bool pState) {
     break;
   case SDLK_SPACE:
     this->mMovePressed[6] = pState;
+    break;
+  case SDLK_F5:
+    if (!pState) {
+      this->mThirdPerson = !this->mThirdPerson;
+    }
   }
 }
 
@@ -195,6 +247,16 @@ const std::optional<entt::entity> &fps_movement_system::body_entity() const {
   return this->mBodyEntity;
 }
 
+void fps_movement_system::body_mesh_entity(
+    const std::optional<entt::entity> &pEntity) {
+  this->mBodyMeshEntity = pEntity;
+}
+
+const std::optional<entt::entity> &
+fps_movement_system::body_mesh_entity() const {
+  return this->mBodyMeshEntity;
+}
+
 void fps_movement_system::head_entity(
     const std::optional<entt::entity> &pEntity) {
   this->mHeadEntity = pEntity;
@@ -202,4 +264,13 @@ void fps_movement_system::head_entity(
 
 const std::optional<entt::entity> &fps_movement_system::head_entity() const {
   return this->mHeadEntity;
+}
+
+void fps_movement_system::camera_entity(
+    const std::optional<entt::entity> &pEntity) {
+  this->mCameraEntity = pEntity;
+}
+
+const std::optional<entt::entity> &fps_movement_system::camera_entity() const {
+  return this->mCameraEntity;
 }

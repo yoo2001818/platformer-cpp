@@ -8,8 +8,14 @@ mesh::mesh(std::vector<mesh_pair> &&pMeshes) : mMeshes(pMeshes) {}
 
 std::vector<mesh::mesh_pair> &mesh::meshes() { return this->mMeshes; }
 
+bool mesh::shouldRender() const { return this->mShouldRender; }
+
+void mesh::shouldRender(bool mValue) { this->mShouldRender = mValue; }
+
 void mesh::render(entt::registry &pRegistry, const entt::entity &pEntity,
                   render_context_root &pRenderContextRoot) {
+  if (!this->mShouldRender)
+    return;
   auto &transformVal = pRegistry.get<transform>(pEntity);
   int index = 0;
   for (auto &[materialVal, geometryVal] : this->mMeshes) {

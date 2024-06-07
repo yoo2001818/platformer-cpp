@@ -15,12 +15,15 @@ public:
   mesh(std::vector<mesh_pair> &&pMeshes);
 
   std::vector<mesh_pair> &meshes();
+  bool shouldRender() const;
+  void shouldRender(bool mValue);
 
   void render(entt::registry &pRegistry, const entt::entity &pEntity,
               render_context_root &pRenderContextRoot);
 
 private:
   std::vector<mesh_pair> mMeshes;
+  bool mShouldRender = true;
 };
 
 }; // namespace platformer

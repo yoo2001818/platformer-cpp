@@ -38,6 +38,11 @@ standard_material::standard_material(glm::vec3 pColor, float pRoughness,
                                      float pMetalic)
     : roughness(pRoughness), metalic(pMetalic), color(pColor) {}
 
+standard_material::standard_material(std::shared_ptr<texture> pDiffuseTexture,
+                                     float pRoughness, float pMetalic)
+    : roughness(pRoughness), metalic(pMetalic), color(glm::vec3(1.0)),
+      diffuseTexture(pDiffuseTexture) {}
+
 void standard_material::render(const render_context &pContext) {
   int featureFlags = 0;
   if (this->diffuseTexture != nullptr) {

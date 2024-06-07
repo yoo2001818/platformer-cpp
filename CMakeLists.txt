@@ -55,6 +55,7 @@ include_directories(${OPENGL_INCLUDE_DIRS})
 include_directories(${GLEW_INCLUDE_DIRS})
 
 include_directories(${PROJECT_SOURCE_DIR}/imgui)
+include_directories(${PROJECT_SOURCE_DIR}/stb)
 include_directories(${PROJECT_SOURCE_DIR}/src ${PROJECT_SOURCE_DIR}/main)
 file(GLOB IMGUI_SOURCES ${PROJECT_SOURCE_DIR}/imgui/*.cpp ${PROJECT_SOURCE_DIR}/imgui/backends/imgui_impl_sdl2.cpp ${PROJECT_SOURCE_DIR}/imgui/backends/imgui_impl_opengl3.cpp)
 file(GLOB_RECURSE SOURCES ${PROJECT_SOURCE_DIR}/src/*.cpp ${PROJECT_SOURCE_DIR}/main/*.cpp)

@@ -32,6 +32,8 @@ class standard_material : public material {
 public:
   standard_material();
   standard_material(glm::vec3 pColor, float pRoughness, float pMetalic);
+  standard_material(std::shared_ptr<texture> diffuseTexture, float pRoughness,
+                    float pMetalic);
 
   virtual void render(const render_context &pContext) override;
   virtual void dispose() override;

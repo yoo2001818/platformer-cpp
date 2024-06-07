@@ -1,34 +1,27 @@
 #include "entt/entity/fwd.hpp"
 #include "name.hpp"
 #include "physics.hpp"
-#include <fstream>
+#include "render/texture.hpp"
 #include <glm/geometric.hpp>
-#include <sstream>
 #include <vector>
 #define GLM_ENABLE_EXPERIMENTAL
 #include "SDL_events.h"
-#include "SDL_keycode.h"
-#include "SDL_mouse.h"
 #include "SDL_video.h"
 #include "application.hpp"
 #include "debug_ui.hpp"
-#include "file.hpp"
 #include "game.hpp"
 #include "render/load.hpp"
 #include "render/material.hpp"
 #include "render/mesh.hpp"
 #include "transform.hpp"
 #include <GL/glew.h>
-#include <algorithm>
 #include <cmath>
 #include <glm/ext/matrix_transform.hpp>
 #include <glm/ext/quaternion_transform.hpp>
 #include <glm/fwd.hpp>
 #include <glm/gtx/quaternion.hpp>
 #include <glm/gtx/string_cast.hpp>
-#include <iostream>
 #include <memory>
-#include <numbers>
 
 using namespace platformer;
 
@@ -41,6 +34,9 @@ void game::init(application &pApplication) {
   this->mTransform.init(this->mRegistry);
   this->mMovement.init(*this);
   load_file_to_entity("res/teapotset.gltf", this->mRegistry);
+
+  auto imageTexture = std::make_shared<image_texture>("res/uv.png");
+
   for (int i = 0; i < 10; i++) {
     auto cube = this->mRegistry.create();
     auto &trans = this->mRegistry.emplace<transform>(cube);
@@ -49,7 +45,7 @@ void game::init(application &pApplication) {
 
     std::vector<mesh::mesh_pair> meshes{};
     meshes.push_back(
-        {std::make_shared<standard_material>(glm::vec3(1.0f), 0.5f, 0.0f),
+        {std::make_shared<standard_material>(imageTexture, 0.5f, 0.0f),
          std::make_shared<geometry>(geometry::make_box())});
 
     this->mRegistry.emplace<mesh>(cube, std::move(meshes));

@@ -1,10 +1,9 @@
 #include "render/texture.hpp"
-#include "SDL2/SDL_image.h"
-#include "SDL2/SDL_pixels.h"
-#include "SDL2/SDL_surface.h"
 #include <GL/glew.h>
 #include <cstdint>
 #include <stdexcept>
+#define STB_IMAGE_IMPLEMENTATION
+#include "stb_image.h"
 
 using namespace platformer;
 
@@ -58,48 +57,21 @@ void buffer_texture::init() {
                GL_UNSIGNED_BYTE, this->mBuffer.data());
 }
 
-void flip_surface(SDL_Surface *surface) {
-  SDL_LockSurface(surface);
-
-  int pitch = surface->pitch;   // row size
-  char *temp = new char[pitch]; // intermediate buffer
-  char *pixels = (char *)surface->pixels;
-
-  for (int i = 0; i < surface->h / 2; ++i) {
-    // get pointers to the two rows to swap
-    char *row1 = pixels + i * pitch;
-    char *row2 = pixels + (surface->h - i - 1) * pitch;
-
-    // swap rows
-    memcpy(temp, row1, pitch);
-    memcpy(row1, row2, pitch);
-    memcpy(row2, temp, pitch);
-  }
-
-  delete[] temp;
-
-  SDL_UnlockSurface(surface);
-}
-
 image_texture::image_texture(const std::string &pSource)
     : texture(), mSource(pSource) {}
 
 image_texture::~image_texture() {}
 
 void image_texture::init() {
-  SDL_Surface *surface = IMG_Load(this->mSource.c_str());
-  if (surface == nullptr) {
-    throw std::runtime_error(IMG_GetError());
+  stbi_set_flip_vertically_on_load(true);
+  int width, height, channels;
+  unsigned char *data = stbi_load(this->mSource.c_str(), &width, &height,
+                                  &channels, STBI_rgb_alpha);
+  if (data == nullptr) {
+    throw std::runtime_error(stbi_failure_reason());
   }
-  SDL_Surface *new_surface =
-      SDL_ConvertSurfaceFormat(surface, SDL_PIXELFORMAT_RGBA32, 0);
-  if (new_surface == nullptr) {
-    SDL_FreeSurface(surface);
-    throw std::runtime_error(SDL_GetError());
-  }
-  flip_surface(new_surface);
-  glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, new_surface->w, new_surface->h, 0,
-               GL_RGBA, GL_UNSIGNED_BYTE, new_surface->pixels);
+  glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA,
+               GL_UNSIGNED_BYTE, data);
   if (glGetError() != GL_NO_ERROR) {
     throw std::runtime_error("glGetError failed");
   }
@@ -114,6 +86,5 @@ void image_texture::init() {
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
   }
-  SDL_FreeSurface(new_surface);
-  SDL_FreeSurface(surface);
+  stbi_image_free(data);
 }

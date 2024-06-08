@@ -1,9 +1,8 @@
 #include "render/texture.hpp"
+#include "stb_image.h"
 #include <GL/glew.h>
 #include <cstdint>
 #include <stdexcept>
-#define STB_IMAGE_IMPLEMENTATION
-#include "stb_image.h"
 
 using namespace platformer;
 

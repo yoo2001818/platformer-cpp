@@ -27,8 +27,9 @@ public:
   const renderbuffer_options &options() const;
 
 private:
-  unsigned int mRenderbuffer;
+  unsigned int mRenderbuffer = -1;
   renderbuffer_options mOptions;
+  bool mIsValid = false;
 };
 
 struct framebuffer_target {
@@ -63,6 +64,7 @@ private:
   framebuffer_options mOptions;
   int mWidth;
   int mHeight;
+  bool mIsValid = false;
 };
 }; // namespace platformer
 

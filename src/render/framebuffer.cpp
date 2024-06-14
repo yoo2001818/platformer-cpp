@@ -1,5 +1,8 @@
 #include "render/framebuffer.hpp"
+#include "render/texture.hpp"
 #include <GL/glew.h>
+#include <memory>
+#include <variant>
 
 using namespace platformer;
 
@@ -7,7 +10,22 @@ renderbuffer::renderbuffer(const renderbuffer_options &pOptions)
     : mOptions(pOptions) {}
 renderbuffer::~renderbuffer() { this->dispose(); }
 
-void renderbuffer::prepare() {}
+void renderbuffer::prepare() {
+  if (this->mRenderbuffer == -1) {
+    glCreateRenderbuffers(1, &(this->mRenderbuffer));
+    glBindRenderbuffer(GL_RENDERBUFFER, this->mRenderbuffer);
+    this->mIsValid = false;
+  }
+  if (!this->mIsValid) {
+    glBindRenderbuffer(GL_RENDERBUFFER, this->mRenderbuffer);
+    auto &options = this->mOptions;
+    glRenderbufferStorage(GL_RENDERBUFFER, options.format, options.width,
+                          options.height);
+    this->mIsValid = true;
+  } else {
+    glBindRenderbuffer(GL_RENDERBUFFER, this->mRenderbuffer);
+  }
+}
 void renderbuffer::dispose() {
   if (this->mRenderbuffer == -1) {
     glDeleteRenderbuffers(1, &(this->mRenderbuffer));
@@ -28,8 +46,42 @@ framebuffer::framebuffer(const framebuffer_options &pOptions)
     : mOptions(pOptions) {}
 framebuffer::~framebuffer() { this->dispose(); }
 
-void framebuffer::bind() {}
-void framebuffer::unbind() {}
+void framebuffer::bind() {
+  if (this->mFramebuffer == -1) {
+    glCreateFramebuffers(1, &(this->mFramebuffer));
+    glBindFramebuffer(GL_FRAMEBUFFER, this->mFramebuffer);
+    this->mIsValid = false;
+  }
+  if (!this->mIsValid) {
+    auto &options = this->mOptions;
+    std::vector<unsigned int> colorAttachments;
+    int i = 0;
+    for (auto &target : options.colors) {
+      this->set_item(GL_COLOR_ATTACHMENT0 + i, target);
+      i += 1;
+      colorAttachments.push_back(GL_COLOR_ATTACHMENT0 + i);
+    }
+    if (colorAttachments.size() >= 1) {
+      glDrawBuffers(colorAttachments.size(), colorAttachments.data());
+    }
+    if (options.depth.has_value()) {
+      this->set_item(GL_DEPTH_ATTACHMENT, options.depth.value());
+    }
+    if (options.stencil.has_value()) {
+      this->set_item(GL_STENCIL_ATTACHMENT, options.stencil.value());
+    }
+    if (options.depthStencil.has_value()) {
+      this->set_item(GL_DEPTH_STENCIL_ATTACHMENT, options.depthStencil.value());
+    }
+    this->mIsValid = true;
+  }
+  glBindFramebuffer(GL_FRAMEBUFFER, this->mFramebuffer);
+  glViewport(0, 0, this->mWidth, this->mHeight);
+}
+void framebuffer::unbind() {
+  glBindFramebuffer(GL_FRAMEBUFFER, 0);
+  // TODO: Set the viewport to match the window size
+}
 void framebuffer::dispose() {
   if (this->mFramebuffer == -1) {
     glDeleteFramebuffers(1, &(this->mFramebuffer));
@@ -43,4 +95,24 @@ void framebuffer::options(const framebuffer_options &pOptions) {
 }
 const framebuffer_options &framebuffer::options() const {
   return this->mOptions;
+}
+
+void framebuffer::set_item(unsigned int mBuffer,
+                           const framebuffer_target &mTarget) {
+  if (std::holds_alternative<std::shared_ptr<texture>>(mTarget.texture)) {
+    auto &inst = std::get<std::shared_ptr<texture>>(mTarget.texture);
+    inst->prepare(0);
+    glFramebufferTexture2D(GL_FRAMEBUFFER, mBuffer,
+                           mTarget.target != 0 ? mTarget.target : GL_TEXTURE_2D,
+                           inst->mTexture, mTarget.level);
+    // TODO: Specify width and height
+  } else if (std::holds_alternative<std::shared_ptr<renderbuffer>>(
+                 mTarget.texture)) {
+    auto &inst = std::get<std::shared_ptr<renderbuffer>>(mTarget.texture);
+    inst->prepare();
+    glFramebufferRenderbuffer(GL_FRAMEBUFFER, mBuffer, GL_RENDERBUFFER,
+                              inst->mRenderbuffer);
+    this->mWidth = inst->options().width;
+    this->mHeight = inst->options().height;
+  }
 }

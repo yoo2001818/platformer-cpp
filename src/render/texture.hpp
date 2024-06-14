@@ -6,6 +6,7 @@
 #include <vector>
 
 namespace platformer {
+class framebuffer;
 class texture {
 public:
   texture();
@@ -25,6 +26,7 @@ protected:
 
 private:
   unsigned int mTexture = -1;
+  friend framebuffer;
 };
 
 class buffer_texture : public texture {

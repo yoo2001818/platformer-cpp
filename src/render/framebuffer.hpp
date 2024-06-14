@@ -7,6 +7,8 @@
 #include <variant>
 namespace platformer {
 
+class framebuffer;
+
 struct renderbuffer_options {
   int width;
   int height;
@@ -30,6 +32,7 @@ private:
   unsigned int mRenderbuffer = -1;
   renderbuffer_options mOptions;
   bool mIsValid = false;
+  friend framebuffer;
 };
 
 struct framebuffer_target {
@@ -65,6 +68,7 @@ private:
   int mWidth;
   int mHeight;
   bool mIsValid = false;
+  void set_item(unsigned int mBuffer, const framebuffer_target &mTarget);
 };
 }; // namespace platformer
 

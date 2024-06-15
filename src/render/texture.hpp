@@ -1,12 +1,26 @@
 #ifndef __RENDER_TEXTURE_HPP__
 #define __RENDER_TEXTURE_HPP__
 
+#include <GL/glew.h>
 #include <cstdint>
 #include <string>
 #include <vector>
 
 namespace platformer {
 class framebuffer;
+
+struct texture_options {
+  int magFilter = GL_LINEAR;
+  int minFilter = GL_LINEAR_MIPMAP_LINEAR;
+  int wrapS = GL_REPEAT;
+  int wrapT = GL_REPEAT;
+  int width = 0;
+  int height = 0;
+  bool mipmap = true;
+  // int format = GL_RGBA;
+  // int type = GL_UNSIGNED_BYTE;
+};
+
 class texture {
 public:
   texture();
@@ -21,10 +35,14 @@ public:
   void prepare(int pSlot);
   void dispose();
 
+  const texture_options &options() const;
+  void options(const texture_options &pOptions);
+
 protected:
   virtual void init();
 
 private:
+  texture_options mOptions;
   unsigned int mTexture = -1;
   friend framebuffer;
 };

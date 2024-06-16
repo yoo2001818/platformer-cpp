@@ -25,7 +25,6 @@ struct texture_source_buffer {
   int type = GL_UNSIGNED_BYTE;
   int width = 0;
   int height = 0;
-  // While void * would have more sense, it's quite dangerous to do that
   std::vector<std::byte> data;
 };
 
@@ -66,6 +65,10 @@ public:
 
 protected:
   virtual void init();
+  void upload(int pTarget, const texture_source &pSource,
+              texture_options &pOptions);
+  void set_options(int pTarget, const texture_options &pOptions);
+  bool mIsValid = false;
 
 private:
   texture_options mOptions{};
@@ -92,7 +95,6 @@ protected:
 
 private:
   texture_source mSource{};
-  bool mIsValid = false;
 };
 
 class texture_cube : public texture {
@@ -115,7 +117,6 @@ protected:
 
 private:
   texture_cube_source mSource{};
-  bool mIsValid = false;
 };
 
 class image_texture : public texture {

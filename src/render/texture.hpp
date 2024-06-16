@@ -2,8 +2,9 @@
 #define __RENDER_TEXTURE_HPP__
 
 #include <GL/glew.h>
-#include <cstdint>
+#include <optional>
 #include <string>
+#include <variant>
 #include <vector>
 
 namespace platformer {
@@ -17,8 +18,32 @@ struct texture_options {
   int width = 0;
   int height = 0;
   bool mipmap = true;
-  // int format = GL_RGBA;
-  // int type = GL_UNSIGNED_BYTE;
+};
+
+struct texture_source_buffer {
+  int format = GL_RGBA;
+  int type = GL_UNSIGNED_BYTE;
+  int width = 0;
+  int height = 0;
+  // While void * would have more sense, it's quite dangerous to do that
+  std::vector<std::byte> data;
+};
+
+struct texture_source_image {
+  std::string filename;
+  std::optional<std::vector<std::byte>> data;
+};
+
+typedef std::variant<texture_source_buffer, texture_source_image>
+    texture_source;
+
+struct texture_cube_source {
+  texture_source right;
+  texture_source left;
+  texture_source up;
+  texture_source down;
+  texture_source front;
+  texture_source back;
 };
 
 class texture {
@@ -26,6 +51,7 @@ public:
   texture();
   texture(const texture &pValue);
   texture(texture &&pValue);
+  texture(const texture_options &pOptions);
 
   texture &operator=(const texture &pValue);
   texture &operator=(texture &&pValue);
@@ -42,24 +68,54 @@ protected:
   virtual void init();
 
 private:
-  texture_options mOptions;
+  texture_options mOptions{};
   unsigned int mTexture = -1;
   friend framebuffer;
 };
 
-class buffer_texture : public texture {
+class texture_2d : public texture {
 public:
-  buffer_texture();
+  texture_2d();
+  texture_2d(const texture_source &pSource);
+  texture_2d(texture_source &&pSource);
+  texture_2d(const texture_source &pSource, const texture_options &pOptions);
+  texture_2d(texture_source &&pSource, const texture_options &pOptions);
 
-  virtual ~buffer_texture();
+  virtual ~texture_2d();
+
+  const texture_source &source() const;
+  void source(const texture_source &pSource);
+  void source(texture_source &&pSource);
 
 protected:
   virtual void init() override;
 
 private:
-  unsigned int mWidth;
-  unsigned int mHeight;
-  std::vector<std::uint8_t> mBuffer;
+  texture_source mSource{};
+  bool mIsValid = false;
+};
+
+class texture_cube : public texture {
+public:
+  texture_cube();
+  texture_cube(const texture_cube_source &pSource);
+  texture_cube(texture_cube_source &&pSource);
+  texture_cube(const texture_cube_source &pSource,
+               const texture_options &pOptions);
+  texture_cube(texture_cube_source &&pSource, const texture_options &pOptions);
+
+  virtual ~texture_cube();
+
+  const texture_cube_source &source() const;
+  void source(const texture_cube_source &pSource);
+  void source(texture_cube_source &&pSource);
+
+protected:
+  virtual void init() override;
+
+private:
+  texture_cube_source mSource{};
+  bool mIsValid = false;
 };
 
 class image_texture : public texture {

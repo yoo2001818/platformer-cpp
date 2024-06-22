@@ -119,7 +119,13 @@ void texture_2d::source(texture_source &&pSource) {
   this->mIsValid = false;
 }
 
-void texture_2d::init() {}
+void texture_2d::init() {
+  this->upload(GL_TEXTURE_2D, this->mSource, this->mOptions);
+  this->set_options(GL_TEXTURE_2D, this->mOptions);
+  if (this->mOptions.mipmap) {
+    this->generate_mipmap(GL_TEXTURE_2D);
+  }
+}
 
 texture_cube::texture_cube() {}
 texture_cube::texture_cube(const texture_cube_source &pSource) {}
@@ -143,7 +149,24 @@ void texture_cube::source(texture_cube_source &&pSource) {
   this->mIsValid = false;
 }
 
-void texture_cube::init() {}
+void texture_cube::init() {
+  this->upload(GL_TEXTURE_CUBE_MAP_NEGATIVE_X, this->mSource.left,
+               this->mOptions);
+  this->upload(GL_TEXTURE_CUBE_MAP_POSITIVE_X, this->mSource.right,
+               this->mOptions);
+  this->upload(GL_TEXTURE_CUBE_MAP_NEGATIVE_Y, this->mSource.down,
+               this->mOptions);
+  this->upload(GL_TEXTURE_CUBE_MAP_POSITIVE_Y, this->mSource.up,
+               this->mOptions);
+  this->upload(GL_TEXTURE_CUBE_MAP_NEGATIVE_Z, this->mSource.back,
+               this->mOptions);
+  this->upload(GL_TEXTURE_CUBE_MAP_POSITIVE_Z, this->mSource.front,
+               this->mOptions);
+  this->set_options(GL_TEXTURE_CUBE_MAP, this->mOptions);
+  if (this->mOptions.mipmap) {
+    this->generate_mipmap(GL_TEXTURE_CUBE_MAP);
+  }
+}
 
 image_texture::image_texture(const std::string &pSource)
     : texture(), mSource(pSource) {}

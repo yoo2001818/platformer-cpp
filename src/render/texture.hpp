@@ -65,6 +65,7 @@ public:
   void options(const texture_options &pOptions);
 
 protected:
+  texture_options mOptions{};
   virtual void init();
   void upload(int pTarget, const texture_source &pSource,
               texture_options &pOptions);
@@ -73,7 +74,6 @@ protected:
   bool mIsValid = false;
 
 private:
-  texture_options mOptions{};
   unsigned int mTexture = -1;
   friend framebuffer;
 };

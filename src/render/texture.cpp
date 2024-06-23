@@ -62,8 +62,14 @@ void texture::upload(int pTarget, const texture_source &pSource,
                      texture_options &pOptions) {
   if (std::holds_alternative<texture_source_buffer>(pSource)) {
     auto &source = std::get<texture_source_buffer>(pSource);
-    glTexImage2D(pTarget, 0, source.internalFormat, source.width, source.height,
-                 0, source.format, source.type, source.data.data());
+    if (source.data.has_value()) {
+      glTexImage2D(pTarget, 0, source.internalFormat, source.width,
+                   source.height, 0, source.format, source.type,
+                   source.data->data());
+    } else {
+      glTexImage2D(pTarget, 0, source.internalFormat, source.width,
+                   source.height, 0, source.format, source.type, nullptr);
+    }
   } else if (std::holds_alternative<texture_source_image>(pSource)) {
     auto &source = std::get<texture_source_image>(pSource);
     stbi_set_flip_vertically_on_load(true);

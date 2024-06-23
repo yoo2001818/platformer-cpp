@@ -36,7 +36,9 @@ private:
 };
 
 struct framebuffer_target {
-  std::variant<std::shared_ptr<renderbuffer>, std::shared_ptr<texture>> texture;
+  std::variant<std::shared_ptr<renderbuffer>,
+               std::shared_ptr<platformer::texture>>
+      texture;
   int target = 0;
   int level = 0;
 };

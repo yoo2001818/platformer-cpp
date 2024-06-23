@@ -26,7 +26,7 @@ struct texture_source_buffer {
   int type = GL_UNSIGNED_BYTE;
   int width = 0;
   int height = 0;
-  std::vector<std::byte> data;
+  std::optional<std::vector<std::byte>> data;
 };
 
 struct texture_source_image {

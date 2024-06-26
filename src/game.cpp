@@ -35,7 +35,8 @@ void game::init(application &pApplication) {
   this->mMovement.init(*this);
   load_file_to_entity("res/teapotset.gltf", this->mRegistry);
 
-  auto imageTexture = std::make_shared<image_texture>("res/uv.png");
+  auto imageTexture =
+      std::make_shared<texture_2d>(texture_source_image("res/uv.png"));
 
   for (int i = 0; i < 10; i++) {
     auto cube = this->mRegistry.create();

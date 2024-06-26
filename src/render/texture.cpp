@@ -2,6 +2,7 @@
 #include "stb_image.h"
 #include <GL/glew.h>
 #include <cstdint>
+#include <iostream>
 #include <stdexcept>
 #include <variant>
 
@@ -106,12 +107,14 @@ void texture::set_options(int pTarget, const texture_options &pOptions) {
 void texture::generate_mipmap(int pTarget) { glGenerateMipmap(pTarget); }
 
 texture_2d::texture_2d() {}
-texture_2d::texture_2d(const texture_source &pSource) {}
-texture_2d::texture_2d(texture_source &&pSource) {}
+texture_2d::texture_2d(const texture_source &pSource) : mSource(pSource) {}
+texture_2d::texture_2d(texture_source &&pSource) : mSource(pSource) {}
 texture_2d::texture_2d(const texture_source &pSource,
-                       const texture_options &pOptions) {}
+                       const texture_options &pOptions)
+    : texture(pOptions), mSource(pSource) {}
 texture_2d::texture_2d(texture_source &&pSource,
-                       const texture_options &pOptions) {}
+                       const texture_options &pOptions)
+    : texture(pOptions), mSource(pSource) {}
 
 texture_2d::~texture_2d() {}
 
@@ -134,12 +137,15 @@ void texture_2d::init() {
 }
 
 texture_cube::texture_cube() {}
-texture_cube::texture_cube(const texture_cube_source &pSource) {}
-texture_cube::texture_cube(texture_cube_source &&pSource) {}
+texture_cube::texture_cube(const texture_cube_source &pSource)
+    : mSource(pSource) {}
+texture_cube::texture_cube(texture_cube_source &&pSource) : mSource(pSource) {}
 texture_cube::texture_cube(const texture_cube_source &pSource,
-                           const texture_options &pOptions) {}
+                           const texture_options &pOptions)
+    : texture(pOptions), mSource(pSource) {}
 texture_cube::texture_cube(texture_cube_source &&pSource,
-                           const texture_options &pOptions) {}
+                           const texture_options &pOptions)
+    : texture(pOptions), mSource(pSource) {}
 
 texture_cube::~texture_cube() {}
 

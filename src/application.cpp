@@ -50,6 +50,14 @@ void application::start() {
   this->dispose();
 }
 
+void GLAPIENTRY MessageCallback(GLenum source, GLenum type, GLuint id,
+                                GLenum severity, GLsizei length,
+                                const GLchar *message, const void *userParam) {
+  fprintf(stderr, "GL: %s type = 0x%x, severity = 0x%x, message = %s\n",
+          (type == GL_DEBUG_TYPE_ERROR ? "** GL ERROR **" : ""), type, severity,
+          message);
+}
+
 int application::init() {
   std::srand(std::time(nullptr));
 
@@ -76,6 +84,9 @@ int application::init() {
   if (glewInit() != GLEW_OK) {
     return 1;
   }
+
+  glEnable(GL_DEBUG_OUTPUT);
+  glDebugMessageCallback(MessageCallback, 0);
 
   IMGUI_CHECKVERSION();
   ImGui::CreateContext();

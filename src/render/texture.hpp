@@ -67,6 +67,7 @@ public:
 protected:
   texture_options mOptions{};
   virtual void init();
+  virtual int type();
   void upload(int pTarget, const texture_source &pSource,
               texture_options &pOptions);
   void set_options(int pTarget, const texture_options &pOptions);
@@ -94,6 +95,7 @@ public:
 
 protected:
   virtual void init() override;
+  virtual int type() override;
 
 private:
   texture_source mSource{};
@@ -116,6 +118,7 @@ public:
 
 protected:
   virtual void init() override;
+  virtual int type() override;
 
 private:
   texture_cube_source mSource{};
@@ -129,6 +132,7 @@ public:
 
 protected:
   virtual void init() override;
+  virtual int type() override;
 
 private:
   std::string mSource;

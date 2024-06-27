@@ -81,7 +81,7 @@ void game::init(application &pApplication) {
     });
 
     auto material = std::make_shared<shader_material>(
-        read_file_str("res/normal.vert"), read_file_str("res/normal.frag"));
+        read_file_str("res/skybox.vert"), read_file_str("res/skybox.frag"));
     auto &uniforms = material->uniforms();
     uniforms["uTexture"] = reinterpret_cast<std::shared_ptr<texture> &>(image);
 

@@ -1,8 +1,8 @@
 #include "render/texture.hpp"
 #include "stb_image.h"
 #include <GL/glew.h>
+#include <GL/glu.h>
 #include <cstdint>
-#include <format>
 #include <stdexcept>
 #include <variant>
 
@@ -33,14 +33,16 @@ texture &texture::operator=(texture &&pValue) {
 texture::~texture() { this->dispose(); }
 
 void texture::prepare(int pSlot) {
+  auto type = this->type();
   if (this->mTexture == -1) {
-    glCreateTextures(GL_TEXTURE_2D, 1, &(this->mTexture));
     glActiveTexture(GL_TEXTURE0 + pSlot);
-    glBindTexture(GL_TEXTURE_2D, this->mTexture);
+    glGenTextures(1, &(this->mTexture));
+    glBindTexture(type, this->mTexture);
     this->mIsValid = false;
+  } else {
+    glActiveTexture(GL_TEXTURE0 + pSlot);
+    glBindTexture(type, this->mTexture);
   }
-  glActiveTexture(GL_TEXTURE0 + pSlot);
-  glBindTexture(GL_TEXTURE_2D, this->mTexture);
   if (!this->mIsValid) {
     this->init();
     this->mIsValid = true;
@@ -58,6 +60,8 @@ void texture::init() {
   glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, 1, 1, 0, GL_RGB, GL_UNSIGNED_BYTE,
                &dummy);
 }
+
+int texture::type() { return GL_TEXTURE_2D; }
 
 void texture::upload(int pTarget, const texture_source &pSource,
                      texture_options &pOptions) {
@@ -87,13 +91,19 @@ void texture::upload(int pTarget, const texture_source &pSource,
     if (data == nullptr) {
       throw std::runtime_error(stbi_failure_reason());
     }
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA,
+    glTexImage2D(pTarget, 0, GL_RGBA, width, height, 0, GL_RGBA,
                  GL_UNSIGNED_BYTE, data);
-    if (auto err = glGetError()) {
-      throw std::runtime_error(std::format("glGetError failed ({})", err));
-    }
+    stbi_image_free(data);
     pOptions.width = width;
     pOptions.height = height;
+  }
+  if (auto err = glGetError()) {
+    // This does not work correctly for some reason
+    /*
+    throw std::runtime_error(
+        std::format("texture upload failed ({})",
+                    reinterpret_cast<const char *>(gluErrorString(err))));
+                    */
   }
 }
 
@@ -136,6 +146,8 @@ void texture_2d::init() {
   }
 }
 
+int texture_2d::type() { return GL_TEXTURE_2D; }
+
 texture_cube::texture_cube() {}
 texture_cube::texture_cube(const texture_cube_source &pSource)
     : mSource(pSource) {}
@@ -162,23 +174,25 @@ void texture_cube::source(texture_cube_source &&pSource) {
 }
 
 void texture_cube::init() {
-  this->upload(GL_TEXTURE_CUBE_MAP_NEGATIVE_X, this->mSource.left,
-               this->mOptions);
   this->upload(GL_TEXTURE_CUBE_MAP_POSITIVE_X, this->mSource.right,
                this->mOptions);
-  this->upload(GL_TEXTURE_CUBE_MAP_NEGATIVE_Y, this->mSource.down,
+  this->upload(GL_TEXTURE_CUBE_MAP_NEGATIVE_X, this->mSource.left,
                this->mOptions);
   this->upload(GL_TEXTURE_CUBE_MAP_POSITIVE_Y, this->mSource.up,
                this->mOptions);
-  this->upload(GL_TEXTURE_CUBE_MAP_NEGATIVE_Z, this->mSource.back,
+  this->upload(GL_TEXTURE_CUBE_MAP_NEGATIVE_Y, this->mSource.down,
                this->mOptions);
   this->upload(GL_TEXTURE_CUBE_MAP_POSITIVE_Z, this->mSource.front,
+               this->mOptions);
+  this->upload(GL_TEXTURE_CUBE_MAP_NEGATIVE_Z, this->mSource.back,
                this->mOptions);
   this->set_options(GL_TEXTURE_CUBE_MAP, this->mOptions);
   if (this->mOptions.mipmap) {
     this->generate_mipmap(GL_TEXTURE_CUBE_MAP);
   }
 }
+
+int texture_cube::type() { return GL_TEXTURE_CUBE_MAP; }
 
 image_texture::image_texture(const std::string &pSource)
     : texture(), mSource(pSource) {}
@@ -211,3 +225,5 @@ void image_texture::init() {
   }
   stbi_image_free(data);
 }
+
+int image_texture::type() { return GL_TEXTURE_2D; }

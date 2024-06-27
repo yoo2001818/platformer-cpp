@@ -6,6 +6,7 @@
 #include "render/texture.hpp"
 #include <any>
 #include <format>
+#include <iostream>
 #include <memory>
 #include <stdexcept>
 #include <string>

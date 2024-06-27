@@ -1,6 +1,8 @@
 #include "entt/entity/fwd.hpp"
+#include "file.hpp"
 #include "name.hpp"
 #include "physics.hpp"
+#include "render/shader.hpp"
 #include "render/texture.hpp"
 #include <glm/geometric.hpp>
 #include <vector>
@@ -33,7 +35,7 @@ void game::init(application &pApplication) {
   this->mName.init(this->mRegistry);
   this->mTransform.init(this->mRegistry);
   this->mMovement.init(*this);
-  load_file_to_entity("res/teapotset.gltf", this->mRegistry);
+  // load_file_to_entity("res/teapotset.gltf", this->mRegistry);
 
   auto imageTexture =
       std::make_shared<texture_2d>(texture_source_image("res/uv.png"));
@@ -62,6 +64,34 @@ void game::init(application &pApplication) {
     this->mRegistry.emplace<mesh>(cube, model);
     this->mRegistry.emplace<collision>(cube);
     this->mRegistry.emplace<name>(cube, "bunny");
+  }
+  {
+    auto cube = this->mRegistry.create();
+
+    auto &trans = this->mRegistry.emplace<transform>(cube);
+    trans.position(glm::vec3(0.0f, 0.0f, 3.0f));
+
+    auto image = std::make_shared<texture_cube>(texture_cube_source{
+        .right = texture_source_image("res/skybox/1.png"),
+        .left = texture_source_image("res/skybox/2.png"),
+        .up = texture_source_image("res/skybox/3.png"),
+        .down = texture_source_image("res/skybox/4.png"),
+        .front = texture_source_image("res/skybox/5.png"),
+        .back = texture_source_image("res/skybox/6.png"),
+    });
+
+    auto material = std::make_shared<shader_material>(
+        read_file_str("res/normal.vert"), read_file_str("res/normal.frag"));
+    auto &uniforms = material->uniforms();
+    uniforms["uTexture"] = reinterpret_cast<std::shared_ptr<texture> &>(image);
+
+    std::vector<mesh::mesh_pair> meshes{};
+    meshes.push_back(
+        {material, std::make_shared<geometry>(geometry::make_box())});
+
+    this->mRegistry.emplace<mesh>(cube, std::move(meshes));
+    this->mRegistry.emplace<collision>(cube);
+    this->mRegistry.emplace<name>(cube, "skyboxCube");
   }
   /*
   {

@@ -2,6 +2,7 @@
 #define __RENDER_MATERIAL_HPP__
 #include "render/shader.hpp"
 #include "render/texture.hpp"
+#include <any>
 #include <glm/glm.hpp>
 #include <memory>
 #include <string>
@@ -24,8 +25,11 @@ public:
   virtual void render(const render_context &pContext) override;
   virtual void dispose() override;
 
+  std::map<std::string, std::any> &uniforms();
+
 private:
   shader mShader;
+  std::map<std::string, std::any> mUniforms;
 };
 
 class standard_material : public material {

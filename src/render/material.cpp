@@ -3,7 +3,11 @@
 #include "render/geometry.hpp"
 #include "render/render.hpp"
 #include "render/shader.hpp"
+#include "render/texture.hpp"
+#include <any>
+#include <format>
 #include <memory>
+#include <stdexcept>
 #include <string>
 
 using namespace platformer;
@@ -13,7 +17,7 @@ material::material() {}
 material::~material() {}
 
 shader_material::shader_material(std::string pVertex, std::string pFragment)
-    : mShader(pVertex, pFragment) {}
+    : mShader(pVertex, pFragment), mUniforms() {}
 
 void shader_material::render(const render_context &pContext) {
   this->mShader.prepare();
@@ -25,11 +29,43 @@ void shader_material::render(const render_context &pContext) {
                                  pContext.registry));
   this->mShader.set("uProjection",
                     pContext.camera_camera.getProjection(pContext.aspect));
+  int textureAcc = 0;
+  for (auto &[key, value] : this->mUniforms) {
+    auto &valueType = value.type();
+    if (valueType == typeid(float)) {
+      this->mShader.set(key, std::any_cast<float>(value));
+    } else if (valueType == typeid(glm::vec2)) {
+      this->mShader.set(key, std::any_cast<glm::vec2>(value));
+    } else if (valueType == typeid(glm::vec3)) {
+      this->mShader.set(key, std::any_cast<glm::vec3>(value));
+    } else if (valueType == typeid(glm::vec4)) {
+      this->mShader.set(key, std::any_cast<glm::vec4>(value));
+    } else if (valueType == typeid(glm::mat2)) {
+      this->mShader.set(key, std::any_cast<glm::mat2>(value));
+    } else if (valueType == typeid(glm::mat3)) {
+      this->mShader.set(key, std::any_cast<glm::mat3>(value));
+    } else if (valueType == typeid(glm::mat4)) {
+      this->mShader.set(key, std::any_cast<glm::mat4>(value));
+    } else if (valueType == typeid(std::shared_ptr<texture>)) {
+      auto textureVal = std::any_cast<std::shared_ptr<texture>>(value);
+      if (textureVal != nullptr) {
+        int textureId = textureAcc++;
+        textureVal->prepare(textureId);
+        this->mShader.set(key, textureId);
+      }
+    } else {
+      throw std::runtime_error(std::format("Invalid type of uniform %s", key));
+    }
+  }
   // Issue draw call
   pContext.geometry.render();
 }
 
 void shader_material::dispose() { this->mShader.dispose(); }
+
+std::map<std::string, std::any> &shader_material::uniforms() {
+  return this->mUniforms;
+}
 
 standard_material::standard_material()
     : roughness(0.5), metalic(0.0), color(glm::vec3(1.0)) {}

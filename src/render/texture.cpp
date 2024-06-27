@@ -2,7 +2,7 @@
 #include "stb_image.h"
 #include <GL/glew.h>
 #include <cstdint>
-#include <iostream>
+#include <format>
 #include <stdexcept>
 #include <variant>
 
@@ -89,8 +89,8 @@ void texture::upload(int pTarget, const texture_source &pSource,
     }
     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA,
                  GL_UNSIGNED_BYTE, data);
-    if (glGetError() != GL_NO_ERROR) {
-      throw std::runtime_error("glGetError failed");
+    if (auto err = glGetError()) {
+      throw std::runtime_error(std::format("glGetError failed ({})", err));
     }
     pOptions.width = width;
     pOptions.height = height;

@@ -1,3 +1,4 @@
+#include <vector>
 #define GLM_ENABLE_EXPERIMENTAL
 #include "render/geometry.hpp"
 #include "render/shader.hpp"
@@ -491,5 +492,43 @@ geometry geometry::make_box() {
   geom.indices({0,  1,  2,  2,  3,  0,  4,  5,  6,  6,  7,  4,
                 8,  9,  10, 10, 11, 8,  12, 13, 14, 14, 15, 12,
                 16, 17, 18, 18, 19, 16, 20, 21, 22, 22, 23, 20});
+  return geom;
+}
+
+geometry geometry::make_quad(int pHSlice, int pVSlice) {
+  geometry geom;
+  std::vector<glm::vec3> positions;
+  std::vector<glm::vec2> texCoords;
+  std::vector<unsigned int> indices;
+  // Create vertices
+  for (int y = 0; y <= pVSlice; y += 1) {
+    int yPos = y / pVSlice * 2 - 1;
+    for (int x = 0; x <= pHSlice; x += 1) {
+      float xPos = (float)x / pHSlice * 2 - 1;
+      positions.push_back({xPos, yPos, 0});
+      texCoords.push_back({(xPos + 1) / 2.0f, (yPos + 1) / 2.0f});
+    }
+  }
+  // Create indices
+  for (int y = 0; y < pVSlice; y += 1) {
+    for (int x = 0; x < pHSlice; x += 1) {
+      // Vertex indices
+      unsigned int tl = y * (pHSlice + 1) + x;
+      unsigned int tr = y * (pHSlice + 1) + x + 1;
+      unsigned int bl = (y + 1) * (pHSlice + 1) + x;
+      unsigned int br = (y + 1) * (pHSlice + 1) + x + 1;
+      // Actual index position
+      unsigned int pos = (y * pHSlice + x) * 6;
+      indices.push_back(tl);
+      indices.push_back(tr);
+      indices.push_back(br);
+      indices.push_back(br);
+      indices.push_back(bl);
+      indices.push_back(tl);
+    }
+  }
+  geom.positions(positions);
+  geom.texCoords(texCoords);
+  geom.indices(indices);
   return geom;
 }

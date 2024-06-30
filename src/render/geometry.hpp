@@ -57,6 +57,8 @@ public:
   static void calc_tangents(geometry &pGeometry);
   static geometry load_obj(std::string pFilename);
   static geometry make_box();
+  static geometry make_quad(int pHSlice, int pVSlice);
+  static geometry make_quad();
 
 private:
   unsigned int mVbo = -1;

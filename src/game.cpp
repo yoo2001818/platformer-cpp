@@ -109,6 +109,28 @@ void game::init(application &pApplication) {
     this->mRegistry.emplace<physics>(cube);
   }
   */
+  // Quad test
+  {
+    auto ent = this->mRegistry.create();
+    auto &transformVal = this->mRegistry.emplace<transform>(ent);
+    transformVal.position(glm::vec3(0.0, 3.0, -3.0));
+
+    auto image =
+        std::make_shared<texture_2d>(texture_source_image{"res/skybox/1.png"});
+
+    auto material = std::make_shared<shader_material>(
+        read_file_str("res/texturePass.vert"),
+        read_file_str("res/texturePass.frag"));
+    auto &uniforms = material->uniforms();
+    uniforms["uDiffuse"] = reinterpret_cast<std::shared_ptr<texture> &>(image);
+
+    std::vector<mesh::mesh_pair> meshes{};
+    meshes.push_back(
+        {material, std::make_shared<geometry>(geometry::make_quad())});
+
+    this->mRegistry.emplace<mesh>(ent, std::move(meshes));
+    this->mRegistry.emplace<name>(ent, "ent");
+  }
   {
     auto cam = this->mRegistry.create();
     auto &transformVal = this->mRegistry.emplace<transform>(cam);

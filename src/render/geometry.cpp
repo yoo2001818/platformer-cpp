@@ -532,3 +532,5 @@ geometry geometry::make_quad(int pHSlice, int pVSlice) {
   geom.indices(indices);
   return geom;
 }
+
+geometry geometry::make_quad() { return geometry::make_quad(1, 1); }

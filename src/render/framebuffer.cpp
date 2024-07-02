@@ -2,6 +2,7 @@
 #include "render/texture.hpp"
 #include <GL/glew.h>
 #include <memory>
+#include <stdexcept>
 #include <variant>
 
 using namespace platformer;
@@ -105,7 +106,8 @@ void framebuffer::set_item(unsigned int mBuffer,
     glFramebufferTexture2D(GL_FRAMEBUFFER, mBuffer,
                            mTarget.target != 0 ? mTarget.target : GL_TEXTURE_2D,
                            inst->mTexture, mTarget.level);
-    // TODO: Specify width and height
+    this->mWidth = inst->options().width;
+    this->mHeight = inst->options().height;
   } else if (std::holds_alternative<std::shared_ptr<renderbuffer>>(
                  mTarget.texture)) {
     auto &inst = std::get<std::shared_ptr<renderbuffer>>(mTarget.texture);
@@ -114,5 +116,7 @@ void framebuffer::set_item(unsigned int mBuffer,
                               inst->mRenderbuffer);
     this->mWidth = inst->options().width;
     this->mHeight = inst->options().height;
+  } else {
+    throw std::runtime_error("Either texture or renderbuffer must be provided");
   }
 }

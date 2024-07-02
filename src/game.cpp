@@ -2,6 +2,8 @@
 #include "file.hpp"
 #include "name.hpp"
 #include "physics.hpp"
+#include "render/framebuffer.hpp"
+#include "render/geometry.hpp"
 #include "render/shader.hpp"
 #include "render/texture.hpp"
 #include <glm/geometric.hpp>
@@ -115,8 +117,21 @@ void game::init(application &pApplication) {
     auto &transformVal = this->mRegistry.emplace<transform>(ent);
     transformVal.position(glm::vec3(0.0, 3.0, -3.0));
 
-    auto image =
-        std::make_shared<texture_2d>(texture_source_image{"res/skybox/1.png"});
+    auto image = std::make_shared<texture_2d>(
+        texture_source_buffer{.width = 256, .height = 256});
+    auto shader = std::make_shared<platformer::shader>(
+        read_file_str("res/quad.vert"), read_file_str("res/quad.frag"));
+    auto quad = geometry::make_quad();
+
+    // Try to bake image
+    framebuffer fb({.colors = {{.texture = image}}});
+    fb.bind();
+    glDisable(GL_DEPTH_TEST);
+    glDisable(GL_CULL_FACE);
+    shader->prepare();
+    quad.prepare(*shader);
+    quad.render();
+    fb.unbind();
 
     auto material = std::make_shared<shader_material>(
         read_file_str("res/texturePass.vert"),
@@ -129,7 +144,7 @@ void game::init(application &pApplication) {
         {material, std::make_shared<geometry>(geometry::make_quad())});
 
     this->mRegistry.emplace<mesh>(ent, std::move(meshes));
-    this->mRegistry.emplace<name>(ent, "ent");
+    this->mRegistry.emplace<name>(ent, "quad");
   }
   {
     auto cam = this->mRegistry.create();
@@ -205,6 +220,7 @@ void game::init(application &pApplication) {
 }
 
 void game::update(application &pApplication, float pDelta) {
+  glViewport(0, 0, this->mWindowWidth, this->mWindowHeight);
   glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
   glEnable(GL_DEPTH_TEST);

@@ -75,6 +75,8 @@ void texture::upload(int pTarget, const texture_source &pSource,
       glTexImage2D(pTarget, 0, source.internalFormat, source.width,
                    source.height, 0, source.format, source.type, nullptr);
     }
+    pOptions.width = source.width;
+    pOptions.height = source.height;
   } else if (std::holds_alternative<texture_source_image>(pSource)) {
     auto &source = std::get<texture_source_image>(pSource);
     stbi_set_flip_vertically_on_load(true);
@@ -105,6 +107,13 @@ void texture::upload(int pTarget, const texture_source &pSource,
                     reinterpret_cast<const char *>(gluErrorString(err))));
                     */
   }
+}
+
+const texture_options &texture::options() const { return this->mOptions; }
+
+void texture::options(const texture_options &pOptions) {
+  this->mOptions = pOptions;
+  this->mIsValid = false;
 }
 
 void texture::set_options(int pTarget, const texture_options &pOptions) {

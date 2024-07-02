@@ -1,4 +1,5 @@
 #include "render/framebuffer.hpp"
+#include "debug.hpp"
 #include "render/texture.hpp"
 #include <GL/glew.h>
 #include <memory>
@@ -53,14 +54,16 @@ void framebuffer::bind() {
     glBindFramebuffer(GL_FRAMEBUFFER, this->mFramebuffer);
     this->mIsValid = false;
   }
+  glBindFramebuffer(GL_FRAMEBUFFER, this->mFramebuffer);
+  glViewport(0, 0, this->mWidth, this->mHeight);
   if (!this->mIsValid) {
     auto &options = this->mOptions;
     std::vector<unsigned int> colorAttachments;
     int i = 0;
     for (auto &target : options.colors) {
       this->set_item(GL_COLOR_ATTACHMENT0 + i, target);
-      i += 1;
       colorAttachments.push_back(GL_COLOR_ATTACHMENT0 + i);
+      i += 1;
     }
     if (colorAttachments.size() >= 1) {
       glDrawBuffers(colorAttachments.size(), colorAttachments.data());
@@ -75,16 +78,19 @@ void framebuffer::bind() {
       this->set_item(GL_DEPTH_STENCIL_ATTACHMENT, options.depthStencil.value());
     }
     this->mIsValid = true;
+    DEBUG("Framebuffer {} configured ({} x {})", this->mFramebuffer,
+          this->mWidth, this->mHeight);
   }
-  glBindFramebuffer(GL_FRAMEBUFFER, this->mFramebuffer);
-  glViewport(0, 0, this->mWidth, this->mHeight);
+  DEBUG("Framebuffer {} bound", this->mFramebuffer);
 }
 void framebuffer::unbind() {
   glBindFramebuffer(GL_FRAMEBUFFER, 0);
+  DEBUG("Framebuffer {} unbound", this->mFramebuffer);
   // TODO: Set the viewport to match the window size
 }
 void framebuffer::dispose() {
   if (this->mFramebuffer == -1) {
+    DEBUG("Framebuffer {} destroyed", this->mFramebuffer);
     glDeleteFramebuffers(1, &(this->mFramebuffer));
     this->mFramebuffer = -1;
   }
@@ -103,11 +109,13 @@ void framebuffer::set_item(unsigned int mBuffer,
   if (std::holds_alternative<std::shared_ptr<texture>>(mTarget.texture)) {
     auto &inst = std::get<std::shared_ptr<texture>>(mTarget.texture);
     inst->prepare(0);
-    glFramebufferTexture2D(GL_FRAMEBUFFER, mBuffer,
-                           mTarget.target != 0 ? mTarget.target : GL_TEXTURE_2D,
-                           inst->mTexture, mTarget.level);
+    auto target = mTarget.target != 0 ? mTarget.target : GL_TEXTURE_2D;
+    glFramebufferTexture2D(GL_FRAMEBUFFER, mBuffer, target, inst->mTexture,
+                           mTarget.level);
     this->mWidth = inst->options().width;
     this->mHeight = inst->options().height;
+    DEBUG("Framebuffer {} setting buffer {:x} to texture {}",
+          this->mFramebuffer, mBuffer, inst->mTexture);
   } else if (std::holds_alternative<std::shared_ptr<renderbuffer>>(
                  mTarget.texture)) {
     auto &inst = std::get<std::shared_ptr<renderbuffer>>(mTarget.texture);
@@ -116,6 +124,8 @@ void framebuffer::set_item(unsigned int mBuffer,
                               inst->mRenderbuffer);
     this->mWidth = inst->options().width;
     this->mHeight = inst->options().height;
+    DEBUG("Framebuffer {} setting buffer {:x} to renderbuffer {}",
+          this->mFramebuffer, mBuffer, inst->mRenderbuffer);
   } else {
     throw std::runtime_error("Either texture or renderbuffer must be provided");
   }

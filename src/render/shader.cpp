@@ -1,5 +1,6 @@
 #define GLM_ENABLE_EXPERIMENTAL
 #include "render/shader.hpp"
+#include "debug.hpp"
 #include <GL/glew.h>
 #include <glm/gtc/type_ptr.hpp>
 
@@ -201,12 +202,14 @@ void shader::prepare() {
     glDeleteShader(vs);
     glDeleteShader(fs);
     this->mIsDirty = false;
+    DEBUG("Shader {} prepared", this->mProgramId);
   }
   glUseProgram(this->mProgramId);
 }
 
 void shader::dispose() {
   if (this->mProgramId != -1) {
+    DEBUG("Shader {} destroyed", this->mProgramId);
     glDeleteProgram(this->mProgramId);
     this->mProgramId = -1;
   }

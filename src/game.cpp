@@ -118,7 +118,8 @@ void game::init(application &pApplication) {
     transformVal.position(glm::vec3(0.0, 3.0, -3.0));
 
     auto image = std::make_shared<texture_2d>(
-        texture_source_buffer{.width = 256, .height = 256});
+        // texture_source_buffer{.width = 256, .height = 256});
+        texture_source_image("res/skybox/1.png"));
     auto shader = std::make_shared<platformer::shader>(
         read_file_str("res/quad.vert"), read_file_str("res/quad.frag"));
     auto quad = geometry::make_quad();
@@ -126,11 +127,13 @@ void game::init(application &pApplication) {
     // Try to bake image
     framebuffer fb({.colors = {{.texture = image}}});
     fb.bind();
+    glClearColor(1.0f, 0.0f, 0.0f, 0.0f);
+    glClear(GL_COLOR_BUFFER_BIT);
     glDisable(GL_DEPTH_TEST);
     glDisable(GL_CULL_FACE);
     shader->prepare();
     quad.prepare(*shader);
-    quad.render();
+    // quad.render();
     fb.unbind();
 
     auto material = std::make_shared<shader_material>(

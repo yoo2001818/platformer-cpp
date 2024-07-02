@@ -1,4 +1,5 @@
 #include "render/texture.hpp"
+#include "debug.hpp"
 #include "stb_image.h"
 #include <GL/glew.h>
 #include <GL/glu.h>
@@ -46,11 +47,13 @@ void texture::prepare(int pSlot) {
   if (!this->mIsValid) {
     this->init();
     this->mIsValid = true;
+    DEBUG("Texture {} initialized", this->mTexture);
   }
 }
 void texture::dispose() {
   if (this->mTexture != -1) {
     glDeleteTextures(1, &this->mTexture);
+    DEBUG("Texture {} disposed", this->mTexture);
     this->mTexture = -1;
   }
 }
@@ -71,9 +74,13 @@ void texture::upload(int pTarget, const texture_source &pSource,
       glTexImage2D(pTarget, 0, source.internalFormat, source.width,
                    source.height, 0, source.format, source.type,
                    source.data->data());
+      DEBUG("Texture {} target {} upload from buffer ({} x {})", this->mTexture,
+            pTarget, source.width, source.height);
     } else {
       glTexImage2D(pTarget, 0, source.internalFormat, source.width,
                    source.height, 0, source.format, source.type, nullptr);
+      DEBUG("Texture {} target {} upload from null ({} x {})", this->mTexture,
+            pTarget, source.width, source.height);
     }
     pOptions.width = source.width;
     pOptions.height = source.height;
@@ -98,6 +105,8 @@ void texture::upload(int pTarget, const texture_source &pSource,
     stbi_image_free(data);
     pOptions.width = width;
     pOptions.height = height;
+    DEBUG("Texture {} target {} upload from image {} ({} x {})", this->mTexture,
+          pTarget, source.filename, width, height);
   }
   if (auto err = glGetError()) {
     // This does not work correctly for some reason

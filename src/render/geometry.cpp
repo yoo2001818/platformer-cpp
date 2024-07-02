@@ -1,5 +1,6 @@
 #include <vector>
 #define GLM_ENABLE_EXPERIMENTAL
+#include "debug.hpp"
 #include "render/geometry.hpp"
 #include "render/shader.hpp"
 #include <GL/glew.h>
@@ -204,6 +205,8 @@ void geometry::prepare(shader &pShader) {
       }
     }
     this->mIsDirty = false;
+    DEBUG("Geometry {} uploaded ({} tris)", this->mVbo,
+          this->mIndices.size() / 3);
   } else {
     glBindVertexArray(this->mVao);
     if (!this->mIndices.empty()) {
@@ -238,6 +241,7 @@ void geometry::dispose() {
   }
   if (this->mVbo != -1) {
     glDeleteBuffers(1, &(this->mVbo));
+    DEBUG("Geometry {} destroyed", this->mVbo);
     this->mVbo = -1;
   }
   if (this->mEbo != -1) {

@@ -55,7 +55,6 @@ void framebuffer::bind() {
     this->mIsValid = false;
   }
   glBindFramebuffer(GL_FRAMEBUFFER, this->mFramebuffer);
-  glViewport(0, 0, this->mWidth, this->mHeight);
   if (!this->mIsValid) {
     auto &options = this->mOptions;
     std::vector<unsigned int> colorAttachments;
@@ -81,6 +80,7 @@ void framebuffer::bind() {
     DEBUG("Framebuffer {} configured ({} x {})", this->mFramebuffer,
           this->mWidth, this->mHeight);
   }
+  glViewport(0, 0, this->mWidth, this->mHeight);
   DEBUG("Framebuffer {} bound", this->mFramebuffer);
 }
 void framebuffer::unbind() {

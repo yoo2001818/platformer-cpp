@@ -53,6 +53,9 @@ void application::start() {
 void GLAPIENTRY MessageCallback(GLenum source, GLenum type, GLuint id,
                                 GLenum severity, GLsizei length,
                                 const GLchar *message, const void *userParam) {
+  if (type == GL_DEBUG_TYPE_OTHER) {
+    return;
+  }
   fprintf(stderr, "GL: %s type = 0x%x, severity = 0x%x, message = %s\n",
           (type == GL_DEBUG_TYPE_ERROR ? "** GL ERROR **" : ""), type, severity,
           message);
@@ -98,6 +101,8 @@ int application::init() {
 
   ImGui_ImplSDL2_InitForOpenGL(this->mWindow, this->mGLContext);
   ImGui_ImplOpenGL3_Init();
+
+  glFinish();
 
   this->mApplet->init(*this);
   return 0;

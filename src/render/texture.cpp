@@ -74,12 +74,12 @@ void texture::upload(int pTarget, const texture_source &pSource,
       glTexImage2D(pTarget, 0, source.internalFormat, source.width,
                    source.height, 0, source.format, source.type,
                    source.data->data());
-      DEBUG("Texture {} target {} upload from buffer ({} x {})", this->mTexture,
-            pTarget, source.width, source.height);
+      DEBUG("Texture {} target {:x} upload from buffer ({} x {})",
+            this->mTexture, pTarget, source.width, source.height);
     } else {
       glTexImage2D(pTarget, 0, source.internalFormat, source.width,
                    source.height, 0, source.format, source.type, nullptr);
-      DEBUG("Texture {} target {} upload from null ({} x {})", this->mTexture,
+      DEBUG("Texture {} target {:x} upload from null ({} x {})", this->mTexture,
             pTarget, source.width, source.height);
     }
     pOptions.width = source.width;
@@ -105,8 +105,8 @@ void texture::upload(int pTarget, const texture_source &pSource,
     stbi_image_free(data);
     pOptions.width = width;
     pOptions.height = height;
-    DEBUG("Texture {} target {} upload from image {} ({} x {})", this->mTexture,
-          pTarget, source.filename, width, height);
+    DEBUG("Texture {} target {:x} upload from image {} ({} x {})",
+          this->mTexture, pTarget, source.filename, width, height);
   }
   if (auto err = glGetError()) {
     // This does not work correctly for some reason
@@ -126,13 +126,17 @@ void texture::options(const texture_options &pOptions) {
 }
 
 void texture::set_options(int pTarget, const texture_options &pOptions) {
-  glTextureParameteri(pTarget, GL_TEXTURE_MAG_FILTER, pOptions.magFilter);
-  glTextureParameteri(pTarget, GL_TEXTURE_MIN_FILTER, pOptions.minFilter);
-  glTextureParameteri(pTarget, GL_TEXTURE_WRAP_S, pOptions.wrapS);
-  glTextureParameteri(pTarget, GL_TEXTURE_WRAP_T, pOptions.wrapT);
+  DEBUG("Texture {} target {:x} setting options", this->mTexture, pTarget);
+  glTexParameteri(pTarget, GL_TEXTURE_MAG_FILTER, pOptions.magFilter);
+  glTexParameteri(pTarget, GL_TEXTURE_MIN_FILTER, pOptions.minFilter);
+  glTexParameteri(pTarget, GL_TEXTURE_WRAP_S, pOptions.wrapS);
+  glTexParameteri(pTarget, GL_TEXTURE_WRAP_T, pOptions.wrapT);
 }
 
-void texture::generate_mipmap(int pTarget) { glGenerateMipmap(pTarget); }
+void texture::generate_mipmap(int pTarget) {
+  DEBUG("Texture {} generating mipmap", this->mTexture);
+  glGenerateMipmap(pTarget);
+}
 
 texture_2d::texture_2d() {}
 texture_2d::texture_2d(const texture_source &pSource) : mSource(pSource) {}

@@ -73,14 +73,41 @@ void game::init(application &pApplication) {
     auto &trans = this->mRegistry.emplace<transform>(cube);
     trans.position(glm::vec3(0.0f, 0.0f, 3.0f));
 
-    auto image = std::make_shared<texture_cube>(texture_cube_source{
-        .right = texture_source_image("res/skybox/1.png"),
-        .left = texture_source_image("res/skybox/2.png"),
-        .up = texture_source_image("res/skybox/3.png"),
-        .down = texture_source_image("res/skybox/4.png"),
-        .front = texture_source_image("res/skybox/5.png"),
-        .back = texture_source_image("res/skybox/6.png"),
-    });
+    auto image = std::make_shared<texture_cube>(
+        texture_cube_source{
+            texture_source_buffer{.width = 256, .height = 256},
+            texture_source_buffer{.width = 256, .height = 256},
+            texture_source_buffer{.width = 256, .height = 256},
+            texture_source_buffer{.width = 256, .height = 256},
+            texture_source_buffer{.width = 256, .height = 256},
+            texture_source_buffer{.width = 256, .height = 256},
+        },
+        texture_options{
+            .magFilter = GL_LINEAR, .minFilter = GL_LINEAR, .mipmap = false});
+    auto shader = std::make_shared<platformer::shader>(
+        read_file_str("res/quad.vert"), read_file_str("res/quad.frag"));
+    auto quad = geometry::make_quad();
+
+    // Try to bake image
+    const int targets[] = {
+        GL_TEXTURE_CUBE_MAP_POSITIVE_X, GL_TEXTURE_CUBE_MAP_NEGATIVE_X,
+        GL_TEXTURE_CUBE_MAP_POSITIVE_Y, GL_TEXTURE_CUBE_MAP_NEGATIVE_Y,
+        GL_TEXTURE_CUBE_MAP_POSITIVE_Z, GL_TEXTURE_CUBE_MAP_NEGATIVE_Z,
+    };
+    framebuffer fb({.colors = {{.texture = image,
+                                .target = GL_TEXTURE_CUBE_MAP_POSITIVE_X}}});
+    for (int i = 0; i < 6; i += 1) {
+      fb.options({.colors = {{.texture = image, .target = targets[i]}}});
+      fb.bind();
+      glClearColor(.5f, .5f, .5f, 0.0f);
+      glClear(GL_COLOR_BUFFER_BIT);
+      glDisable(GL_DEPTH_TEST);
+      glDisable(GL_CULL_FACE);
+      shader->prepare();
+      quad.prepare(*shader);
+      quad.render();
+      fb.unbind();
+    }
 
     auto material = std::make_shared<shader_material>(
         read_file_str("res/skybox.vert"), read_file_str("res/skybox.frag"));

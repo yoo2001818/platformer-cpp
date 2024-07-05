@@ -6,6 +6,8 @@
 #include "render/geometry.hpp"
 #include "render/shader.hpp"
 #include "render/texture.hpp"
+#include <glm/ext/matrix_clip_space.hpp>
+#include <glm/ext/scalar_constants.hpp>
 #include <glm/geometric.hpp>
 #include <vector>
 #define GLM_ENABLE_EXPERIMENTAL
@@ -85,7 +87,8 @@ void game::init(application &pApplication) {
         texture_options{
             .magFilter = GL_LINEAR, .minFilter = GL_LINEAR, .mipmap = false});
     auto shader = std::make_shared<platformer::shader>(
-        read_file_str("res/quad.vert"), read_file_str("res/quad.frag"));
+        read_file_str("res/skyboxgen.vert"),
+        read_file_str("res/skyboxgen.frag"));
     auto quad = geometry::make_quad();
 
     // Try to bake image
@@ -94,6 +97,25 @@ void game::init(application &pApplication) {
         GL_TEXTURE_CUBE_MAP_POSITIVE_Y, GL_TEXTURE_CUBE_MAP_NEGATIVE_Y,
         GL_TEXTURE_CUBE_MAP_POSITIVE_Z, GL_TEXTURE_CUBE_MAP_NEGATIVE_Z,
     };
+    glm::mat4 transforms[] = {
+        glm::lookAt(glm::vec3(0.0f), glm::vec3(-1.0f, 0.0f, 0.0f),
+                    glm::vec3(0.0f, -1.0f, 0.0f)),
+        glm::lookAt(glm::vec3(0.0f), glm::vec3(1.0f, 0.0f, 0.0f),
+                    glm::vec3(0.0f, -1.0f, 0.0f)),
+        glm::lookAt(glm::vec3(0.0f), glm::vec3(0.0f, 1.0f, 0.0f),
+                    glm::vec3(0.0f, 0.0f, 1.0f)),
+        glm::lookAt(glm::vec3(0.0f), glm::vec3(0.0f, -1.0f, 0.0f),
+                    glm::vec3(0.0f, 0.0f, -1.0f)),
+        glm::lookAt(glm::vec3(0.0f), glm::vec3(0.0f, 0.0f, 1.0f),
+                    glm::vec3(0.0f, -1.0f, 0.0f)),
+        glm::lookAt(glm::vec3(0.0f), glm::vec3(0.0f, 0.0f, -1.0f),
+                    glm::vec3(0.0f, -1.0f, 0.0f)),
+    };
+    for (int i = 0; i < 6; i += 1) {
+      transforms[i] = glm::perspectiveFov(glm::pi<float>() / 2.0f, 1.0f, 1.0f,
+                                          0.1f, 10.0f) *
+                      transforms[i];
+    }
     framebuffer fb({.colors = {{.texture = image,
                                 .target = GL_TEXTURE_CUBE_MAP_POSITIVE_X}}});
     for (int i = 0; i < 6; i += 1) {
@@ -104,6 +126,7 @@ void game::init(application &pApplication) {
       glDisable(GL_DEPTH_TEST);
       glDisable(GL_CULL_FACE);
       shader->prepare();
+      shader->set("uTransform", transforms[i]);
       quad.prepare(*shader);
       quad.render();
       fb.unbind();

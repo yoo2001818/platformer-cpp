@@ -73,7 +73,7 @@ void game::init(application &pApplication) {
     auto cube = this->mRegistry.create();
 
     auto &trans = this->mRegistry.emplace<transform>(cube);
-    trans.position(glm::vec3(0.0f, 0.0f, 3.0f));
+    trans.position(glm::vec3(0.0f, 1.0f, 3.0f));
 
     auto image = std::make_shared<texture_cube>(
         texture_cube_source{

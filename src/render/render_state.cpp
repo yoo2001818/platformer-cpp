@@ -133,7 +133,7 @@ void platformer::apply_render_state(render_state &from,
   }
 
   // Viewport
-  if (from.viewport != to.viewport) {
+  if (to.viewport[2] != 0 && from.viewport != to.viewport) {
     from.viewport = to.viewport;
     glViewport(from.viewport[0], from.viewport[1], from.viewport[2],
                from.viewport[3]);

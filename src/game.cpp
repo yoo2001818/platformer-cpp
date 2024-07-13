@@ -239,7 +239,7 @@ void game::init(application &pApplication) {
       this->mMovement.body_mesh_entity(playerBody);
 
       this->mRegistry.emplace<fps_movement>(player);
-      this->mRegistry.emplace<physics>(player);
+      // this->mRegistry.emplace<physics>(player);
       this->mRegistry.emplace<collision>(player, glm::vec3(-0.15, -1.0, -0.15),
                                          glm::vec3(0.15, 1.0, 0.15));
       this->mRegistry.emplace<name>(player, "player");

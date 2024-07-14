@@ -1,12 +1,10 @@
 #include "entt/entity/fwd.hpp"
-#include "file.hpp"
 #include "name.hpp"
 #include "physics.hpp"
-#include "render/framebuffer.hpp"
 #include "render/geometry.hpp"
 #include "render/gl_renderer.hpp"
 #include "render/shader.hpp"
-#include "render/texture.hpp"
+#include "scene/scene.hpp"
 #include <glm/ext/matrix_clip_space.hpp>
 #include <glm/ext/scalar_constants.hpp>
 #include <glm/geometric.hpp>
@@ -17,12 +15,10 @@
 #include "application.hpp"
 #include "debug_ui.hpp"
 #include "game.hpp"
-#include "render/load.hpp"
 #include "render/material.hpp"
 #include "render/mesh.hpp"
 #include "transform.hpp"
 #include <GL/glew.h>
-#include <cmath>
 #include <glm/ext/matrix_transform.hpp>
 #include <glm/ext/quaternion_transform.hpp>
 #include <glm/fwd.hpp>
@@ -35,176 +31,52 @@ using namespace platformer;
 game::game() : mRegistry() {}
 
 void game::init(application &pApplication) {
+  this->mApplication = &pApplication;
   SDL_GetWindowSize(pApplication.window(), &(this->mWindowWidth),
                     &(this->mWindowHeight));
   this->mName.init(this->mRegistry);
   this->mTransform.init(this->mRegistry);
   this->mMovement.init(*this);
-  // load_file_to_entity("res/teapotset.gltf", this->mRegistry);
 
-  auto imageTexture =
-      std::make_shared<texture_2d>(texture_source_image("res/uv.png"));
+  this->change_scene(scene_registry::getScenes()["bunchoftest"]);
+}
 
-  for (int i = 0; i < 10; i++) {
-    auto cube = this->mRegistry.create();
-    auto &trans = this->mRegistry.emplace<transform>(cube);
-    trans.position(glm::vec3(cos(i / 10.0f * 3.14f * 2) * 5.0f, 0.0f,
-                             sin(i / 10.0f * 3.14f * 2) * 5.0f));
+void game::update(application &pApplication, float pDelta) {
+  glViewport(0, 0, this->mWindowWidth, this->mWindowHeight);
+  glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
+  glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+  pApplication.gl_renderer().apply_render_state({
+      .cullEnabled = true,
+      .depthEnabled = true,
+  });
 
-    std::vector<mesh::mesh_pair> meshes{};
-    meshes.push_back(
-        {std::make_shared<standard_material>(imageTexture, 0.5f, 0.0f),
-         std::make_shared<geometry>(geometry::make_box())});
-
-    this->mRegistry.emplace<mesh>(cube, std::move(meshes));
-    this->mRegistry.emplace<collision>(cube);
-    this->mRegistry.emplace<name>(cube, "cube");
+  if (this->mScene != nullptr) {
+    this->mScene->update(pApplication, *this, pDelta);
   }
-  {
-    auto cube = this->mRegistry.create();
-    auto &trans = this->mRegistry.emplace<transform>(cube);
-    trans.position(glm::vec3(0.0f, 0.0f, 0.0f));
 
-    mesh model = load_file_to_mesh("res/bunny.gltf");
-    this->mRegistry.emplace<mesh>(cube, model);
-    this->mRegistry.emplace<collision>(cube);
-    this->mRegistry.emplace<name>(cube, "bunny");
+  this->mMovement.update(*this, pDelta);
+  this->mPhysics.update(*this, pDelta);
+  this->mDebugUi.update(*this, pDelta);
+  this->mRenderer.render(*this, this->mCamera,
+                         static_cast<float>(this->mWindowWidth) /
+                             static_cast<float>(this->mWindowHeight));
+}
+
+void game::dispose() {}
+
+void game::handle_event(application &pApplication, SDL_Event &pEvent) {
+  if (pEvent.type == SDL_WINDOWEVENT &&
+      pEvent.window.event == SDL_WINDOWEVENT_RESIZED) {
+    this->mWindowWidth = pEvent.window.data1;
+    this->mWindowHeight = pEvent.window.data2;
+    glViewport(0, 0, this->mWindowWidth, this->mWindowHeight);
   }
-  {
-    auto cube = this->mRegistry.create();
+  this->mMovement.handle_event(*this, pEvent);
+}
 
-    auto &trans = this->mRegistry.emplace<transform>(cube);
-    trans.position(glm::vec3(0.0f, 1.0f, 3.0f));
+entt::registry &game::registry() { return this->mRegistry; }
 
-    auto image = std::make_shared<texture_cube>(
-        texture_cube_source{
-            texture_source_buffer{.width = 256, .height = 256},
-            texture_source_buffer{.width = 256, .height = 256},
-            texture_source_buffer{.width = 256, .height = 256},
-            texture_source_buffer{.width = 256, .height = 256},
-            texture_source_buffer{.width = 256, .height = 256},
-            texture_source_buffer{.width = 256, .height = 256},
-        },
-        texture_options{
-            .magFilter = GL_LINEAR, .minFilter = GL_LINEAR, .mipmap = false});
-    auto shader = std::make_shared<platformer::shader>(
-        read_file_str("res/skyboxgen.vert"),
-        read_file_str("res/skyboxgen.frag"));
-    auto quad = geometry::make_quad();
-
-    // Try to bake image
-    const int targets[] = {
-        GL_TEXTURE_CUBE_MAP_POSITIVE_X, GL_TEXTURE_CUBE_MAP_NEGATIVE_X,
-        GL_TEXTURE_CUBE_MAP_POSITIVE_Y, GL_TEXTURE_CUBE_MAP_NEGATIVE_Y,
-        GL_TEXTURE_CUBE_MAP_POSITIVE_Z, GL_TEXTURE_CUBE_MAP_NEGATIVE_Z,
-    };
-    glm::mat4 transforms[] = {
-        glm::lookAt(glm::vec3(0.0f), glm::vec3(-1.0f, 0.0f, 0.0f),
-                    glm::vec3(0.0f, -1.0f, 0.0f)),
-        glm::lookAt(glm::vec3(0.0f), glm::vec3(1.0f, 0.0f, 0.0f),
-                    glm::vec3(0.0f, -1.0f, 0.0f)),
-        glm::lookAt(glm::vec3(0.0f), glm::vec3(0.0f, 1.0f, 0.0f),
-                    glm::vec3(0.0f, 0.0f, 1.0f)),
-        glm::lookAt(glm::vec3(0.0f), glm::vec3(0.0f, -1.0f, 0.0f),
-                    glm::vec3(0.0f, 0.0f, -1.0f)),
-        glm::lookAt(glm::vec3(0.0f), glm::vec3(0.0f, 0.0f, 1.0f),
-                    glm::vec3(0.0f, -1.0f, 0.0f)),
-        glm::lookAt(glm::vec3(0.0f), glm::vec3(0.0f, 0.0f, -1.0f),
-                    glm::vec3(0.0f, -1.0f, 0.0f)),
-    };
-    for (int i = 0; i < 6; i += 1) {
-      transforms[i] = glm::perspectiveFov(glm::pi<float>() / 2.0f, 1.0f, 1.0f,
-                                          0.1f, 10.0f) *
-                      transforms[i];
-    }
-    framebuffer fb({.colors = {{.texture = image,
-                                .target = GL_TEXTURE_CUBE_MAP_POSITIVE_X}}});
-    for (int i = 0; i < 6; i += 1) {
-      fb.options({.colors = {{.texture = image, .target = targets[i]}}});
-      fb.bind();
-      glClearColor(.5f, .5f, .5f, 0.0f);
-      glClear(GL_COLOR_BUFFER_BIT);
-      pApplication.gl_renderer().apply_render_state({
-          .cullEnabled = false,
-          .depthEnabled = false,
-      });
-      shader->prepare();
-      shader->set("uTransform", transforms[i]);
-      quad.prepare(*shader);
-      quad.render();
-      fb.unbind();
-    }
-
-    auto material = std::make_shared<shader_material>(
-        read_file_str("res/skybox.vert"), read_file_str("res/skybox.frag"));
-    auto &uniforms = material->uniforms();
-    uniforms["uTexture"] = reinterpret_cast<std::shared_ptr<texture> &>(image);
-
-    std::vector<mesh::mesh_pair> meshes{};
-    meshes.push_back(
-        {material, std::make_shared<geometry>(geometry::make_box())});
-
-    this->mRegistry.emplace<mesh>(cube, std::move(meshes));
-    this->mRegistry.emplace<collision>(cube);
-    this->mRegistry.emplace<name>(cube, "skyboxCube");
-  }
-  /*
-  {
-    auto cube = this->mRegistry.create();
-    auto &trans = this->mRegistry.emplace<transform>(cube);
-    trans.position(glm::vec3(0.5f, 3.0f, 0.5f));
-
-    std::vector<mesh::mesh_pair> meshes{};
-    meshes.push_back(
-        {std::make_shared<standard_material>(glm::vec3(1.0f), 0.5f, 0.0f),
-         std::make_shared<geometry>(geometry::make_box())});
-
-    this->mRegistry.emplace<mesh>(cube, std::move(meshes));
-    this->mRegistry.emplace<collision>(cube);
-    this->mRegistry.emplace<physics>(cube);
-  }
-  */
-  // Quad test
-  {
-    auto ent = this->mRegistry.create();
-    auto &transformVal = this->mRegistry.emplace<transform>(ent);
-    transformVal.position(glm::vec3(0.0, 3.0, -3.0));
-
-    auto image = std::make_shared<texture_2d>(
-        texture_source_buffer{.width = 256, .height = 256},
-        texture_options{
-            .magFilter = GL_LINEAR, .minFilter = GL_LINEAR, .mipmap = false});
-    auto shader = std::make_shared<platformer::shader>(
-        read_file_str("res/quad.vert"), read_file_str("res/quad.frag"));
-    auto quad = geometry::make_quad();
-
-    // Try to bake image
-    framebuffer fb({.colors = {{.texture = image}}});
-    fb.bind();
-    glClearColor(.5f, .5f, .5f, 0.0f);
-    glClear(GL_COLOR_BUFFER_BIT);
-    pApplication.gl_renderer().apply_render_state({
-        .cullEnabled = false,
-        .depthEnabled = false,
-    });
-    shader->prepare();
-    quad.prepare(*shader);
-    quad.render();
-    fb.unbind();
-
-    auto material = std::make_shared<shader_material>(
-        read_file_str("res/texturePass.vert"),
-        read_file_str("res/texturePass.frag"));
-    auto &uniforms = material->uniforms();
-    uniforms["uDiffuse"] = reinterpret_cast<std::shared_ptr<texture> &>(image);
-
-    std::vector<mesh::mesh_pair> meshes{};
-    meshes.push_back(
-        {material, std::make_shared<geometry>(geometry::make_quad())});
-
-    this->mRegistry.emplace<mesh>(ent, std::move(meshes));
-    this->mRegistry.emplace<name>(ent, "quad");
-  }
+void game::make_player() {
   {
     auto cam = this->mRegistry.create();
     auto &transformVal = this->mRegistry.emplace<transform>(cam);
@@ -265,46 +137,16 @@ void game::init(application &pApplication) {
       this->mPlayerHead = playerHead;
     }
   }
-  {
-    auto light = this->mRegistry.create();
-    auto &transformVal = this->mRegistry.emplace<transform>(light);
-    transformVal.position(glm::vec3(0.0, 10.0, 2.0));
-    auto &lightVal = this->mRegistry.emplace<platformer::light>(light);
-    lightVal.color = glm::vec3(1.0, 1.0, 1.0);
-    lightVal.power = 1.0f;
-    lightVal.radius = 0.1f;
-    lightVal.range = 100.0f;
-    this->mRegistry.emplace<name>(light, "light");
+}
+
+void game::change_scene(std::shared_ptr<scene> &pScene) {
+  if (this->mScene != nullptr) {
+    this->mScene->dispose();
+  }
+  this->mRegistry.clear();
+  this->make_player();
+  this->mScene = pScene;
+  if (this->mScene != nullptr) {
+    this->mScene->init(*(this->mApplication), *this);
   }
 }
-
-void game::update(application &pApplication, float pDelta) {
-  glViewport(0, 0, this->mWindowWidth, this->mWindowHeight);
-  glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
-  glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-  pApplication.gl_renderer().apply_render_state({
-      .cullEnabled = true,
-      .depthEnabled = true,
-  });
-
-  this->mMovement.update(*this, pDelta);
-  this->mPhysics.update(*this, pDelta);
-  this->mDebugUi.update(*this, pDelta);
-  this->mRenderer.render(*this, this->mCamera,
-                         static_cast<float>(this->mWindowWidth) /
-                             static_cast<float>(this->mWindowHeight));
-}
-
-void game::dispose() {}
-
-void game::handle_event(application &pApplication, SDL_Event &pEvent) {
-  if (pEvent.type == SDL_WINDOWEVENT &&
-      pEvent.window.event == SDL_WINDOWEVENT_RESIZED) {
-    this->mWindowWidth = pEvent.window.data1;
-    this->mWindowHeight = pEvent.window.data2;
-    glViewport(0, 0, this->mWindowWidth, this->mWindowHeight);
-  }
-  this->mMovement.handle_event(*this, pEvent);
-}
-
-entt::registry &game::registry() { return this->mRegistry; }

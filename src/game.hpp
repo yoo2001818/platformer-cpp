@@ -9,8 +9,10 @@
 #include "name.hpp"
 #include "physics.hpp"
 #include "renderer.hpp"
+#include "scene/scene.hpp"
 #include "transform.hpp"
 #include <entt/entt.hpp>
+#include <memory>
 
 namespace platformer {
 class game : public application_applet {
@@ -36,6 +38,11 @@ private:
   physics_system mPhysics;
   debug_ui_system mDebugUi;
   renderer mRenderer;
+  application *mApplication;
+  std::shared_ptr<scene> mScene;
+
+  void make_player();
+  void change_scene(std::shared_ptr<scene> &pScene);
 };
 }; // namespace platformer
 

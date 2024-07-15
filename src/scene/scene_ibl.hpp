@@ -1,11 +1,11 @@
-#ifndef __SCENE_BUNCHOFTEST__
-#define __SCENE_BUNCHOFTEST__
+#ifndef __SCENE_IBL__
+#define __SCENE_IBL__
 #include "scene.hpp"
 namespace platformer {
-class scene_bunchoftest : public scene {
+class scene_ibl : public scene {
 public:
-  scene_bunchoftest(){};
-  virtual ~scene_bunchoftest() override{};
+  scene_ibl(){};
+  virtual ~scene_ibl() override{};
 
   virtual void init(application &pApplication, game &pGame) override;
   virtual void update(application &pApplication, game &pGame,

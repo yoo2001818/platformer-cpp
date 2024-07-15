@@ -6,7 +6,12 @@ class game;
 class debug_ui_system {
 public:
   debug_ui_system();
+  void init(game &pGame);
   void update(game &pGame, float pDelta);
+
+private:
+  game *mGame;
+  int mSceneIndex;
 };
 }; // namespace platformer
 

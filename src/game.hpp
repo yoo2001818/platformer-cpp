@@ -24,6 +24,8 @@ public:
   virtual void handle_event(application &pApplication,
                             SDL_Event &pEvent) override;
   entt::registry &registry();
+  void change_scene(std::shared_ptr<scene> &pScene);
+  const std::shared_ptr<scene>& current_scene() const;
 
 private:
   entt::registry mRegistry;
@@ -42,7 +44,6 @@ private:
   std::shared_ptr<scene> mScene;
 
   void make_player();
-  void change_scene(std::shared_ptr<scene> &pScene);
 };
 }; // namespace platformer
 

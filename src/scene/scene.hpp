@@ -1,7 +1,8 @@
 #ifndef __SCENE_HPP__
 #define __SCENE_HPP__
-#include <map>
 #include <memory>
+#include <string>
+#include <vector>
 namespace platformer {
 class game;
 class application;
@@ -13,14 +14,16 @@ public:
   virtual void init(application &pApplication, game &pGame);
   virtual void update(application &pApplication, game &pGame, float pDelta);
   virtual void dispose();
+
+  virtual const std::string get_name();
 };
 
 class scene_registry {
 public:
-  static std::map<std::string, std::shared_ptr<scene>> &getScenes();
+  static std::vector<std::shared_ptr<scene>> &getScenes();
 
 private:
-  static std::map<std::string, std::shared_ptr<scene>> mScenes;
+  static std::vector<std::shared_ptr<scene>> mScenes;
 };
 } // namespace platformer
 #endif

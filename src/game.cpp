@@ -38,7 +38,7 @@ void game::init(application &pApplication) {
   this->mTransform.init(this->mRegistry);
   this->mMovement.init(*this);
 
-  this->change_scene(scene_registry::getScenes()["bunchoftest"]);
+  this->change_scene(scene_registry::getScenes()[0]);
 }
 
 void game::update(application &pApplication, float pDelta) {
@@ -149,4 +149,8 @@ void game::change_scene(std::shared_ptr<scene> &pScene) {
   if (this->mScene != nullptr) {
     this->mScene->init(*(this->mApplication), *this);
   }
+}
+
+const std::shared_ptr<scene>& game::current_scene() const {
+  return this->mScene;
 }

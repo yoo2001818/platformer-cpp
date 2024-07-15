@@ -190,3 +190,7 @@ void scene_bunchoftest::init(application &pApplication, game &pGame) {
 void scene_bunchoftest::update(application &pApplication, game &pGame,
                                float pDelta) {}
 void scene_bunchoftest::dispose() {}
+
+const std::string scene_bunchoftest::get_name() {
+  return "bunchoftest";
+}

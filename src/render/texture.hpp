@@ -64,6 +64,8 @@ public:
   const texture_options &options() const;
   void options(const texture_options &pOptions);
 
+  bool is_valid();
+
 protected:
   texture_options mOptions{};
   virtual void init();
@@ -122,20 +124,6 @@ protected:
 
 private:
   texture_cube_source mSource{};
-};
-
-class image_texture : public texture {
-public:
-  image_texture(const std::string &pSource);
-
-  virtual ~image_texture();
-
-protected:
-  virtual void init() override;
-  virtual int type() override;
-
-private:
-  std::string mSource;
 };
 } // namespace platformer
 

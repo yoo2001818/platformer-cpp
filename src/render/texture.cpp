@@ -138,6 +138,10 @@ void texture::generate_mipmap(int pTarget) {
   glGenerateMipmap(pTarget);
 }
 
+bool texture::is_valid() {
+  return this->mIsValid;
+}
+
 texture_2d::texture_2d() {}
 texture_2d::texture_2d(const texture_source &pSource) : mSource(pSource) {}
 texture_2d::texture_2d(texture_source &&pSource) : mSource(pSource) {}
@@ -215,37 +219,3 @@ void texture_cube::init() {
 }
 
 int texture_cube::type() { return GL_TEXTURE_CUBE_MAP; }
-
-image_texture::image_texture(const std::string &pSource)
-    : texture(), mSource(pSource) {}
-
-image_texture::~image_texture() {}
-
-void image_texture::init() {
-  stbi_set_flip_vertically_on_load(true);
-  int width, height, channels;
-  unsigned char *data = stbi_load(this->mSource.c_str(), &width, &height,
-                                  &channels, STBI_rgb_alpha);
-  if (data == nullptr) {
-    throw std::runtime_error(stbi_failure_reason());
-  }
-  glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA,
-               GL_UNSIGNED_BYTE, data);
-  if (glGetError() != GL_NO_ERROR) {
-    throw std::runtime_error("glGetError failed");
-  }
-  if (true) {
-    glGenerateMipmap(GL_TEXTURE_2D);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER,
-                    GL_LINEAR_MIPMAP_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-  } else {
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_BASE_LEVEL, 0);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAX_LEVEL, 0);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-  }
-  stbi_image_free(data);
-}
-
-int image_texture::type() { return GL_TEXTURE_2D; }

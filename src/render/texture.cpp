@@ -73,14 +73,15 @@ void texture::upload(int pTarget, const texture_source &pSource,
   if (std::holds_alternative<texture_source_buffer>(pSource)) {
     auto &source = std::get<texture_source_buffer>(pSource);
     if (source.data.has_value()) {
-      glTexImage2D(pTarget, 0, source.internalFormat, source.width,
-                   source.height, 0, source.format, source.type,
+      glTexImage2D(pTarget, 0, source.format.internalFormat, source.width,
+                   source.height, 0, source.format.format, source.format.type,
                    source.data->data());
       DEBUG("Texture {} target {:x} upload from buffer ({} x {})",
             this->mTexture, pTarget, source.width, source.height);
     } else {
-      glTexImage2D(pTarget, 0, source.internalFormat, source.width,
-                   source.height, 0, source.format, source.type, nullptr);
+      glTexImage2D(pTarget, 0, source.format.internalFormat, source.width,
+                   source.height, 0, source.format.format, source.format.type,
+                   nullptr);
       DEBUG("Texture {} target {:x} upload from null ({} x {})", this->mTexture,
             pTarget, source.width, source.height);
     }
@@ -90,20 +91,67 @@ void texture::upload(int pTarget, const texture_source &pSource,
     auto &source = std::get<texture_source_image>(pSource);
     stbi_set_flip_vertically_on_load(true);
     int width, height, channels;
-    unsigned char *data = nullptr;
+    int desired_channels;
+    switch (source.format.format) {
+    case GL_RGBA:
+      desired_channels = STBI_rgb_alpha;
+      break;
+    case GL_RGB:
+      desired_channels = STBI_rgb;
+      break;
+    case GL_R:
+      desired_channels = STBI_grey;
+      break;
+    case GL_RG:
+      desired_channels = STBI_grey_alpha;
+      break;
+    default:
+      throw std::runtime_error("Unsupported texture format specified");
+    }
+    void *data = nullptr;
     if (source.data.has_value()) {
-      data = stbi_load_from_memory(
-          reinterpret_cast<const unsigned char *>(source.data->data()),
-          source.data->size(), &width, &height, &channels, STBI_rgb_alpha);
+      switch (source.format.type) {
+      case GL_UNSIGNED_BYTE:
+        data = stbi_load_from_memory(
+            reinterpret_cast<const unsigned char *>(source.data->data()),
+            source.data->size(), &width, &height, &channels, desired_channels);
+        break;
+      case GL_UNSIGNED_SHORT:
+        data = stbi_load_16_from_memory(
+            reinterpret_cast<const unsigned char *>(source.data->data()),
+            source.data->size(), &width, &height, &channels, desired_channels);
+        break;
+      case GL_FLOAT:
+        data = stbi_loadf_from_memory(
+            reinterpret_cast<const unsigned char *>(source.data->data()),
+            source.data->size(), &width, &height, &channels, desired_channels);
+        break;
+      default:
+        throw std::runtime_error("Unsupported texture type specified");
+      }
     } else {
-      data = stbi_load(source.filename.c_str(), &width, &height, &channels,
-                       STBI_rgb_alpha);
+      switch (source.format.type) {
+      case GL_UNSIGNED_BYTE:
+        data = stbi_load(source.filename.c_str(), &width, &height, &channels,
+                         desired_channels);
+        break;
+      case GL_UNSIGNED_SHORT:
+        data = stbi_load_16(source.filename.c_str(), &width, &height, &channels,
+                            desired_channels);
+        break;
+      case GL_FLOAT:
+        data = stbi_loadf(source.filename.c_str(), &width, &height, &channels,
+                          desired_channels);
+        break;
+      default:
+        throw std::runtime_error("Unsupported texture type specified");
+      }
     }
     if (data == nullptr) {
       throw std::runtime_error(stbi_failure_reason());
     }
-    glTexImage2D(pTarget, 0, GL_RGBA, width, height, 0, GL_RGBA,
-                 GL_UNSIGNED_BYTE, data);
+    glTexImage2D(pTarget, 0, source.format.internalFormat, width, height, 0,
+                 source.format.format, source.format.type, data);
     stbi_image_free(data);
     pOptions.width = width;
     pOptions.height = height;

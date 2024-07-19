@@ -14,8 +14,8 @@ using namespace platformer;
 
 void scene_ibl::init(application &pApplication, game &pGame) {
   auto &registry = pGame.registry();
-  auto imageTexture =
-      std::make_shared<texture_2d>(texture_source_image("res/uv.png"));
+  auto imageTexture = std::make_shared<texture_2d>(
+      texture_source_image({.filename = "res/uv.png"}));
 
   for (int i = 0; i < 10; i++) {
     auto cube = registry.create();

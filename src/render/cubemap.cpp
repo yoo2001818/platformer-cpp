@@ -39,9 +39,7 @@ void cubemap::render() {
   }
   auto &format = this->mTextureFormat;
   texture_source_buffer texSource{
-      .format = format.format,
-      .internalFormat = format.internalFormat,
-      .type = format.type,
+      .format = format,
       .width = width,
       .height = height,
   };

@@ -27,15 +27,14 @@ struct texture_format {
 };
 
 struct texture_source_buffer {
-  int format = GL_RGBA;
-  int internalFormat = GL_RGBA;
-  int type = GL_UNSIGNED_BYTE;
+  texture_format format;
   int width = 0;
   int height = 0;
   std::optional<std::vector<std::byte>> data;
 };
 
 struct texture_source_image {
+  texture_format format;
   std::string filename;
   std::optional<std::vector<std::byte>> data;
 };

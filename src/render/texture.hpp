@@ -20,6 +20,12 @@ struct texture_options {
   bool mipmap = true;
 };
 
+struct texture_format {
+  int format = GL_RGBA;
+  int internalFormat = GL_RGBA;
+  int type = GL_UNSIGNED_BYTE;
+};
+
 struct texture_source_buffer {
   int format = GL_RGBA;
   int internalFormat = GL_RGBA;

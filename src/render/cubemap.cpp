@@ -16,6 +16,11 @@ cubemap::cubemap(const texture_options &pTextureOptions)
     : mTextureOptions(pTextureOptions),
       mTexture(std::make_shared<texture_cube>()),
       mFramebuffer(std::make_shared<framebuffer>()) {}
+cubemap::cubemap(const texture_options &pTextureOptions,
+                 const texture_format &pTextureFormat)
+    : mTextureOptions(pTextureOptions), mTextureFormat(pTextureFormat),
+      mTexture(std::make_shared<texture_cube>()),
+      mFramebuffer(std::make_shared<framebuffer>()) {}
 cubemap::~cubemap() {}
 
 std::shared_ptr<texture_cube> &cubemap::get_texture() {
@@ -32,10 +37,11 @@ void cubemap::render() {
     throw std::runtime_error(
         "cubemap width/height must be present in texture options");
   }
+  auto &format = this->mTextureFormat;
   texture_source_buffer texSource{
-      .format = GL_RGBA,
-      .internalFormat = GL_RGBA,
-      .type = GL_UNSIGNED_BYTE,
+      .format = format.format,
+      .internalFormat = format.internalFormat,
+      .type = format.type,
       .width = width,
       .height = height,
   };
@@ -92,37 +98,46 @@ void cubemap::render() {
   }
 }
 
-void cubemap::render_side(int pTarget, int pLevel, glm::mat4 &pProjection,
-                          glm::mat4 &pView) {}
+void cubemap::render_side(int pTarget, int pLevel, const glm::mat4 &pProjection,
+                          const glm::mat4 &pView) {}
 
 bool cubemap::is_rendered_per_mipmap_level() { return false; }
 
-cubemap_quad::cubemap_quad(const texture_options &pTextureOptions)
-    : cubemap(pTextureOptions), mQuad(geometry::make_quad()),
-      mShader(read_file_str("res/skyboxgen.vert"),
-              read_file_str("res/skyboxgen.frag")) {}
+cubemap_quad::cubemap_quad(const std::shared_ptr<shader> &pShader,
+                           const texture_options &pTextureOptions)
+    : cubemap(pTextureOptions), mShader(pShader), mQuad(geometry::make_quad()) {
+}
+cubemap_quad::cubemap_quad(std::shared_ptr<shader> &&pShader,
+                           const texture_options &pTextureOptions)
+    : cubemap(pTextureOptions), mShader(pShader), mQuad(geometry::make_quad()) {
+}
+cubemap_quad::cubemap_quad(const std::shared_ptr<shader> &pShader,
+                           const texture_options &pTextureOptions,
+                           const texture_format &pTextureFormat)
+    : cubemap(pTextureOptions, pTextureFormat), mShader(pShader),
+      mQuad(geometry::make_quad()) {}
+cubemap_quad::cubemap_quad(std::shared_ptr<shader> &&pShader,
+                           const texture_options &pTextureOptions,
+                           const texture_format &pTextureFormat)
+    : cubemap(pTextureOptions, pTextureFormat), mShader(pShader),
+      mQuad(geometry::make_quad()) {}
 cubemap_quad::~cubemap_quad() {}
 
-glm::mat4 inverseTranslateRotate(const glm::mat4 &m) {
-  glm::mat3 rotation = glm::mat3(m);
-  glm::mat3 invRotation = glm::transpose(rotation);
-  glm::vec3 translation = glm::vec3(m[3]);
-  glm::vec3 invTranslation = -invRotation * translation;
-  glm::mat4 invMatrix = glm::mat4(invRotation);
-  invMatrix[3] = glm::vec4(invTranslation, 1.0f);
-
-  return invMatrix;
-}
-
-void cubemap_quad::render_side(int pTarget, int pLevel, glm::mat4 &pProjection,
-                               glm::mat4 &pView) {
+void cubemap_quad::render_side(int pTarget, int pLevel,
+                               const glm::mat4 &pProjection,
+                               const glm::mat4 &pView) {
   // This is just an example, obviously it needs to be improved
   glClearColor(.5f, .5f, .5f, 0.0f);
   glClear(GL_COLOR_BUFFER_BIT);
   glDisable(GL_DEPTH_TEST);
-  this->mShader.prepare();
-  this->mQuad.prepare(this->mShader);
-  this->mShader.set("uModel", inverseTranslateRotate(pView));
+  this->mShader->prepare();
+  this->mQuad.prepare(*this->mShader);
+  this->mShader->set("uView", pView);
+  this->set_uniforms(pTarget, pLevel, pProjection, pView);
   this->mQuad.render();
   glEnable(GL_DEPTH_TEST);
 }
+
+void cubemap_quad::set_uniforms(int pTarget, int pLevel,
+                                const glm::mat4 &pProjection,
+                                const glm::mat4 &pView) {}

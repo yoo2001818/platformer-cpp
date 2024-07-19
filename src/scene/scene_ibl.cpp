@@ -6,7 +6,9 @@
 #include "render/material.hpp"
 #include "render/mesh.hpp"
 #include "render/render_state.hpp"
+#include "render/shader.hpp"
 #include "render/texture.hpp"
+#include <memory>
 
 using namespace platformer;
 
@@ -47,13 +49,16 @@ void scene_ibl::init(application &pApplication, game &pGame) {
     auto &trans = registry.emplace<transform>(cube);
     trans.position(glm::vec3(0.0f, 1.0f, 3.0f));
 
-    cubemap_quad cubemapVal{{
-        .magFilter = GL_LINEAR,
-        .minFilter = GL_LINEAR,
-        .width = 256,
-        .height = 256,
-        .mipmap = false,
-    }};
+    cubemap_quad cubemapVal{
+        std::make_shared<shader>(read_file_str("res/skyboxgen.vert"),
+                                 read_file_str("res/skyboxgen.frag")),
+        {
+            .magFilter = GL_LINEAR,
+            .minFilter = GL_LINEAR,
+            .width = 256,
+            .height = 256,
+            .mipmap = false,
+        }};
 
     auto material = std::make_shared<shader_material>(
         read_file_str("res/skybox.vert"), read_file_str("res/skybox.frag"));

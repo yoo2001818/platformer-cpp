@@ -114,8 +114,8 @@ void framebuffer::set_item(unsigned int mBuffer,
                            mTarget.level);
     this->mWidth = inst->options().width;
     this->mHeight = inst->options().height;
-    DEBUG("Framebuffer {} setting buffer {:x} to texture {}",
-          this->mFramebuffer, mBuffer, inst->mTexture);
+    DEBUG("Framebuffer {} setting buffer {:x} to texture {} ({:x})",
+          this->mFramebuffer, mBuffer, inst->mTexture, target);
   } else if (std::holds_alternative<std::shared_ptr<renderbuffer>>(
                  mTarget.texture)) {
     auto &inst = std::get<std::shared_ptr<renderbuffer>>(mTarget.texture);

@@ -60,6 +60,7 @@ public:
 
   void prepare(int pSlot);
   void dispose();
+  void generate_mipmaps();
 
   const texture_options &options() const;
   void options(const texture_options &pOptions);

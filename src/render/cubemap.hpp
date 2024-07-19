@@ -1,6 +1,8 @@
 #ifndef __CUBEMAP_HPP__
 #define __CUBEMAP_HPP__
 #include "framebuffer.hpp"
+#include "geometry.hpp"
+#include "shader.hpp"
 #include "texture.hpp"
 #include <glm/glm.hpp>
 #include <memory>
@@ -11,13 +13,14 @@ public:
   cubemap(const texture_options &pTextureOptions);
   virtual ~cubemap();
 
-  texture_cube &getTexture();
+  std::shared_ptr<texture_cube> &get_texture();
 
   virtual void render();
 
 protected:
-  virtual void renderSide(int pTarget, glm::mat4 &pProjection,
-                          glm::mat4 &pView);
+  virtual void render_side(int pTarget, int pLevel, glm::mat4 &pProjection,
+                           glm::mat4 &pView);
+  virtual bool is_rendered_per_mipmap_level();
 
   texture_options mTextureOptions;
   std::shared_ptr<texture_cube> mTexture;
@@ -30,8 +33,11 @@ public:
   virtual ~cubemap_quad();
 
 protected:
-  virtual void renderSide(int pTarget, glm::mat4 &pProjection,
-                          glm::mat4 &pView) override;
+  virtual void render_side(int pTarget, int pLevel, glm::mat4 &pProjection,
+                           glm::mat4 &pView) override;
+
+  geometry mQuad;
+  shader mShader;
 };
 } // namespace platformer
 #endif

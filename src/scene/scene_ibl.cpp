@@ -1,8 +1,11 @@
 #include "scene_ibl.hpp"
 #include "application.hpp"
+#include "file.hpp"
 #include "game.hpp"
+#include "render/cubemap.hpp"
 #include "render/material.hpp"
 #include "render/mesh.hpp"
+#include "render/render_state.hpp"
 #include "render/texture.hpp"
 
 using namespace platformer;
@@ -38,11 +41,36 @@ void scene_ibl::init(application &pApplication, game &pGame) {
     lightVal.range = 100.0f;
     registry.emplace<name>(light, "light");
   }
+  {
+    auto cube = registry.create();
+
+    auto &trans = registry.emplace<transform>(cube);
+    trans.position(glm::vec3(0.0f, 1.0f, 3.0f));
+
+    cubemap_quad cubemapVal{{
+        .magFilter = GL_LINEAR,
+        .minFilter = GL_LINEAR,
+        .width = 256,
+        .height = 256,
+        .mipmap = false,
+    }};
+
+    auto material = std::make_shared<shader_material>(
+        read_file_str("res/skybox.vert"), read_file_str("res/skybox.frag"));
+    auto &uniforms = material->uniforms();
+    uniforms["uTexture"] =
+        reinterpret_cast<std::shared_ptr<texture> &>(cubemapVal.get_texture());
+
+    std::vector<mesh::mesh_pair> meshes{};
+    meshes.push_back(
+        {material, std::make_shared<geometry>(geometry::make_box())});
+
+    registry.emplace<mesh>(cube, std::move(meshes));
+    registry.emplace<collision>(cube);
+    registry.emplace<name>(cube, "skyboxCube");
+  }
 }
-void scene_ibl::update(application &pApplication, game &pGame,
-                               float pDelta) {}
+void scene_ibl::update(application &pApplication, game &pGame, float pDelta) {}
 void scene_ibl::dispose() {}
 
-const std::string scene_ibl::get_name() {
-  return "ibl";
-}
+const std::string scene_ibl::get_name() { return "ibl"; }

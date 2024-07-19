@@ -58,6 +58,8 @@ void texture::dispose() {
   }
 }
 
+void texture::generate_mipmaps() { this->generate_mipmap(this->type()); }
+
 void texture::init() {
   uint8_t dummy[3] = {255, 0, 255};
   glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, 1, 1, 0, GL_RGB, GL_UNSIGNED_BYTE,
@@ -138,9 +140,7 @@ void texture::generate_mipmap(int pTarget) {
   glGenerateMipmap(pTarget);
 }
 
-bool texture::is_valid() {
-  return this->mIsValid;
-}
+bool texture::is_valid() { return this->mIsValid; }
 
 texture_2d::texture_2d() {}
 texture_2d::texture_2d(const texture_source &pSource) : mSource(pSource) {}

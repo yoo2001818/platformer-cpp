@@ -25,7 +25,7 @@ public:
                             SDL_Event &pEvent) override;
   entt::registry &registry();
   void change_scene(std::shared_ptr<scene> &pScene);
-  const std::shared_ptr<scene>& current_scene() const;
+  const std::shared_ptr<scene> &current_scene() const;
 
 private:
   entt::registry mRegistry;

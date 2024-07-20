@@ -57,10 +57,12 @@ void scene_ibl::init(application &pApplication, game &pGame) {
                                       },
                                   .filename = "res/skybox.hdr"})),
         {.magFilter = GL_LINEAR,
-         .minFilter = GL_LINEAR,
-         .width = 256,
-         .height = 256,
-         .mipmap = false},
+         .minFilter = GL_LINEAR_MIPMAP_LINEAR,
+         .wrapS = GL_CLAMP_TO_EDGE,
+         .wrapT = GL_CLAMP_TO_EDGE,
+         .width = 1024,
+         .height = 1024,
+         .mipmap = true},
         {.type = GL_FLOAT}};
 
     auto material = std::make_shared<shader_material>(
@@ -71,11 +73,11 @@ void scene_ibl::init(application &pApplication, game &pGame) {
 
     std::vector<mesh::mesh_pair> meshes{};
     meshes.push_back(
-        {material, std::make_shared<geometry>(geometry::make_box())});
+        {material, std::make_shared<geometry>(geometry::make_quad())});
 
     registry.emplace<mesh>(cube, std::move(meshes));
     registry.emplace<collision>(cube);
-    registry.emplace<name>(cube, "skyboxCube");
+    registry.emplace<name>(cube, "skybox");
   }
 }
 void scene_ibl::update(application &pApplication, game &pGame, float pDelta) {}

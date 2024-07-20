@@ -93,6 +93,7 @@ void cubemap::render() {
   }
   // Finalize the cubemap (generate mipmap, etc)
   if (!renderedPerMipmapLevel && this->mTextureOptions.mipmap) {
+    this->mTexture->prepare(0);
     this->mTexture->generate_mipmaps();
   }
 }

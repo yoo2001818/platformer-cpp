@@ -6,7 +6,6 @@
 #include "render/texture.hpp"
 #include <any>
 #include <format>
-#include <iostream>
 #include <memory>
 #include <stdexcept>
 #include <string>
@@ -30,6 +29,11 @@ void shader_material::render(const render_context &pContext) {
                                  pContext.registry));
   this->mShader.set("uProjection",
                     pContext.camera_camera.getProjection(pContext.aspect));
+  this->mShader.set("uInverseView",
+                    pContext.camera_transform.matrix_world(pContext.registry));
+  this->mShader.set(
+      "uInverseProjection",
+      glm::inverse(pContext.camera_camera.getProjection(pContext.aspect)));
   int textureAcc = 0;
   for (auto &[key, value] : this->mUniforms) {
     auto &valueType = value.type();

@@ -4,7 +4,6 @@ out vec4 FragColor;
 uniform sampler2D uTexture;
 
 const vec2 invAtan = vec2(0.1591, 0.3183);
-
 void main()
 {
   vec3 dir = normalize(vPosition);

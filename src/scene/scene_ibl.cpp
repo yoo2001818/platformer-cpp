@@ -49,16 +49,19 @@ void scene_ibl::init(application &pApplication, game &pGame) {
     auto &trans = registry.emplace<transform>(cube);
     trans.position(glm::vec3(0.0f, 1.0f, 3.0f));
 
-    cubemap_quad cubemapVal{
-        std::make_shared<shader>(read_file_str("res/skyboxgen.vert"),
-                                 read_file_str("res/skyboxgen.frag")),
-        {
-            .magFilter = GL_LINEAR,
-            .minFilter = GL_LINEAR,
-            .width = 256,
-            .height = 256,
-            .mipmap = false,
-        }};
+    cubemap_equirectangular cubemapVal{
+        std::make_shared<texture_2d>(
+            texture_source_image({.format =
+                                      {
+                                          .type = GL_FLOAT,
+                                      },
+                                  .filename = "res/skybox.hdr"})),
+        {.magFilter = GL_LINEAR,
+         .minFilter = GL_LINEAR,
+         .width = 256,
+         .height = 256,
+         .mipmap = false},
+        {.type = GL_FLOAT}};
 
     auto material = std::make_shared<shader_material>(
         read_file_str("res/skybox.vert"), read_file_str("res/skybox.frag"));

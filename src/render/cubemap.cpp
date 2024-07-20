@@ -1,6 +1,7 @@
 #include "cubemap.hpp"
 #include "file.hpp"
 #include "render/framebuffer.hpp"
+#include "render/shader.hpp"
 #include "render/texture.hpp"
 #include <algorithm>
 #include <cmath>
@@ -139,3 +140,29 @@ void cubemap_quad::render_side(int pTarget, int pLevel,
 void cubemap_quad::set_uniforms(int pTarget, int pLevel,
                                 const glm::mat4 &pProjection,
                                 const glm::mat4 &pView) {}
+
+cubemap_equirectangular::cubemap_equirectangular(
+    const std::shared_ptr<texture> &pOriginalTexture,
+    const texture_options &pTextureOptions)
+    : cubemap_quad(std::make_shared<shader>(
+                       read_file_str("res/skyboxgen.vert"),
+                       read_file_str("res/skyboxgen_equirectangular.frag")),
+                   pTextureOptions),
+      mOriginalTexture(pOriginalTexture) {}
+
+cubemap_equirectangular::cubemap_equirectangular(
+    const std::shared_ptr<texture> &pOriginalTexture,
+    const texture_options &pTextureOptions,
+    const texture_format &pTextureFormat)
+    : cubemap_quad(std::make_shared<shader>(
+                       read_file_str("res/skyboxgen.vert"),
+                       read_file_str("res/skyboxgen_equirectangular.frag")),
+                   pTextureOptions, pTextureFormat),
+      mOriginalTexture(pOriginalTexture) {}
+
+void cubemap_equirectangular::set_uniforms(int pTarget, int pLevel,
+                                           const glm::mat4 &pProjection,
+                                           const glm::mat4 &pView) {
+  this->mOriginalTexture->prepare(1);
+  this->mShader->set("uTexture", 1);
+}

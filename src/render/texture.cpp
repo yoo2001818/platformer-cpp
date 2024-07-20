@@ -160,11 +160,9 @@ void texture::upload(int pTarget, const texture_source &pSource,
   }
   if (auto err = glGetError()) {
     // This does not work correctly for some reason
-    /*
     throw std::runtime_error(
         std::format("texture upload failed ({})",
                     reinterpret_cast<const char *>(gluErrorString(err))));
-                    */
   }
 }
 

@@ -58,7 +58,20 @@ protected:
   std::shared_ptr<shader> mShader;
 };
 
-class cubemap_equirectangular : public cubemap_quad {};
+class cubemap_equirectangular : public cubemap_quad {
+public:
+  cubemap_equirectangular(const std::shared_ptr<texture> &pOriginalTexture,
+                          const texture_options &pTextureOptions);
+  cubemap_equirectangular(const std::shared_ptr<texture> &pOriginalTexture,
+                          const texture_options &pTextureOptions,
+                          const texture_format &pTextureFormat);
+
+protected:
+  virtual void set_uniforms(int pTarget, int pLevel,
+                            const glm::mat4 &pProjection,
+                            const glm::mat4 &pView) override;
+  std::shared_ptr<texture> mOriginalTexture;
+};
 
 } // namespace platformer
 #endif

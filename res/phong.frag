@@ -169,7 +169,7 @@ void main()
     vec3 color = uColor;
     #endif
     vec3 result = vec3(0.0);
-    vec3 ambient = vec3(0.1);
+    vec3 ambient = vec3(0.0);
     result += ambient * color;
     vec3 normal = normalize(vNormal);
     for (int i = 0; i < 8; i += 1) {
@@ -203,5 +203,7 @@ void main()
 
         result += lightValue * brdfValue;
     }
-    FragColor = vec4(result, 1.0f);
+    // TODO: Tonemapping functions
+    vec3 tonemappedColor = pow(result, vec3(1.0 / 2.2));
+    FragColor = vec4(tonemappedColor, 1.0f);
 }

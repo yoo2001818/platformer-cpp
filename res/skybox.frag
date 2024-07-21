@@ -10,6 +10,8 @@ void main()
     viewPos /= viewPos.w;
     vec3 dir = (uInverseView * vec4(normalize(viewPos.xyz), 0.0)).xyz;
     vec3 color = texture(uTexture, dir).rgb;
-    FragColor = vec4(color, 1.0f);
+    // TODO: Tonemapping functions
+    vec3 tonemappedColor = pow(color, vec3(1.0 / 2.2));
+    FragColor = vec4(tonemappedColor, 1.0f);
 }
 

@@ -1,5 +1,4 @@
 #include "render/material.hpp"
-#include "file.hpp"
 #include "render/geometry.hpp"
 #include "render/render.hpp"
 #include "render/shader.hpp"
@@ -9,6 +8,7 @@
 #include <memory>
 #include <stdexcept>
 #include <string>
+#include <vector>
 
 using namespace platformer;
 
@@ -91,21 +91,13 @@ void standard_material::render(const render_context &pContext) {
   }
   auto shaderVal = pContext.asset_manager.get<std::shared_ptr<shader>>(
       "standard_material:" + std::to_string(featureFlags), [&]() {
-        // TODO: We have to dynamically choose which shader to use, and possibly
-        // use #define to determine the feature flags. This also needs to be
-        // shared between instances of standard_material, necessitating some
-        // kind of asset management.
-        auto vert = read_file_str("res/phong.vert");
-        auto frag = read_file_str("res/phong.frag");
-        int vertPos = vert.find('\n');
-        int fragPos = frag.find('\n');
-        std::string defines = "";
+        std::vector<std::string> defines;
         if (featureFlags & 1) {
-          defines += "#define USE_DIFFUSE_TEXTURE\n";
+          defines.push_back("USE_DIFFUSE_TEXTURE");
         }
-        vert = vert.substr(0, fragPos + 1) + defines + vert.substr(fragPos + 1);
-        frag = frag.substr(0, fragPos + 1) + defines + frag.substr(fragPos + 1);
-        return std::make_shared<shader>(vert, frag);
+
+        return std::make_shared<file_shader>("res/phong.vert", "res/phong.frag",
+                                             defines);
       });
   shaderVal->prepare();
   pContext.geometry.prepare(*shaderVal);

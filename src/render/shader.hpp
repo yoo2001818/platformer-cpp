@@ -4,6 +4,7 @@
 #include <glm/fwd.hpp>
 #include <glm/glm.hpp>
 #include <string>
+#include <vector>
 namespace platformer {
 class geometry;
 
@@ -58,6 +59,8 @@ private:
 class file_shader : public shader {
 public:
   file_shader(const std::string &pVertexPath, const std::string &pFragmentPath);
+  file_shader(const std::string &pVertexPath, const std::string &pFragmentPath,
+              const std::vector<std::string> &pDefines);
 };
 
 } // namespace platformer

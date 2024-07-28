@@ -224,3 +224,13 @@ file_shader::file_shader(const std::string &pVertexPath,
   this->vertex(vertex.get());
   this->fragment(fragment.get());
 }
+
+file_shader::file_shader(const std::string &pVertexPath,
+                         const std::string &pFragmentPath,
+                         const std::vector<std::string> &pDefines)
+    : shader() {
+  shader_preprocessor vertex(pVertexPath, pDefines);
+  shader_preprocessor fragment(pFragmentPath, pDefines);
+  this->vertex(vertex.get());
+  this->fragment(fragment.get());
+}

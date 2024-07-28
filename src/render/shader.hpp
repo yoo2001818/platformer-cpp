@@ -17,7 +17,7 @@ public:
   shader &operator=(const shader &pValue);
   shader &operator=(shader &&pValue);
 
-  ~shader();
+  virtual ~shader();
 
   const std::string &vertex() const;
   void vertex(const std::string &pCode);
@@ -53,6 +53,11 @@ private:
   unsigned int mProgramId = -1;
   bool mIsDirty = true;
   friend geometry;
+};
+
+class file_shader : public shader {
+public:
+  file_shader(const std::string &pVertexPath, const std::string &pFragmentPath);
 };
 
 } // namespace platformer

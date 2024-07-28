@@ -145,20 +145,20 @@ void cubemap_quad::set_uniforms(int pTarget, int pLevel,
 cubemap_equirectangular::cubemap_equirectangular(
     const std::shared_ptr<texture> &pOriginalTexture,
     const texture_options &pTextureOptions)
-    : cubemap_quad(std::make_shared<shader>(
-                       read_file_str("res/skyboxgen.vert"),
-                       read_file_str("res/skyboxgen_equirectangular.frag")),
-                   pTextureOptions),
+    : cubemap_quad(
+          std::make_shared<file_shader>("res/skyboxgen.vert",
+                                        "res/skyboxgen_equirectangular.frag"),
+          pTextureOptions),
       mOriginalTexture(pOriginalTexture) {}
 
 cubemap_equirectangular::cubemap_equirectangular(
     const std::shared_ptr<texture> &pOriginalTexture,
     const texture_options &pTextureOptions,
     const texture_format &pTextureFormat)
-    : cubemap_quad(std::make_shared<shader>(
-                       read_file_str("res/skyboxgen.vert"),
-                       read_file_str("res/skyboxgen_equirectangular.frag")),
-                   pTextureOptions, pTextureFormat),
+    : cubemap_quad(
+          std::make_shared<file_shader>("res/skyboxgen.vert",
+                                        "res/skyboxgen_equirectangular.frag"),
+          pTextureOptions, pTextureFormat),
       mOriginalTexture(pOriginalTexture) {}
 
 void cubemap_equirectangular::set_uniforms(int pTarget, int pLevel,

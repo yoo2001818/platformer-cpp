@@ -1,6 +1,7 @@
+#include "render/shader_preprocessor.hpp"
 #define GLM_ENABLE_EXPERIMENTAL
-#include "render/shader.hpp"
 #include "debug.hpp"
+#include "render/shader.hpp"
 #include <GL/glew.h>
 #include <glm/gtc/type_ptr.hpp>
 
@@ -213,4 +214,13 @@ void shader::dispose() {
     glDeleteProgram(this->mProgramId);
     this->mProgramId = -1;
   }
+}
+
+file_shader::file_shader(const std::string &pVertexPath,
+                         const std::string &pFragmentPath)
+    : shader() {
+  shader_preprocessor vertex(pVertexPath);
+  shader_preprocessor fragment(pFragmentPath);
+  this->vertex(vertex.get());
+  this->fragment(fragment.get());
 }

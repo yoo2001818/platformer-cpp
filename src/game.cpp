@@ -33,8 +33,8 @@ game::game() : mRegistry() {}
 
 void game::init(application &pApplication) {
   this->mApplication = &pApplication;
-  SDL_GetWindowSize(pApplication.window(), &(this->mWindowWidth),
-                    &(this->mWindowHeight));
+  SDL_GL_GetDrawableSize(pApplication.window(), &(this->mWindowWidth),
+                         &(this->mWindowHeight));
   this->mName.init(this->mRegistry);
   this->mTransform.init(this->mRegistry);
   this->mMovement.init(*this);
@@ -69,8 +69,8 @@ void game::dispose() {}
 void game::handle_event(application &pApplication, SDL_Event &pEvent) {
   if (pEvent.type == SDL_WINDOWEVENT &&
       pEvent.window.event == SDL_WINDOWEVENT_RESIZED) {
-    this->mWindowWidth = pEvent.window.data1;
-    this->mWindowHeight = pEvent.window.data2;
+    SDL_GL_GetDrawableSize(pApplication.window(), &(this->mWindowWidth),
+                           &(this->mWindowHeight));
     glViewport(0, 0, this->mWindowWidth, this->mWindowHeight);
   }
   this->mMovement.handle_event(*this, pEvent);

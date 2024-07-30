@@ -72,9 +72,9 @@ int application::init() {
 
   SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 4);
   SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 0);
-  this->mWindow = SDL_CreateWindow("PlatformerCpp", SDL_WINDOWPOS_CENTERED,
-                                   SDL_WINDOWPOS_CENTERED, 1024, 768,
-                                   SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE);
+  this->mWindow = SDL_CreateWindow(
+      "PlatformerCpp", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, 1024,
+      768, SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE | SDL_WINDOW_ALLOW_HIGHDPI);
 
   this->mGLContext = SDL_GL_CreateContext(this->mWindow);
   if (this->mGLContext == NULL) {

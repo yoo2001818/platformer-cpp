@@ -1,7 +1,8 @@
 #version 330 core
-in vec2 vPosition;
+in vec2 vTexCoord;
+out vec4 FragColor;
 
-#include "shader/pbr.glsl"
+#include "res/shader/pbr.glsl"
 
 vec2 integrateBRDF(float NdotV, float roughness) {
   vec3 V;
@@ -14,8 +15,8 @@ vec2 integrateBRDF(float NdotV, float roughness) {
 
   vec3 N = vec3(0.0, 0.0, 1.0);
 
-  const int SAMPLE_COUNT = 1024;
-  for(int i = 0; i < SAMPLE_COUNT; ++i) {
+  const uint SAMPLE_COUNT = uint(1024);
+  for(uint i = uint(0); i < SAMPLE_COUNT; ++i) {
     vec2 Xi = hammersley(i, SAMPLE_COUNT);
     vec3 H = importanceSampleGGX(Xi, N, roughness);
     vec3 L = normalize(2.0 * dot(V, H) * H - V);
@@ -40,5 +41,5 @@ vec2 integrateBRDF(float NdotV, float roughness) {
 }
 
 void main() {
-  gl_FragColor = vec4(integrateBRDF(vPosition.x, vPosition.y * vPosition.y), 0.0, 1.0);
+  FragColor = vec4(integrateBRDF(vTexCoord.x, vTexCoord.y * vTexCoord.y), 0.0, 1.0);
 }

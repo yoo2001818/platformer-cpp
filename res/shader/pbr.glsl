@@ -1,4 +1,4 @@
-const float PI  = 3.1415926535897932384626433832795;
+const float PI = 3.1415926535897932384626433832795;
 
 float distributionGGX(float dotNM, float a) {
     float a2 = a * a;
@@ -92,7 +92,7 @@ vec3 brdfCookTorr(
     return dotNL * albedo / PI + spec;
 }
 
-float radicalInverse_VdC(int bits) {
+float radicalInverse_VdC(uint bits) {
     bits = (bits << 16u) | (bits >> 16u);
     bits = ((bits & 0x55555555u) << 1u) | ((bits & 0xAAAAAAAAu) >> 1u);
     bits = ((bits & 0x33333333u) << 2u) | ((bits & 0xCCCCCCCCu) >> 2u);
@@ -101,26 +101,25 @@ float radicalInverse_VdC(int bits) {
     return float(bits) * 2.3283064365386963e-10; // / 0x100000000
 }
 
-
-float vanDerCorput(int n, int base) {
+float vanDerCorput(uint n, uint base) {
     float invBase = 1.0 / float(base);
-    float denom   = 1.0;
-    float result  = 0.0;
+    float denom = 1.0;
+    float result = 0.0;
 
-    for (uint i = 0u; i < 32u; ++i) {
-        if (n > 0u) {
-            denom   = mod(float(n), 2.0);
+    for(uint i = 0u; i < 32u; ++i) {
+        if(n > 0u) {
+            denom = mod(float(n), 2.0);
             result += denom * invBase;
             invBase = invBase / 2.0;
-            n       = uint(float(n) / 2.0);
+            n = uint(float(n) / 2.0);
         }
     }
 
     return result;
 }
 
-vec2 hammersley(int i, int N) {
-    return vec2(float(i)/float(N), radicalInverse_VdC(i));
+vec2 hammersley(uint i, uint N) {
+    return vec2(float(i) / float(N), radicalInverse_VdC(i));
 }
 
 vec2 hammersleyFromMap(sampler2D map, int i, int N) {
@@ -142,13 +141,12 @@ vec3 importanceSampleGGX(vec2 Xi, vec3 N, float roughness) {
     H.x = cos(phi) * sinTheta;
     H.y = sin(phi) * sinTheta;
     H.z = cosTheta;
-  
+
     // from tangent-space vector to world-space sample vector
     vec3 up = abs(N.z) < 0.999 ? vec3(0.0, 0.0, 1.0) : vec3(1.0, 0.0, 0.0);
     vec3 tangent = normalize(cross(up, N));
     vec3 bitangent = cross(N, tangent);
-  
+
     vec3 sampleVec = tangent * H.x + bitangent * H.y + N * H.z;
     return normalize(sampleVec);
 }
-

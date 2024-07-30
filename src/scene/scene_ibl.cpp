@@ -3,6 +3,8 @@
 #include "file.hpp"
 #include "game.hpp"
 #include "render/cubemap.hpp"
+#include "render/framebuffer.hpp"
+#include "render/geometry.hpp"
 #include "render/material.hpp"
 #include "render/mesh.hpp"
 #include "render/render_state.hpp"
@@ -78,6 +80,41 @@ void scene_ibl::init(application &pApplication, game &pGame) {
     registry.emplace<mesh>(cube, std::move(meshes));
     registry.emplace<collision>(cube);
     registry.emplace<name>(cube, "skybox");
+  }
+  {
+    auto quad = registry.create();
+
+    auto &trans = registry.emplace<transform>(quad);
+    trans.position(glm::vec3(0.0f, 0.0f, 0.0f));
+
+    // Bake BRDF texture
+    auto tex = std::make_shared<texture_2d>(
+        texture_2d(texture_source_buffer({.format = {.type = GL_UNSIGNED_BYTE},
+                                          .width = 256,
+                                          .height = 256}),
+                   {.minFilter = GL_LINEAR, .mipmap = false}));
+    auto quad_geom = std::make_shared<geometry>(geometry::make_quad());
+    auto shader =
+        std::make_shared<file_shader>("res/quad.vert", "res/brdfmap.frag");
+    framebuffer fb({.colors = {{.texture = tex}}});
+    fb.bind();
+    shader->prepare();
+    quad_geom->prepare(*shader);
+    quad_geom->render();
+    fb.unbind();
+
+    auto material = std::make_shared<shader_material>(
+        read_file_str("res/texturePass.vert"),
+        read_file_str("res/texturePass.frag"));
+    auto &uniforms = material->uniforms();
+    uniforms["uDiffuse"] = reinterpret_cast<std::shared_ptr<texture> &>(tex);
+
+    auto cube_geom = std::make_shared<geometry>(geometry::make_box());
+    std::vector<mesh::mesh_pair> meshes{};
+    meshes.push_back({material, cube_geom});
+
+    registry.emplace<mesh>(quad, std::move(meshes));
+    registry.emplace<name>(quad, "BRDFMap");
   }
 }
 void scene_ibl::update(application &pApplication, game &pGame, float pDelta) {}

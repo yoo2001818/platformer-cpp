@@ -10,8 +10,10 @@
 using namespace platformer;
 
 texture::texture() : mTexture(-1) {}
-texture::texture(const texture &pValue) { this->mTexture = pValue.mTexture; }
-texture::texture(texture &&pValue) {
+texture::texture(const texture &pValue) : mOptions(pValue.mOptions) {
+  this->mTexture = pValue.mTexture;
+}
+texture::texture(texture &&pValue) : mOptions(pValue.mOptions) {
   this->mTexture = pValue.mTexture;
   pValue.mTexture = -1;
 }
@@ -158,12 +160,14 @@ void texture::upload(int pTarget, const texture_source &pSource,
     DEBUG("Texture {} target {:x} upload from image {} ({} x {})",
           this->mTexture, pTarget, source.filename, width, height);
   }
+  /*
   if (auto err = glGetError()) {
     // This does not work correctly for some reason
     throw std::runtime_error(
         std::format("texture upload failed ({})",
                     reinterpret_cast<const char *>(gluErrorString(err))));
   }
+  */
 }
 
 const texture_options &texture::options() const { return this->mOptions; }
@@ -189,6 +193,10 @@ void texture::generate_mipmap(int pTarget) {
 bool texture::is_valid() { return this->mIsValid; }
 
 texture_2d::texture_2d() {}
+texture_2d::texture_2d(const texture_2d &pValue)
+    : texture(pValue), mSource(pValue.mSource) {}
+texture_2d::texture_2d(texture_2d &&pValue)
+    : texture(pValue), mSource(pValue.mSource) {}
 texture_2d::texture_2d(const texture_source &pSource) : mSource(pSource) {}
 texture_2d::texture_2d(texture_source &&pSource) : mSource(pSource) {}
 texture_2d::texture_2d(const texture_source &pSource,
@@ -199,6 +207,24 @@ texture_2d::texture_2d(texture_source &&pSource,
     : texture(pOptions), mSource(pSource) {}
 
 texture_2d::~texture_2d() {}
+
+texture_2d &texture_2d::operator=(const texture &pValue) {
+  texture::operator=(pValue);
+  if (const texture_2d *derived = dynamic_cast<const texture_2d *>(&pValue)) {
+    this->mSource = derived->mSource;
+    this->mIsValid = derived->mIsValid;
+  }
+  return *this;
+}
+
+texture_2d &texture_2d::operator=(texture &&pValue) {
+  texture::operator=(pValue);
+  if (const texture_2d *derived = dynamic_cast<const texture_2d *>(&pValue)) {
+    this->mSource = derived->mSource;
+    this->mIsValid = derived->mIsValid;
+  }
+  return *this;
+}
 
 const texture_source &texture_2d::source() const { return this->mSource; }
 void texture_2d::source(const texture_source &pSource) {

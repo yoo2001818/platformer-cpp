@@ -58,8 +58,8 @@ public:
   texture(texture &&pValue);
   texture(const texture_options &pOptions);
 
-  texture &operator=(const texture &pValue);
-  texture &operator=(texture &&pValue);
+  virtual texture &operator=(const texture &pValue);
+  virtual texture &operator=(texture &&pValue);
 
   virtual ~texture();
 
@@ -90,10 +90,15 @@ private:
 class texture_2d : public texture {
 public:
   texture_2d();
+  texture_2d(const texture_2d &pValue);
+  texture_2d(texture_2d &&pValue);
   texture_2d(const texture_source &pSource);
   texture_2d(texture_source &&pSource);
   texture_2d(const texture_source &pSource, const texture_options &pOptions);
   texture_2d(texture_source &&pSource, const texture_options &pOptions);
+
+  virtual texture_2d &operator=(const texture &pValue) override;
+  virtual texture_2d &operator=(texture &&pValue) override;
 
   virtual ~texture_2d();
 

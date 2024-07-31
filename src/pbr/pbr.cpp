@@ -35,7 +35,8 @@ void cubemap_pbr::set_uniforms(int pTarget, int pLevel,
   this->mOriginalTexture->prepare(2);
   this->mShader->set("uSource", 2);
   this->mShader->set("uMipLevel", pLevel);
-  this->mShader->set("uMaxMipLevel", numMipmapLevels - 2);
+  // We want at least 8*8 for irradiance too
+  this->mShader->set("uMaxMipLevel", numMipmapLevels - 3);
   this->mShader->set("uResolution", (float)width);
 }
 

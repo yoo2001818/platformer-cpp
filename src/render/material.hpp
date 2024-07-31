@@ -46,6 +46,10 @@ public:
   float metalic;
   glm::vec3 color;
   std::shared_ptr<texture> diffuseTexture = nullptr;
+  // FIXME: This should not be in here, but since the entire lighting routine
+  // needs to be updated anyway so...
+  std::shared_ptr<texture> environmentTexture = nullptr;
+  std::shared_ptr<texture> brdfTexture = nullptr;
 };
 
 class armature_material : public material {

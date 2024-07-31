@@ -89,11 +89,17 @@ void standard_material::render(const render_context &pContext) {
   if (this->diffuseTexture != nullptr) {
     featureFlags |= 1;
   }
+  if (this->environmentTexture != nullptr) {
+    featureFlags |= 2;
+  }
   auto shaderVal = pContext.asset_manager.get<std::shared_ptr<shader>>(
       "standard_material:" + std::to_string(featureFlags), [&]() {
         std::vector<std::string> defines;
         if (featureFlags & 1) {
           defines.push_back("USE_DIFFUSE_TEXTURE");
+        }
+        if (featureFlags & 2) {
+          defines.push_back("USE_ENVIRONMENT_MAP");
         }
 
         return std::make_shared<file_shader>("res/phong.vert", "res/phong.frag",
@@ -126,6 +132,14 @@ void standard_material::render(const render_context &pContext) {
   if (this->diffuseTexture != nullptr) {
     this->diffuseTexture->prepare(0);
     shaderVal->set("uDiffuse", 0);
+  }
+  if (this->environmentTexture != nullptr) {
+    this->environmentTexture->prepare(1);
+    shaderVal->set("uEnvironmentMap", 1);
+    // FIXME: Yup, the resolution is hardcoded
+    shaderVal->set("uEnvironmentMapSize", glm::vec2(7.0f, 1.0f));
+    this->brdfTexture->prepare(2);
+    shaderVal->set("uBRDFMap", 2);
   }
   // Issue draw call
   pContext.geometry.render();

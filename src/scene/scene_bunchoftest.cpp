@@ -103,7 +103,7 @@ void scene_bunchoftest::init(application &pApplication, game &pGame) {
     transformVal.position(glm::vec3(0.0, 10.0, 2.0));
     auto &lightVal = registry.emplace<platformer::light>(light);
     lightVal.color = glm::vec3(1.0, 1.0, 1.0);
-    lightVal.power = 1.0f;
+    lightVal.power = 100.0f;
     lightVal.radius = 0.1f;
     lightVal.range = 100.0f;
     registry.emplace<name>(light, "light");

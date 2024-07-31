@@ -2,6 +2,7 @@
 #include "game.hpp"
 #include "render/mesh.hpp"
 #include "transform.hpp"
+#include <numbers>
 #include <vector>
 
 using namespace platformer;
@@ -18,7 +19,8 @@ std::vector<render_light> renderer::get_lights(game &pGame) {
     render_light renderLight{
         .position = glm::vec4(transformVal.position_world(registry), 1.0f),
         .color = lightVal.color,
-        .range = glm::vec3(lightVal.range, lightVal.power, lightVal.radius)};
+        .range = glm::vec3(lightVal.power / std::numbers::pi, lightVal.radius,
+                           lightVal.range)};
     lights.push_back(renderLight);
   }
   return lights;

@@ -5,6 +5,7 @@
 #include "pbr/pbr.hpp"
 #include "render/cubemap.hpp"
 #include "render/geometry.hpp"
+#include "render/load.hpp"
 #include "render/material.hpp"
 #include "render/mesh.hpp"
 #include "render/render_state.hpp"
@@ -18,6 +19,36 @@ void scene_ibl::init(application &pApplication, game &pGame) {
   auto &registry = pGame.registry();
   auto imageTexture = std::make_shared<texture_2d>(
       texture_source_image({.filename = "res/uv.png"}));
+  cubemap_equirectangular cubemapVal{
+      std::make_shared<texture_2d>(
+          texture_source_image({.format =
+                                    {
+                                        .type = GL_FLOAT,
+                                    },
+                                .filename = "res/skybox.hdr"})),
+      {.magFilter = GL_LINEAR,
+       .minFilter = GL_LINEAR_MIPMAP_LINEAR,
+       .wrapS = GL_CLAMP_TO_EDGE,
+       .wrapT = GL_CLAMP_TO_EDGE,
+       .width = 1024,
+       .height = 1024,
+       .mipmap = true},
+      {.format = GL_RGB, .internalFormat = GL_RGB, .type = GL_HALF_FLOAT}};
+  cubemap_pbr cubemapPbr{cubemapVal.get_texture(),
+                         {.magFilter = GL_LINEAR,
+                          .minFilter = GL_LINEAR_MIPMAP_LINEAR,
+                          .wrapS = GL_CLAMP_TO_EDGE,
+                          .wrapT = GL_CLAMP_TO_EDGE,
+                          .width = 1024,
+                          .height = 1024,
+                          .mipmap = true},
+                         {
+                             .format = GL_RGB,
+                             .internalFormat = GL_RGB,
+                             .type = GL_HALF_FLOAT,
+                         }};
+  auto brdfMap = std::make_shared<texture_brdf>(texture_brdf(
+      {.minFilter = GL_LINEAR, .width = 256, .height = 256, .mipmap = false}));
 
   for (int i = 0; i < 10; i++) {
     auto cube = registry.create();
@@ -40,7 +71,7 @@ void scene_ibl::init(application &pApplication, game &pGame) {
     transformVal.position(glm::vec3(0.0, 10.0, 2.0));
     auto &lightVal = registry.emplace<platformer::light>(light);
     lightVal.color = glm::vec3(1.0, 1.0, 1.0);
-    lightVal.power = 1.0f;
+    lightVal.power = 100.0f;
     lightVal.radius = 0.1f;
     lightVal.range = 100.0f;
     registry.emplace<name>(light, "light");
@@ -51,27 +82,11 @@ void scene_ibl::init(application &pApplication, game &pGame) {
     auto &trans = registry.emplace<transform>(cube);
     trans.position(glm::vec3(0.0f, 1.0f, 3.0f));
 
-    cubemap_equirectangular cubemapVal{
-        std::make_shared<texture_2d>(
-            texture_source_image({.format =
-                                      {
-                                          .type = GL_FLOAT,
-                                      },
-                                  .filename = "res/skybox.hdr"})),
-        {.magFilter = GL_LINEAR,
-         .minFilter = GL_LINEAR_MIPMAP_LINEAR,
-         .wrapS = GL_CLAMP_TO_EDGE,
-         .wrapT = GL_CLAMP_TO_EDGE,
-         .width = 1024,
-         .height = 1024,
-         .mipmap = true},
-        {.type = GL_FLOAT}};
-
     auto material = std::make_shared<shader_material>(
         read_file_str("res/skybox.vert"), read_file_str("res/skybox.frag"));
     auto &uniforms = material->uniforms();
     uniforms["uTexture"] =
-        reinterpret_cast<std::shared_ptr<texture> &>(cubemapVal.get_texture());
+        reinterpret_cast<std::shared_ptr<texture> &>(cubemapPbr.get_texture());
 
     std::vector<mesh::mesh_pair> meshes{};
     meshes.push_back(
@@ -80,70 +95,27 @@ void scene_ibl::init(application &pApplication, game &pGame) {
     registry.emplace<mesh>(cube, std::move(meshes));
     registry.emplace<collision>(cube);
     registry.emplace<name>(cube, "skybox");
-    {
-      cubemap_pbr cubemapPbr{cubemapVal.get_texture(),
-                             {.magFilter = GL_LINEAR,
-                              .minFilter = GL_LINEAR_MIPMAP_LINEAR,
-                              .wrapS = GL_CLAMP_TO_EDGE,
-                              .wrapT = GL_CLAMP_TO_EDGE,
-                              .width = 1024,
-                              .height = 1024,
-                              .mipmap = true},
-                             {
-                                 .format = GL_RGB,
-                                 .internalFormat = GL_RGB,
-                                 .type = GL_FLOAT,
-                             }};
-      for (int i = 0; i < 10; i += 1) {
-        auto cubePbr = registry.create();
-
-        auto &trans = registry.emplace<transform>(cubePbr);
-        trans.position(glm::vec3(2.4f * i, 1.0f, 4.0f));
-
-        auto material = std::make_shared<shader_material>(
-            read_file_str("res/cubemapPass.vert"),
-            read_file_str("res/cubemapPass.frag"));
-        auto &uniforms = material->uniforms();
-        uniforms["uTexture"] = reinterpret_cast<std::shared_ptr<texture> &>(
-            cubemapPbr.get_texture());
-        uniforms["uLod"] = (float)i;
-
-        std::vector<mesh::mesh_pair> meshes{};
-        meshes.push_back(
-            {material, std::make_shared<geometry>(geometry::make_box())});
-
-        registry.emplace<mesh>(cubePbr, std::move(meshes));
-        registry.emplace<collision>(cubePbr);
-        registry.emplace<name>(cubePbr, "skyboxPbr");
-      }
-    }
   }
   {
-    auto quad = registry.create();
+    mesh model = load_file_to_mesh("res/bunny.gltf");
 
-    auto &trans = registry.emplace<transform>(quad);
-    trans.position(glm::vec3(0.0f, 0.0f, 0.0f));
+    for (int x = 0; x < 5; x += 1) {
+      for (int y = 0; y < 5; y += 1) {
+        auto cube = registry.create();
+        auto &trans = registry.emplace<transform>(cube);
+        trans.position(glm::vec3(x * 3.0f, y * 3.0f, -6.0f));
 
-    // Bake BRDF texture
-    auto tex =
-        std::make_shared<texture_brdf>(texture_brdf({.minFilter = GL_LINEAR,
-                                                     .width = 256,
-                                                     .height = 256,
-                                                     .mipmap = false}));
+        // FIXME: This should not be done like this
+        auto mat = std::make_shared<standard_material>(glm::vec3(1.0f),
+                                                       x / 5.0f, y / 5.0f);
+        mat->environmentTexture = cubemapPbr.get_texture();
+        mat->brdfTexture = brdfMap->get_texture();
 
-    auto material = std::make_shared<shader_material>(
-        read_file_str("res/texturePass.vert"),
-        read_file_str("res/texturePass.frag"));
-    auto &uniforms = material->uniforms();
-    uniforms["uDiffuse"] =
-        reinterpret_cast<std::shared_ptr<texture> &>(tex->get_texture());
-
-    auto cube_geom = std::make_shared<geometry>(geometry::make_box());
-    std::vector<mesh::mesh_pair> meshes{};
-    meshes.push_back({material, cube_geom});
-
-    registry.emplace<mesh>(quad, std::move(meshes));
-    registry.emplace<name>(quad, "BRDFMap");
+        registry.emplace<mesh>(cube, mesh({{mat, model.meshes()[0].second}}));
+        registry.emplace<collision>(cube);
+        registry.emplace<name>(cube, "bunny");
+      }
+    }
   }
 }
 void scene_ibl::update(application &pApplication, game &pGame, float pDelta) {}

@@ -16,8 +16,23 @@ uniform vec3 uViewPos;
 #ifdef USE_DIFFUSE_TEXTURE
 uniform sampler2D uDiffuse;
 #endif
+#ifdef USE_ENVIRONMENT_MAP
+uniform sampler2D uBRDFMap;
+uniform samplerCube uEnvironmentMap;
+uniform vec2 uEnvironmentMapSize;
+#endif
 
-const float PI  = 3.1415926535897932384626433832795;
+const float PI = 3.1415926535897932384626433832795;
+
+struct MaterialInfo {
+    vec3 albedo;
+    vec3 normal;
+    vec3 position;
+    vec3 hardNormal;
+    float depth;
+    float roughness;
+    float metalic;
+};
 
 float distributionGGX(float dotNM, float a) {
     float a2 = a * a;
@@ -113,23 +128,23 @@ vec3 brdfCookTorr(
 
 float vanDerCorput(int n, int base) {
     float invBase = 1.0 / float(base);
-    float denom   = 1.0;
-    float result  = 0.0;
+    float denom = 1.0;
+    float result = 0.0;
 
-    for (int i = 0; i < 32; ++i) {
-      if (n > 0) {
-        denom = mod(float(n), 2.0);
-        result += denom * invBase;
-        invBase = invBase / 2.0;
-        n = int(float(n) / 2.0);
-      }
+    for(int i = 0; i < 32; ++i) {
+        if(n > 0) {
+            denom = mod(float(n), 2.0);
+            result += denom * invBase;
+            invBase = invBase / 2.0;
+            n = int(float(n) / 2.0);
+        }
     }
 
     return result;
 }
 
 vec2 hammersley(int i, int N) {
-    return vec2(float(i)/float(N), vanDerCorput(i, 2));
+    return vec2(float(i) / float(N), vanDerCorput(i, 2));
 }
 
 vec2 hammersleyFromMap(sampler2D map, int i, int N) {
@@ -151,59 +166,120 @@ vec3 importanceSampleGGX(vec2 Xi, vec3 N, float roughness) {
     H.x = cos(phi) * sinTheta;
     H.y = sin(phi) * sinTheta;
     H.z = cosTheta;
-  
+
     // from tangent-space vector to world-space sample vector
     vec3 up = abs(N.z) < 0.999 ? vec3(0.0, 0.0, 1.0) : vec3(1.0, 0.0, 0.0);
     vec3 tangent = normalize(cross(up, N));
     vec3 bitangent = cross(N, tangent);
-  
+
     vec3 sampleVec = tangent * H.x + bitangent * H.y + N * H.z;
     return normalize(sampleVec);
 }
 
-void main()
-{
+vec3 calcBRDF(vec3 L, vec3 V, vec3 N, MaterialInfo mInfo) {
+    float roughness = mInfo.roughness * mInfo.roughness;
+    vec3 albedo = mix(mInfo.albedo, vec3(0.0), mInfo.metalic);
+    vec3 fresnel = mix(vec3(0.04), mInfo.albedo, mInfo.metalic);
+
+    return brdfCookTorr(L, V, N, max(roughness, 0.000001), albedo, fresnel);
+}
+
+struct PointLight {
+    vec3 position;
+    vec3 color;
+    vec3 intensity;
+};
+
+vec3 calcPointLight(
+    out vec3 L,
+    vec3 V,
+    vec3 N,
+    vec3 hitPos,
+    PointLight light
+) {
+    float radius = light.intensity.y;
+    L = light.position - hitPos;
+
+    vec3 R = reflect(V, N);
+    vec3 centerToRay = dot(L, R) * R - L;
+    vec3 closestPos = L +
+        centerToRay * clamp(radius / length(centerToRay), 0.0, 1.0);
+    L = closestPos;
+
+    float lightDist = length(L);
+    L = L / lightDist;
+
+    float power = light.intensity.x;
+    float range = light.intensity.z;
+    float attenuation = power / (0.0001 + (lightDist * lightDist));
+    float window = 1.0;
+    if(range > 0.0) {
+        window = pow(max(1.0 - pow(lightDist / range, 4.0), 0.0), 2.0);
+    }
+
+    float dotNL = max(dot(N, L), 0.0);
+
+    return window * attenuation * dotNL * light.color;
+}
+
+vec3 calcEnvironmentMap(vec3 viewPos, MaterialInfo mInfo, sampler2D brdfMap, samplerCube envMap, float lodMax, float power) {
+    vec3 albedo = mix(mInfo.albedo, vec3(0.0), mInfo.metalic);
+    vec3 fresnel = mix(vec3(0.04), mInfo.albedo, mInfo.metalic);
+    float roughness = mInfo.roughness;
+
+    vec3 V = normalize(viewPos - mInfo.position);
+    vec3 N = mInfo.normal;
+    vec3 R = reflect(-V, N);
+    float dotNV = max(dot(N, V), 0.0);
+    float lod = roughness * (lodMax - 1.0);
+    vec3 envColor = textureLod(envMap, R, lod).rgb * power;
+    vec3 F = fresnelSchlickRoughness(dotNV, fresnel, roughness * roughness);
+    vec2 envBRDF = texture(brdfMap, vec2(dotNV, roughness)).rg;
+
+    vec3 spec = envColor * (F * envBRDF.x + envBRDF.y);
+
+    vec3 kS = F;
+    vec3 kD = vec3(1.0) - kS;
+
+    vec3 irradiance = textureLod(envMap, N, lodMax).rgb * power;
+
+    return kD * albedo * irradiance + spec;
+}
+
+void main() {
+    MaterialInfo mInfo;
     #ifdef USE_DIFFUSE_TEXTURE
-    vec3 color = texture2D(uDiffuse, vTexCoord).rgb;
+    mInfo.albedo = pow(texture(uDiffuse, vTexCoord).rgb, vec3(2.2));
     #else
-    vec3 color = uColor;
+    mInfo.albedo = uColor;
     #endif
+    mInfo.normal = normalize(vNormal);
+    mInfo.position = vPosition;
+    mInfo.roughness = uRoughness;
+    mInfo.metalic = uMetalic;
+
     vec3 result = vec3(0.0);
     vec3 ambient = vec3(0.0);
-    result += ambient * color;
-    vec3 normal = normalize(vNormal);
-    for (int i = 0; i < 8; i += 1) {
-        if (i > uLightCount) break;
+    result += ambient * mInfo.albedo;
+    // point lights
+    for(int i = 0; i < 8; i += 1) {
+        if(i > uLightCount)
+            break;
+        PointLight light;
+        light.position = uLightPositions[i].xyz;
+        light.color = uLightColors[i];
+        light.intensity = uLightRanges[i];
+
         vec3 L;
-        vec3 V = normalize(uViewPos - vPosition);
-        vec3 N = vNormal;
-
-        L = uLightPositions[i].xyz - vPosition;
-
-        vec3 R = reflect(V, N);
-        vec3 centerToRay = dot(L, R) * R - L;
-        vec3 closestPos = L +
-        centerToRay * clamp(0.01 / length(centerToRay), 0.0, 1.0);
-        L = closestPos;
-
-        float lightDist = length(L);
-        L = L / lightDist;
-
-        float attenuation = 60.0 / (0.0001 + (lightDist * lightDist));
-        
-        float dotNL = max(dot(N, L), 0.0);
-
-        vec3 lightValue = attenuation * dotNL * uLightColors[i];
-        
-        float roughness = uRoughness * uRoughness;
-        vec3 albedo = mix(color, vec3(0.0), uMetalic);
-        vec3 fresnel = mix(vec3(0.04), color, uMetalic);
-
-        vec3 brdfValue = brdfCookTorr(L, V, N, max(roughness, 0.000001), albedo, fresnel);
-
-        result += lightValue * brdfValue;
+        vec3 V = normalize(uViewPos - mInfo.position);
+        vec3 N = mInfo.normal;
+        result += calcPointLight(L, V, N, mInfo.position, light) *
+            calcBRDF(L, V, N, mInfo);
     }
+    #ifdef USE_ENVIRONMENT_MAP
+    result += calcEnvironmentMap(uViewPos, mInfo, uBRDFMap, uEnvironmentMap, uEnvironmentMapSize.x, uEnvironmentMapSize.y);
+    #endif
     // TODO: Tonemapping functions
     vec3 tonemappedColor = pow(result, vec3(1.0 / 2.2));
-    FragColor = vec4(tonemappedColor, 1.0f);
+    FragColor = vec4(tonemappedColor, 1.0);
 }

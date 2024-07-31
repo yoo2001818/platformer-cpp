@@ -2,8 +2,8 @@
 #include "application.hpp"
 #include "file.hpp"
 #include "game.hpp"
+#include "pbr/pbr.hpp"
 #include "render/cubemap.hpp"
-#include "render/framebuffer.hpp"
 #include "render/geometry.hpp"
 #include "render/material.hpp"
 #include "render/mesh.hpp"
@@ -88,26 +88,18 @@ void scene_ibl::init(application &pApplication, game &pGame) {
     trans.position(glm::vec3(0.0f, 0.0f, 0.0f));
 
     // Bake BRDF texture
-    auto tex = std::make_shared<texture_2d>(
-        texture_2d(texture_source_buffer({.format = {.type = GL_UNSIGNED_BYTE},
-                                          .width = 256,
-                                          .height = 256}),
-                   {.minFilter = GL_LINEAR, .mipmap = false}));
-    auto quad_geom = std::make_shared<geometry>(geometry::make_quad());
-    auto shader =
-        std::make_shared<file_shader>("res/quad.vert", "res/brdfmap.frag");
-    framebuffer fb({.colors = {{.texture = tex}}});
-    fb.bind();
-    shader->prepare();
-    quad_geom->prepare(*shader);
-    quad_geom->render();
-    fb.unbind();
+    auto tex =
+        std::make_shared<texture_brdf>(texture_brdf({.minFilter = GL_LINEAR,
+                                                     .width = 256,
+                                                     .height = 256,
+                                                     .mipmap = false}));
 
     auto material = std::make_shared<shader_material>(
         read_file_str("res/texturePass.vert"),
         read_file_str("res/texturePass.frag"));
     auto &uniforms = material->uniforms();
-    uniforms["uDiffuse"] = reinterpret_cast<std::shared_ptr<texture> &>(tex);
+    uniforms["uDiffuse"] =
+        reinterpret_cast<std::shared_ptr<texture> &>(tex->get_texture());
 
     auto cube_geom = std::make_shared<geometry>(geometry::make_box());
     std::vector<mesh::mesh_pair> meshes{};

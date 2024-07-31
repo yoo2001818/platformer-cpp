@@ -80,6 +80,43 @@ void scene_ibl::init(application &pApplication, game &pGame) {
     registry.emplace<mesh>(cube, std::move(meshes));
     registry.emplace<collision>(cube);
     registry.emplace<name>(cube, "skybox");
+    {
+      cubemap_pbr cubemapPbr{cubemapVal.get_texture(),
+                             {.magFilter = GL_LINEAR,
+                              .minFilter = GL_LINEAR_MIPMAP_LINEAR,
+                              .wrapS = GL_CLAMP_TO_EDGE,
+                              .wrapT = GL_CLAMP_TO_EDGE,
+                              .width = 1024,
+                              .height = 1024,
+                              .mipmap = true},
+                             {
+                                 .format = GL_RGB,
+                                 .internalFormat = GL_RGB,
+                                 .type = GL_FLOAT,
+                             }};
+      for (int i = 0; i < 10; i += 1) {
+        auto cubePbr = registry.create();
+
+        auto &trans = registry.emplace<transform>(cubePbr);
+        trans.position(glm::vec3(2.4f * i, 1.0f, 4.0f));
+
+        auto material = std::make_shared<shader_material>(
+            read_file_str("res/cubemapPass.vert"),
+            read_file_str("res/cubemapPass.frag"));
+        auto &uniforms = material->uniforms();
+        uniforms["uTexture"] = reinterpret_cast<std::shared_ptr<texture> &>(
+            cubemapPbr.get_texture());
+        uniforms["uLod"] = (float)i;
+
+        std::vector<mesh::mesh_pair> meshes{};
+        meshes.push_back(
+            {material, std::make_shared<geometry>(geometry::make_box())});
+
+        registry.emplace<mesh>(cubePbr, std::move(meshes));
+        registry.emplace<collision>(cubePbr);
+        registry.emplace<name>(cubePbr, "skyboxPbr");
+      }
+    }
   }
   {
     auto quad = registry.create();

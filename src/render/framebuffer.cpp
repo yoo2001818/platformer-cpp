@@ -112,8 +112,8 @@ void framebuffer::set_item(unsigned int mBuffer,
     auto target = mTarget.target != 0 ? mTarget.target : GL_TEXTURE_2D;
     glFramebufferTexture2D(GL_FRAMEBUFFER, mBuffer, target, inst->mTexture,
                            mTarget.level);
-    this->mWidth = inst->options().width;
-    this->mHeight = inst->options().height;
+    this->mWidth = inst->options().width >> mTarget.level;
+    this->mHeight = inst->options().height >> mTarget.level;
     DEBUG("Framebuffer {} setting buffer {:x} to texture {} ({:x})",
           this->mFramebuffer, mBuffer, inst->mTexture, target);
   } else if (std::holds_alternative<std::shared_ptr<renderbuffer>>(
@@ -122,8 +122,10 @@ void framebuffer::set_item(unsigned int mBuffer,
     inst->prepare();
     glFramebufferRenderbuffer(GL_FRAMEBUFFER, mBuffer, GL_RENDERBUFFER,
                               inst->mRenderbuffer);
-    this->mWidth = inst->options().width;
-    this->mHeight = inst->options().height;
+    // Since basically every framebuffer will contain at least one texture,
+    // let's use the dimension of that instead.
+    // this->mWidth = inst->options().width;
+    // this->mHeight = inst->options().height;
     DEBUG("Framebuffer {} setting buffer {:x} to renderbuffer {}",
           this->mFramebuffer, mBuffer, inst->mRenderbuffer);
   } else {

@@ -1,4 +1,4 @@
-#include "renderer.hpp"
+#include "render/renderer.hpp"
 #include "game.hpp"
 #include "render/mesh.hpp"
 #include "transform.hpp"
@@ -46,4 +46,8 @@ void renderer::render(game &pGame, const entt::entity pCamera, float pAspect) {
     auto &meshVal = registry.get<mesh>(entity);
     meshVal.render(registry, entity, renderContextRoot);
   }
+}
+
+void renderer::apply_render_state(const render_state &to) {
+  platformer::apply_render_state(this->mRenderState, to);
 }

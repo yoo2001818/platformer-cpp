@@ -2,9 +2,8 @@
 #include "name.hpp"
 #include "physics.hpp"
 #include "render/geometry.hpp"
-#include "render/gl_renderer.hpp"
+#include "render/renderer.hpp"
 #include "render/shader.hpp"
-#include "renderer.hpp"
 #include "scene/scene.hpp"
 #include <glm/ext/matrix_clip_space.hpp>
 #include <glm/ext/scalar_constants.hpp>
@@ -46,11 +45,9 @@ void game::update(application &pApplication, float pDelta) {
   glViewport(0, 0, this->mWindowWidth, this->mWindowHeight);
   glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-  pApplication.gl_renderer().apply_render_state({
-      .cullEnabled = true,
-      .depthEnabled = true,
-      .depthFunc = GL_LEQUAL,
-  });
+  glEnable(GL_CULL_FACE);
+  glEnable(GL_DEPTH_TEST);
+  glDepthFunc(GL_LEQUAL);
 
   if (this->mScene != nullptr) {
     this->mScene->update(pApplication, *this, pDelta);

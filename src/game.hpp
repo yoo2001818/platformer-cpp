@@ -8,7 +8,7 @@
 #include "movement.hpp"
 #include "name.hpp"
 #include "physics.hpp"
-#include "renderer.hpp"
+#include "render/renderer.hpp"
 #include "scene/scene.hpp"
 #include "transform.hpp"
 #include <entt/entt.hpp>

@@ -2,6 +2,7 @@
 #define __RENDERER_HPP__
 
 #include "render/render.hpp"
+#include "render/render_state.hpp"
 #include <entt/entt.hpp>
 #include <vector>
 
@@ -12,8 +13,12 @@ public:
   renderer();
   std::vector<render_light> get_lights(game &pGame);
   void render(game &pGame, const entt::entity pCamera, float pAspect);
+  void apply_render_state(const render_state &to);
 
 private:
+  int mWidth;
+  int mHeight;
+  render_state mRenderState;
   asset_manager mAssetManager{};
 };
 } // namespace platformer

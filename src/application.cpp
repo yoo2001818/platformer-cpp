@@ -3,7 +3,6 @@
 #include "backends/imgui_impl_opengl3.h"
 #include "backends/imgui_impl_sdl2.h"
 #include "imgui.h"
-#include "render/gl_renderer.hpp"
 #include <GL/glew.h>
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_events.h>
@@ -130,7 +129,3 @@ void application::dispose() {
 }
 
 SDL_Window *&application::window() { return this->mWindow; }
-
-platformer::gl_renderer &application::gl_renderer() {
-  return this->mGLRenderer;
-}

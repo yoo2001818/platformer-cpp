@@ -75,10 +75,8 @@ void scene_bunchoftest::init(application &pApplication, game &pGame) {
     fb.bind();
     glClearColor(.5f, .5f, .5f, 0.0f);
     glClear(GL_COLOR_BUFFER_BIT);
-    pApplication.gl_renderer().apply_render_state({
-        .cullEnabled = false,
-        .depthEnabled = false,
-    });
+    glDisable(GL_CULL_FACE);
+    glDisable(GL_DEPTH_TEST);
     shader->prepare();
     quad.prepare(*shader);
     quad.render();

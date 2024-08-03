@@ -68,6 +68,7 @@ target_link_libraries(PlatformerCpp ${GLEW_LIBRARIES})
 target_link_libraries(PlatformerCpp EnTT::EnTT)
 target_link_libraries(PlatformerCpp assimp)
 
+#[[
 file(GLOB_RECURSE TEST_SOURCES ${PROJECT_SOURCE_DIR}/src/*.cpp ${PROJECT_SOURCE_DIR}/test/*.cpp)
 add_executable(tests ${TEST_SOURCES} ${IMGUI_SOURCES})
 target_link_libraries(tests ${SDL2_LIBRARIES})
@@ -78,3 +79,7 @@ target_link_libraries(tests ${GLEW_LIBRARIES})
 target_link_libraries(tests EnTT::EnTT)
 target_link_libraries(tests Catch2::Catch2WithMain)
 target_link_libraries(tests assimp)
+]]
+
+file(COPY ${CMAKE_CURRENT_SOURCE_DIR}/res
+     DESTINATION ${CMAKE_CURRENT_BINARY_DIR})

@@ -26,14 +26,12 @@ public:
   entt::registry &registry();
   void change_scene(std::shared_ptr<scene> &pScene);
   const std::shared_ptr<scene> &current_scene() const;
+  application &app();
 
 private:
   entt::registry mRegistry;
-  entt::entity mCamera;
   entt::entity mPlayer;
   entt::entity mPlayerHead;
-  int mWindowWidth;
-  int mWindowHeight;
   name_system mName;
   transform_system mTransform;
   fps_movement_system mMovement;

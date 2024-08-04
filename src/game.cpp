@@ -28,12 +28,11 @@
 
 using namespace platformer;
 
-game::game() : mRegistry() {}
+game::game() : mRegistry(), mRenderer(*this) {}
 
 void game::init(application &pApplication) {
   this->mApplication = &pApplication;
-  SDL_GL_GetDrawableSize(pApplication.window(), &(this->mWindowWidth),
-                         &(this->mWindowHeight));
+  this->mRenderer.init();
   this->mName.init(this->mRegistry);
   this->mTransform.init(this->mRegistry);
   this->mMovement.init(*this);
@@ -42,12 +41,7 @@ void game::init(application &pApplication) {
 }
 
 void game::update(application &pApplication, float pDelta) {
-  glViewport(0, 0, this->mWindowWidth, this->mWindowHeight);
-  glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
-  glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-  glEnable(GL_CULL_FACE);
-  glEnable(GL_DEPTH_TEST);
-  glDepthFunc(GL_LEQUAL);
+  this->mRenderer.clear();
 
   if (this->mScene != nullptr) {
     this->mScene->update(pApplication, *this, pDelta);
@@ -56,9 +50,7 @@ void game::update(application &pApplication, float pDelta) {
   this->mMovement.update(*this, pDelta);
   this->mPhysics.update(*this, pDelta);
   this->mDebugUi.update(*this, pDelta);
-  this->mRenderer.render(*this, this->mCamera,
-                         static_cast<float>(this->mWindowWidth) /
-                             static_cast<float>(this->mWindowHeight));
+  this->mRenderer.render();
 }
 
 void game::dispose() {}
@@ -66,9 +58,11 @@ void game::dispose() {}
 void game::handle_event(application &pApplication, SDL_Event &pEvent) {
   if (pEvent.type == SDL_WINDOWEVENT &&
       pEvent.window.event == SDL_WINDOWEVENT_RESIZED) {
-    SDL_GL_GetDrawableSize(pApplication.window(), &(this->mWindowWidth),
-                           &(this->mWindowHeight));
-    glViewport(0, 0, this->mWindowWidth, this->mWindowHeight);
+    int width;
+    int height;
+    SDL_GL_GetDrawableSize(pApplication.window(), &width, &height);
+    this->mRenderer.width(width);
+    this->mRenderer.height(height);
   }
   this->mMovement.handle_event(*this, pEvent);
 }
@@ -86,7 +80,7 @@ void game::make_player() {
     cameraVal.near = 0.1f;
     cameraVal.far = 100.0f;
     cameraVal.fov = glm::radians(90.0f);
-    this->mCamera = cam;
+    this->mRenderer.camera(cam);
     this->mRegistry.emplace<name>(cam, "camera");
     this->mMovement.camera_entity(cam);
   }
@@ -153,3 +147,5 @@ void game::change_scene(std::shared_ptr<scene> &pScene) {
 const std::shared_ptr<scene> &game::current_scene() const {
   return this->mScene;
 }
+
+application &game::app() { return *(this->mApplication); }

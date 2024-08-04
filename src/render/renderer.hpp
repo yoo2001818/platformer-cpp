@@ -2,17 +2,17 @@
 #define __RENDERER_HPP__
 
 #include "entt/entity/fwd.hpp"
+#include "render/pipeline.hpp"
 #include "render/render.hpp"
 #include "render/render_state.hpp"
 #include <entt/entt.hpp>
-#include <vector>
+#include <memory>
 
 namespace platformer {
 class game;
 class renderer {
 public:
   renderer(game &pGame);
-  std::vector<render_light> get_lights(game &pGame);
   void apply_render_state(const render_state &to);
 
   void init();
@@ -27,10 +27,14 @@ public:
   int height() const;
   void height(int pValue);
 
+  platformer::game &game() const;
+  platformer::asset_manager &asset_manager();
+
 private:
   render_state mRenderState;
-  asset_manager mAssetManager{};
-  game &mGame;
+  platformer::asset_manager mAssetManager{};
+  platformer::game &mGame;
+  std::unique_ptr<pipeline> mPipeline;
   entt::registry &mRegistry;
   entt::entity mCamera;
   int mWidth;

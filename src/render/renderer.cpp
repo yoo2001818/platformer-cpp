@@ -1,30 +1,14 @@
 #include "render/renderer.hpp"
 #include "game.hpp"
-#include "render/mesh.hpp"
-#include "transform.hpp"
-#include <numbers>
-#include <vector>
+#include "render/pipeline.hpp"
+#include "render/render.hpp"
+#include <memory>
 
 using namespace platformer;
 
-renderer::renderer(game &pGame) : mGame(pGame), mRegistry(pGame.registry()) {}
-
-std::vector<render_light> renderer::get_lights(game &pGame) {
-  auto &registry = pGame.registry();
-  std::vector<render_light> lights;
-  auto view = registry.view<transform, light>();
-  for (auto entity : view) {
-    auto &lightVal = registry.get<light>(entity);
-    auto &transformVal = registry.get<transform>(entity);
-    render_light renderLight{
-        .position = glm::vec4(transformVal.position_world(registry), 1.0f),
-        .color = lightVal.color,
-        .range = glm::vec3(lightVal.power / std::numbers::pi, lightVal.radius,
-                           lightVal.range)};
-    lights.push_back(renderLight);
-  }
-  return lights;
-}
+renderer::renderer(platformer::game &pGame)
+    : mGame(pGame), mRegistry(pGame.registry()),
+      mPipeline(std::make_unique<pipeline>(*this)) {}
 
 void renderer::apply_render_state(const render_state &to) {
   platformer::apply_render_state(this->mRenderState, to);
@@ -44,28 +28,7 @@ void renderer::clear() {
   glDepthFunc(GL_LEQUAL);
 }
 
-void renderer::render() {
-  auto &registry = this->mRegistry;
-  auto &cameraEntity = this->mCamera;
-  auto &cameraTransform = registry.get<transform>(cameraEntity);
-  auto &cameraCamera = registry.get<platformer::camera>(cameraEntity);
-  std::vector<render_light> lights = this->get_lights(this->mGame);
-  render_context_root renderContextRoot{
-      .registry = registry,
-      .asset_manager = mAssetManager,
-      .aspect =
-          static_cast<float>(this->mWidth) / static_cast<float>(this->mHeight),
-      .camera_entity = cameraEntity,
-      .camera_transform = cameraTransform,
-      .camera_camera = cameraCamera,
-      .lights = lights,
-  };
-  auto view = registry.view<transform, mesh>();
-  for (auto entity : view) {
-    auto &meshVal = registry.get<mesh>(entity);
-    meshVal.render(registry, entity, renderContextRoot);
-  }
-}
+void renderer::render() { this->mPipeline->render(); }
 
 entt::entity renderer::camera() const { return mCamera; }
 
@@ -78,3 +41,8 @@ void renderer::width(int pValue) { mWidth = pValue; }
 int renderer::height() const { return mHeight; }
 
 void renderer::height(int pValue) { mHeight = pValue; }
+
+platformer::game &renderer::game() const { return this->mGame; }
+platformer::asset_manager &renderer::asset_manager() {
+  return this->mAssetManager;
+}

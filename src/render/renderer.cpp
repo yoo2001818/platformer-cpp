@@ -1,4 +1,5 @@
 #include "render/renderer.hpp"
+#include "entt/entity/fwd.hpp"
 #include "game.hpp"
 #include "render/pipeline.hpp"
 #include "render/render.hpp"
@@ -8,7 +9,7 @@ using namespace platformer;
 
 renderer::renderer(platformer::game &pGame)
     : mGame(pGame), mRegistry(pGame.registry()),
-      mPipeline(std::make_unique<pipeline>(*this)) {}
+      mPipeline(std::make_unique<platformer::pipeline>(*this)) {}
 
 void renderer::apply_render_state(const render_state &to) {
   platformer::apply_render_state(this->mRenderState, to);
@@ -46,3 +47,5 @@ platformer::game &renderer::game() const { return this->mGame; }
 platformer::asset_manager &renderer::asset_manager() {
   return this->mAssetManager;
 }
+entt::registry &renderer::registry() { return this->mRegistry; }
+platformer::pipeline &renderer::pipeline() { return *this->mPipeline; }

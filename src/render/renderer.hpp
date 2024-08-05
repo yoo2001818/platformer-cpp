@@ -29,12 +29,14 @@ public:
 
   platformer::game &game() const;
   platformer::asset_manager &asset_manager();
+  entt::registry &registry();
+  platformer::pipeline &pipeline();
 
 private:
   render_state mRenderState;
   platformer::asset_manager mAssetManager{};
   platformer::game &mGame;
-  std::unique_ptr<pipeline> mPipeline;
+  std::unique_ptr<platformer::pipeline> mPipeline;
   entt::registry &mRegistry;
   entt::entity mCamera;
   int mWidth;

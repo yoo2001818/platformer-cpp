@@ -3,9 +3,9 @@
 
 #include "render/geometry.hpp"
 #include "render/material.hpp"
-#include "render/render.hpp"
 
 namespace platformer {
+class renderer;
 class mesh {
 public:
   using mesh_pair =
@@ -18,8 +18,7 @@ public:
   bool shouldRender() const;
   void shouldRender(bool mValue);
 
-  void render(entt::registry &pRegistry, const entt::entity &pEntity,
-              render_context_root &pRenderContextRoot);
+  void render(renderer &pRenderer, entt::entity pEntity);
 
 private:
   std::vector<mesh_pair> mMeshes;

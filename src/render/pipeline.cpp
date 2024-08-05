@@ -3,6 +3,7 @@
 #include "render/mesh.hpp"
 #include "render/render.hpp"
 #include "render/renderer.hpp"
+#include <vector>
 
 using namespace platformer;
 
@@ -13,27 +14,21 @@ void pipeline::render() {
   auto cameraEntity = this->mRenderer.camera();
   auto &cameraTransform = registry.get<transform>(cameraEntity);
   auto &cameraCamera = registry.get<platformer::camera>(cameraEntity);
-  std::vector<render_light> lights = this->collect_lights();
-  render_context_root renderContextRoot{
-      .registry = registry,
-      .asset_manager = this->mRenderer.asset_manager(),
-      .aspect = static_cast<float>(this->mRenderer.width()) /
-                static_cast<float>(this->mRenderer.height()),
-      .camera_entity = cameraEntity,
-      .camera_transform = cameraTransform,
-      .camera_camera = cameraCamera,
-      .lights = lights,
-  };
+  this->collect_lights();
   auto view = registry.view<transform, mesh>();
   for (auto entity : view) {
     auto &meshVal = registry.get<mesh>(entity);
-    meshVal.render(registry, entity, renderContextRoot);
+    meshVal.render(this->mRenderer, entity);
   }
 }
 
-std::vector<render_light> pipeline::collect_lights() {
+const std::vector<render_light> &pipeline::get_lights() const {
+  return this->mLights;
+}
+
+void pipeline::collect_lights() {
   auto &registry = this->mRenderer.game().registry();
-  std::vector<render_light> lights;
+  this->mLights.clear();
   auto view = registry.view<transform, light>();
   for (auto entity : view) {
     auto &lightVal = registry.get<light>(entity);
@@ -43,7 +38,6 @@ std::vector<render_light> pipeline::collect_lights() {
         .color = lightVal.color,
         .range = glm::vec3(lightVal.power / std::numbers::pi, lightVal.radius,
                            lightVal.range)};
-    lights.push_back(renderLight);
+    this->mLights.push_back(renderLight);
   }
-  return lights;
 }

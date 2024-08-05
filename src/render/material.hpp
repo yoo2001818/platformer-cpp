@@ -1,5 +1,7 @@
 #ifndef __RENDER_MATERIAL_HPP__
 #define __RENDER_MATERIAL_HPP__
+#include "entt/entt.hpp"
+#include "render/geometry.hpp"
 #include "render/shader.hpp"
 #include "render/texture.hpp"
 #include <any>
@@ -8,13 +10,14 @@
 #include <string>
 
 namespace platformer {
-class render_context;
+class renderer;
 class material {
 public:
   material();
   virtual ~material();
 
-  virtual void render(const render_context &pContext) = 0;
+  virtual void render(renderer &pRenderer, geometry &pGeometry,
+                      entt::entity pEntity) = 0;
   virtual void dispose() = 0;
 };
 
@@ -22,7 +25,8 @@ class shader_material : public material {
 public:
   shader_material(std::string pVertex, std::string pFragment);
 
-  virtual void render(const render_context &pContext) override;
+  virtual void render(renderer &pRenderer, geometry &pGeometry,
+                      entt::entity pEntity) override;
   virtual void dispose() override;
 
   std::map<std::string, std::any> &uniforms();
@@ -39,7 +43,8 @@ public:
   standard_material(std::shared_ptr<texture> diffuseTexture, float pRoughness,
                     float pMetalic);
 
-  virtual void render(const render_context &pContext) override;
+  virtual void render(renderer &pRenderer, geometry &pGeometry,
+                      entt::entity pEntity) override;
   virtual void dispose() override;
 
   float roughness;
@@ -58,7 +63,8 @@ public:
   // yet
   armature_material();
 
-  virtual void render(const render_context &pContext) override;
+  virtual void render(renderer &pRenderer, geometry &pGeometry,
+                      entt::entity pEntity) override;
   virtual void dispose() override;
 
 private:

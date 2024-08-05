@@ -1,14 +1,15 @@
 #include "render/material.hpp"
 #include "render/geometry.hpp"
 #include "render/render.hpp"
+#include "render/renderer.hpp"
 #include "render/shader.hpp"
 #include "render/texture.hpp"
+#include "transform.hpp"
 #include <any>
 #include <format>
 #include <memory>
 #include <stdexcept>
 #include <string>
-#include <vector>
 
 using namespace platformer;
 
@@ -19,21 +20,24 @@ material::~material() {}
 shader_material::shader_material(std::string pVertex, std::string pFragment)
     : mShader(pVertex, pFragment), mUniforms() {}
 
-void shader_material::render(const render_context &pContext) {
+void shader_material::render(renderer &pRenderer, geometry &pGeometry,
+                             entt::entity pEntity) {
+  auto &registry = pRenderer.registry();
+  auto &transformVal = registry.get<transform>(pEntity);
   this->mShader.prepare();
-  pContext.geometry.prepare(this->mShader);
+  pGeometry.prepare(this->mShader);
   // Set up uniforms
-  this->mShader.set("uModel",
-                    pContext.transform.matrix_world(pContext.registry));
-  this->mShader.set("uView", pContext.camera_transform.matrix_world_inverse(
-                                 pContext.registry));
-  this->mShader.set("uProjection",
-                    pContext.camera_camera.getProjection(pContext.aspect));
-  this->mShader.set("uInverseView",
-                    pContext.camera_transform.matrix_world(pContext.registry));
-  this->mShader.set(
-      "uInverseProjection",
-      glm::inverse(pContext.camera_camera.getProjection(pContext.aspect)));
+  this->mShader.set("uModel", transformVal.matrix_world(registry));
+  // FIXME: This shouldn't be here, really
+  auto &camera_transform = registry.get<transform>(pRenderer.camera());
+  auto &camera_camera = registry.get<camera>(pRenderer.camera());
+  float aspect = static_cast<float>(pRenderer.width()) /
+                 static_cast<float>(pRenderer.height());
+  this->mShader.set("uView", camera_transform.matrix_world_inverse(registry));
+  this->mShader.set("uProjection", camera_camera.getProjection(aspect));
+  this->mShader.set("uInverseView", camera_transform.matrix_world(registry));
+  this->mShader.set("uInverseProjection",
+                    glm::inverse(camera_camera.getProjection(aspect)));
   int textureAcc = 0;
   for (auto &[key, value] : this->mUniforms) {
     auto &valueType = value.type();
@@ -63,7 +67,7 @@ void shader_material::render(const render_context &pContext) {
     }
   }
   // Issue draw call
-  pContext.geometry.render();
+  pGeometry.render();
 }
 
 void shader_material::dispose() { this->mShader.dispose(); }
@@ -84,7 +88,10 @@ standard_material::standard_material(std::shared_ptr<texture> pDiffuseTexture,
     : roughness(pRoughness), metalic(pMetalic), color(glm::vec3(1.0)),
       diffuseTexture(pDiffuseTexture) {}
 
-void standard_material::render(const render_context &pContext) {
+void standard_material::render(renderer &pRenderer, geometry &pGeometry,
+                               entt::entity pEntity) {
+  auto &registry = pRenderer.registry();
+  auto &transformVal = registry.get<transform>(pEntity);
   int featureFlags = 0;
   if (this->diffuseTexture != nullptr) {
     featureFlags |= 1;
@@ -92,7 +99,7 @@ void standard_material::render(const render_context &pContext) {
   if (this->environmentTexture != nullptr) {
     featureFlags |= 2;
   }
-  auto shaderVal = pContext.asset_manager.get<std::shared_ptr<shader>>(
+  auto shaderVal = pRenderer.asset_manager().get<std::shared_ptr<shader>>(
       "standard_material:" + std::to_string(featureFlags), [&]() {
         std::vector<std::string> defines;
         if (featureFlags & 1) {
@@ -106,20 +113,22 @@ void standard_material::render(const render_context &pContext) {
                                              defines);
       });
   shaderVal->prepare();
-  pContext.geometry.prepare(*shaderVal);
+  pGeometry.prepare(*shaderVal);
   // Set up uniforms
-  shaderVal->set("uModel", pContext.transform.matrix_world(pContext.registry));
-  shaderVal->set("uView", pContext.camera_transform.matrix_world_inverse(
-                              pContext.registry));
-  shaderVal->set("uViewPos",
-                 pContext.camera_transform.position_world(pContext.registry));
-  shaderVal->set("uProjection",
-                 pContext.camera_camera.getProjection(pContext.aspect));
+  shaderVal->set("uModel", transformVal.matrix_world(registry));
+  // FIXME: This shouldn't be here, really
+  auto &camera_transform = registry.get<transform>(pRenderer.camera());
+  auto &camera_camera = registry.get<camera>(pRenderer.camera());
+  float aspect = static_cast<float>(pRenderer.width()) /
+                 static_cast<float>(pRenderer.height());
+  shaderVal->set("uView", camera_transform.matrix_world_inverse(registry));
+  shaderVal->set("uViewPos", camera_transform.position_world(registry));
+  shaderVal->set("uProjection", camera_camera.getProjection(aspect));
   shaderVal->set("uColor", this->color);
   shaderVal->set("uRoughness", this->roughness);
   shaderVal->set("uMetalic", this->metalic);
   int pos = 0;
-  for (auto &light : pContext.lights) {
+  for (auto &light : pRenderer.pipeline().get_lights()) {
     shaderVal->set("uLightPositions", pos, light.position);
     shaderVal->set("uLightColors", pos, light.color);
     shaderVal->set("uLightRanges", pos, light.range);
@@ -142,7 +151,7 @@ void standard_material::render(const render_context &pContext) {
     shaderVal->set("uBRDFMap", 2);
   }
   // Issue draw call
-  pContext.geometry.render();
+  pGeometry.render();
 }
 
 void standard_material::dispose() {}

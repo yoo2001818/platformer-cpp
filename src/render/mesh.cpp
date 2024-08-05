@@ -1,4 +1,6 @@
 #include "render/mesh.hpp"
+#include "render/renderer.hpp"
+#include "transform.hpp"
 
 using namespace platformer;
 
@@ -12,25 +14,13 @@ bool mesh::shouldRender() const { return this->mShouldRender; }
 
 void mesh::shouldRender(bool mValue) { this->mShouldRender = mValue; }
 
-void mesh::render(entt::registry &pRegistry, const entt::entity &pEntity,
-                  render_context_root &pRenderContextRoot) {
+void mesh::render(renderer &pRenderer, entt::entity pEntity) {
   if (!this->mShouldRender)
     return;
-  auto &transformVal = pRegistry.get<transform>(pEntity);
+  auto &registry = pRenderer.registry();
+  auto &transformVal = registry.get<transform>(pEntity);
   int index = 0;
   for (auto &[materialVal, geometryVal] : this->mMeshes) {
-    materialVal->render({
-        .registry = pRegistry,
-        .asset_manager = pRenderContextRoot.asset_manager,
-        .aspect = pRenderContextRoot.aspect,
-        .entity = pEntity,
-        .transform = transformVal,
-        .mesh = *this,
-        .geometry = *geometryVal,
-        .camera_entity = pRenderContextRoot.camera_entity,
-        .camera_transform = pRenderContextRoot.camera_transform,
-        .camera_camera = pRenderContextRoot.camera_camera,
-        .lights = pRenderContextRoot.lights,
-    });
+    materialVal->render(pRenderer, *geometryVal, pEntity);
   }
 }

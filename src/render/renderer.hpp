@@ -12,7 +12,7 @@ namespace platformer {
 class game;
 class renderer {
 public:
-  renderer(game &pGame);
+  renderer(platformer::game &pGame);
   void apply_render_state(const render_state &to);
 
   void init();

@@ -1,6 +1,7 @@
 #include "entt/entity/fwd.hpp"
 #include "name.hpp"
 #include "physics.hpp"
+#include "render/camera.hpp"
 #include "render/geometry.hpp"
 #include "render/renderer.hpp"
 #include "render/shader.hpp"

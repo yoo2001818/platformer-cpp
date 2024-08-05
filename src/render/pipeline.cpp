@@ -1,9 +1,10 @@
 #include "render/pipeline.hpp"
 #include "game.hpp"
+#include "render/camera.hpp"
 #include "render/mesh.hpp"
-#include "render/render.hpp"
 #include "render/renderer.hpp"
 #include <vector>
+
 
 using namespace platformer;
 

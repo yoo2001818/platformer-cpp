@@ -1,4 +1,5 @@
 #include "render/material.hpp"
+#include "render/camera.hpp"
 #include "render/geometry.hpp"
 #include "render/render.hpp"
 #include "render/renderer.hpp"
@@ -28,16 +29,11 @@ void shader_material::render(renderer &pRenderer, geometry &pGeometry,
   pGeometry.prepare(this->mShader);
   // Set up uniforms
   this->mShader.set("uModel", transformVal.matrix_world(registry));
-  // FIXME: This shouldn't be here, really
-  auto &camera_transform = registry.get<transform>(pRenderer.camera());
-  auto &camera_camera = registry.get<camera>(pRenderer.camera());
-  float aspect = static_cast<float>(pRenderer.width()) /
-                 static_cast<float>(pRenderer.height());
-  this->mShader.set("uView", camera_transform.matrix_world_inverse(registry));
-  this->mShader.set("uProjection", camera_camera.getProjection(aspect));
-  this->mShader.set("uInverseView", camera_transform.matrix_world(registry));
-  this->mShader.set("uInverseProjection",
-                    glm::inverse(camera_camera.getProjection(aspect)));
+  camera_handle camHandle(pRenderer);
+  this->mShader.set("uView", camHandle.view());
+  this->mShader.set("uProjection", camHandle.projection());
+  this->mShader.set("uInverseView", camHandle.inverse_view());
+  this->mShader.set("uInverseProjection", camHandle.inverse_projection());
   int textureAcc = 0;
   for (auto &[key, value] : this->mUniforms) {
     auto &valueType = value.type();
@@ -116,14 +112,10 @@ void standard_material::render(renderer &pRenderer, geometry &pGeometry,
   pGeometry.prepare(*shaderVal);
   // Set up uniforms
   shaderVal->set("uModel", transformVal.matrix_world(registry));
-  // FIXME: This shouldn't be here, really
-  auto &camera_transform = registry.get<transform>(pRenderer.camera());
-  auto &camera_camera = registry.get<camera>(pRenderer.camera());
-  float aspect = static_cast<float>(pRenderer.width()) /
-                 static_cast<float>(pRenderer.height());
-  shaderVal->set("uView", camera_transform.matrix_world_inverse(registry));
-  shaderVal->set("uViewPos", camera_transform.position_world(registry));
-  shaderVal->set("uProjection", camera_camera.getProjection(aspect));
+  camera_handle camHandle(pRenderer);
+  shaderVal->set("uView", camHandle.view());
+  shaderVal->set("uViewPos", camHandle.view_pos());
+  shaderVal->set("uProjection", camHandle.projection());
   shaderVal->set("uColor", this->color);
   shaderVal->set("uRoughness", this->roughness);
   shaderVal->set("uMetalic", this->metalic);

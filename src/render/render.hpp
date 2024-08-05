@@ -8,18 +8,6 @@
 namespace platformer {
 class mesh;
 
-class camera {
-public:
-  // FIXME: This is against the convention; it could and should be improved
-  // in the future
-  enum { PERSPECTIVE, ORTHOGRAPHIC } type;
-  float near;
-  float far;
-  float fov;
-
-  glm::mat4 getProjection(float pAspect);
-};
-
 class light {
 public:
   glm::vec3 color;

@@ -24,7 +24,7 @@ public:
   pipeline(renderer &pRenderer);
   void render();
   const std::vector<render_light> &get_lights() const;
-  std::shared_ptr<shader> &get_shader(shader_block pShaderBlock);
+  std::shared_ptr<shader> get_shader(const shader_block &pShaderBlock);
   void prepare_shader(std::shared_ptr<shader> &pShader);
   void provide_uniforms(std::shared_ptr<shader> &pShader);
 

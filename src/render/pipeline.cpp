@@ -3,8 +3,9 @@
 #include "render/camera.hpp"
 #include "render/mesh.hpp"
 #include "render/renderer.hpp"
+#include "render/shader.hpp"
+#include <memory>
 #include <vector>
-
 
 using namespace platformer;
 
@@ -26,6 +27,16 @@ void pipeline::render() {
 const std::vector<render_light> &pipeline::get_lights() const {
   return this->mLights;
 }
+
+std::shared_ptr<shader> pipeline::get_shader(const shader_block &pShaderBlock) {
+  auto &assetManager = this->mRenderer.asset_manager();
+  return assetManager.get<std::shared_ptr<shader>>(
+      pShaderBlock.id, [&]() { return std::make_shared<shader>("", ""); });
+}
+
+void pipeline::prepare_shader(std::shared_ptr<shader> &pShader) {}
+
+void pipeline::provide_uniforms(std::shared_ptr<shader> &pShader) {}
 
 void pipeline::collect_lights() {
   auto &registry = this->mRenderer.game().registry();

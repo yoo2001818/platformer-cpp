@@ -1,3 +1,4 @@
+#include "file.hpp"
 #include "render/shader_preprocessor.hpp"
 #define GLM_ENABLE_EXPERIMENTAL
 #include "debug.hpp"
@@ -219,8 +220,8 @@ void shader::dispose() {
 file_shader::file_shader(const std::string &pVertexPath,
                          const std::string &pFragmentPath)
     : shader() {
-  shader_preprocessor vertex(pVertexPath);
-  shader_preprocessor fragment(pFragmentPath);
+  shader_preprocessor vertex(read_file_str(pVertexPath));
+  shader_preprocessor fragment(read_file_str(pFragmentPath));
   this->vertex(vertex.get());
   this->fragment(fragment.get());
 }
@@ -229,8 +230,8 @@ file_shader::file_shader(const std::string &pVertexPath,
                          const std::string &pFragmentPath,
                          const std::vector<std::string> &pDefines)
     : shader() {
-  shader_preprocessor vertex(pVertexPath, pDefines);
-  shader_preprocessor fragment(pFragmentPath, pDefines);
+  shader_preprocessor vertex(read_file_str(pVertexPath), pDefines);
+  shader_preprocessor fragment(read_file_str(pFragmentPath), pDefines);
   this->vertex(vertex.get());
   this->fragment(fragment.get());
 }

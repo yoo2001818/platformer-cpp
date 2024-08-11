@@ -8,16 +8,16 @@
 namespace platformer {
 class shader_preprocessor {
 public:
-  shader_preprocessor(const std::string &pPath);
-  shader_preprocessor(const std::string &pPath,
+  shader_preprocessor(const std::string &pSource);
+  shader_preprocessor(const std::string &pSource,
                       const std::vector<std::string> &pDefines);
-  shader_preprocessor(const std::string &pPath,
+  shader_preprocessor(const std::string &pSource,
                       std::vector<std::string> &&pDefines);
 
   std::string &get();
 
 private:
-  std::string mPath;
+  std::string mSource;
   std::vector<std::string> mDefines;
   std::optional<std::string> mCode;
 };

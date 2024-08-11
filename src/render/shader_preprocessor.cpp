@@ -6,22 +6,22 @@
 
 using namespace platformer;
 
-shader_preprocessor::shader_preprocessor(const std::string &pPath)
-    : mPath(pPath) {}
+shader_preprocessor::shader_preprocessor(const std::string &pSource)
+    : mSource(pSource) {}
 
 shader_preprocessor::shader_preprocessor(
-    const std::string &pPath, const std::vector<std::string> &pDefines)
-    : mPath(pPath), mDefines(pDefines) {}
+    const std::string &pSource, const std::vector<std::string> &pDefines)
+    : mSource(pSource), mDefines(pDefines) {}
 
-shader_preprocessor::shader_preprocessor(const std::string &pPath,
+shader_preprocessor::shader_preprocessor(const std::string &pSource,
                                          std::vector<std::string> &&pDefines)
-    : mPath(pPath), mDefines(pDefines) {}
+    : mSource(pSource), mDefines(pDefines) {}
 
 std::string &shader_preprocessor::get() {
   if (this->mCode != std::nullopt) {
     return this->mCode.value();
   }
-  auto input = read_file_str(this->mPath);
+  auto input = this->mSource;
   std::string output = "";
   std::string::size_type pos = 0;
   std::string::size_type prev = 0;
@@ -42,7 +42,7 @@ std::string &shader_preprocessor::get() {
       // Since the included script won't contain a version directive, add the
       // line here
       output += "#line 1 1\n";
-      shader_preprocessor included(file_path, this->mDefines);
+      shader_preprocessor included(read_file_str(file_path), this->mDefines);
       output += included.get() + '\n';
       output += "#line " + std::to_string(lineCount) + " 0\n";
     } else if (std::regex_match(line, match, versionPattern)) {

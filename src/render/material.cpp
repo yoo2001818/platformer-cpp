@@ -1,7 +1,8 @@
 #include "render/material.hpp"
+#include "file.hpp"
 #include "render/camera.hpp"
 #include "render/geometry.hpp"
-#include "render/render.hpp"
+#include "render/pipeline.hpp"
 #include "render/renderer.hpp"
 #include "render/shader.hpp"
 #include "render/texture.hpp"
@@ -88,6 +89,58 @@ void standard_material::render(renderer &pRenderer, geometry &pGeometry,
                                entt::entity pEntity) {
   auto &registry = pRenderer.registry();
   auto &transformVal = registry.get<transform>(pEntity);
+  auto &pipeline = pRenderer.pipeline();
+  int featureFlags = 0;
+  if (this->diffuseTexture != nullptr) {
+    featureFlags |= 1;
+  }
+  auto shaderVal = pipeline.get_shader(
+      "standard_material~" + std::to_string(featureFlags), [&]() {
+        std::string defines = "";
+        if (featureFlags & 1) {
+          defines += "#define USE_DIFFUSE_TEXTURE\n";
+        }
+
+        shader_block result{
+            .vertex_dependencies = {},
+            .vertex_body = read_file_str("res/shader/standard.vert"),
+            .fragment_dependencies = {},
+            .fragment_header = defines + "in vec3 vPosition;\n"
+                                         "in vec3 vNormal;\n"
+                                         "in vec2 vTexCoord;\n"
+                                         "uniform float uRoughness;\n"
+                                         "uniform float uMetalic;\n"
+                                         "uniform vec3 uColor;\n"
+                                         "#ifdef USE_DIFFUSE_TEXTURE\n"
+                                         "uniform sampler2D uDiffuse;\n"
+                                         "#endif",
+            .fragment_body = "#ifdef USE_DIFFUSE_TEXTURE\n"
+                             "mInfo.albedo = pow(texture(uDiffuse, "
+                             "vTexCoord).rgb, vec3(2.2));\n"
+                             "#else\n"
+                             "mInfo.albedo = uColor;\n"
+                             "#endif\n"
+                             "mInfo.normal = normalize(vNormal);\n"
+                             "mInfo.position = vPosition;\n"
+                             "mInfo.roughness = uRoughness;\n"
+                             "mInfo.metalic = uMetalic;\n",
+        };
+        return result;
+      });
+  pipeline.prepare_shader(shaderVal);
+  pGeometry.prepare(*shaderVal);
+  shaderVal->set("uModel", transformVal.matrix_world(registry));
+  shaderVal->set("uColor", this->color);
+  shaderVal->set("uRoughness", this->roughness);
+  shaderVal->set("uMetalic", this->metalic);
+  if (this->diffuseTexture != nullptr) {
+    this->diffuseTexture->prepare(0);
+    shaderVal->set("uDiffuse", 0);
+  }
+  pGeometry.render();
+
+  /*
+  auto &transformVal = registry.get<transform>(pEntity);
   int featureFlags = 0;
   if (this->diffuseTexture != nullptr) {
     featureFlags |= 1;
@@ -143,7 +196,7 @@ void standard_material::render(renderer &pRenderer, geometry &pGeometry,
     shaderVal->set("uBRDFMap", 2);
   }
   // Issue draw call
-  pGeometry.render();
+  */
 }
 
 void standard_material::dispose() {}

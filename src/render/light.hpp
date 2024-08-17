@@ -3,6 +3,7 @@
 
 #include "entt/entity/fwd.hpp"
 #include "render/renderer.hpp"
+#include "render/shader.hpp"
 #include "render/texture.hpp"
 #include <memory>
 #include <vector>
@@ -14,7 +15,8 @@ public:
   virtual ~light() {};
   virtual shader_block get_shader_block(int pNumLights,
                                         renderer &pRenderer) = 0;
-  virtual void set_uniforms(std::vector<entt::entity> pEntities,
+  virtual void set_uniforms(shader &pShader,
+                            std::vector<entt::entity> pEntities,
                             renderer &pRenderer) = 0;
 };
 
@@ -33,8 +35,12 @@ public:
 
   virtual shader_block get_shader_block(int pNumLights,
                                         renderer &pRenderer) override;
-  virtual void set_uniforms(std::vector<entt::entity> pEntities,
+  virtual void set_uniforms(shader &pShader,
+                            std::vector<entt::entity> pEntities,
                             renderer &pRenderer) override;
+
+  const point_light_options &options();
+  void options(const point_light_options &pOptions);
 
 private:
   point_light_options mOptions;
@@ -54,7 +60,8 @@ public:
 
   virtual shader_block get_shader_block(int pNumLights,
                                         renderer &pRenderer) override;
-  virtual void set_uniforms(std::vector<entt::entity> pEntities,
+  virtual void set_uniforms(shader &pShader,
+                            std::vector<entt::entity> pEntities,
                             renderer &pRenderer) override;
 
 private:

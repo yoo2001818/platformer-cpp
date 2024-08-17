@@ -11,6 +11,7 @@
 namespace platformer {
 class renderer;
 struct shader_block {
+  std::string id;
   std::vector<std::string> vertex_dependencies;
   std::string vertex_body;
   std::vector<std::string> fragment_dependencies;

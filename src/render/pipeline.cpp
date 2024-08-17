@@ -55,7 +55,7 @@ pipeline::get_shader(const std::string &pShaderId,
 
         std::stringstream fragment;
         fragment << "#version 330 core\n";
-        fragment << "#include \"res/shader/pipeline.glsl\"\n";
+        fragment << "#include \"res/shader/pbr.glsl\"\n";
         for (auto &file : shaderBlock.fragment_dependencies) {
           fragment << "#include " << file << "\n";
         }

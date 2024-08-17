@@ -1,4 +1,5 @@
 #include "light.hpp"
+#include "entt/core/hashed_string.hpp"
 #include "pipeline.hpp"
 #include "transform.hpp"
 #include <memory>
@@ -28,11 +29,11 @@ shader_block point_light::get_shader_block(int pNumLights,
               "uniform int uPointLightCount;\n",
           .fragment_body =
               "for (int i = 0; i < POINT_LIGHTS_SIZE; i += 1) {\n"
-              "  if (i > uPointLightCount) break;\n"
+              "  if (i >= uPointLightCount) break;\n"
               "  PointLight light;\n"
               "  light.position = uPointLightPositions[i].xyz;\n"
               "  light.color = uPointLightColors[i];\n"
-              "  light.intensity = uLightRanges[i];\n"
+              "  light.intensity = uPointLightRanges[i];\n"
               "  vec3 L;\n"
               "  vec3 V = normalize(uViewPos - mInfo.position);\n"
               "  vec3 N = mInfo.normal;\n"
@@ -58,6 +59,14 @@ void point_light::set_uniforms(shader &pShader,
                           options.range));
     pos += 1;
   }
+  pShader.set("uPointLightCount", pos);
+}
+
+void point_light::prepare(std::vector<entt::entity> pEntities,
+                          renderer &pRenderer) {}
+
+entt::hashed_string point_light::type() const {
+  return entt::hashed_string{"point"};
 }
 
 const point_light_options &point_light::options() { return this->mOptions; }
@@ -82,4 +91,11 @@ void envmap_light::set_uniforms(shader &pShader,
                                 std::vector<entt::entity> pEntities,
                                 renderer &pRenderer) {
   // Implementation of set_uniforms for envmap_light
+}
+
+void envmap_light::prepare(std::vector<entt::entity> pEntities,
+                           renderer &pRenderer) {}
+
+entt::hashed_string envmap_light::type() const {
+  return entt::hashed_string{"envmap"};
 }

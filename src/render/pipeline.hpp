@@ -1,11 +1,13 @@
 #ifndef __PIPELINE_HPP__
 #define __PIPELINE_HPP__
 
-#include "render/render.hpp"
+#include "entt/core/hashed_string.hpp"
+#include "entt/entity/fwd.hpp"
 #include "render/shader.hpp"
 #include <functional>
 #include <memory>
 #include <string>
+#include <unordered_map>
 #include <vector>
 
 namespace platformer {
@@ -24,16 +26,17 @@ class pipeline {
 public:
   pipeline(renderer &pRenderer);
   void render();
-  const std::vector<render_light> &get_lights() const;
   std::shared_ptr<shader>
   get_shader(const std::string &pShaderId,
              const std::function<shader_block()> &pExec);
   void prepare_shader(std::shared_ptr<shader> &pShader);
 
 private:
-  void collect_lights();
+  void prepare_lights();
   renderer &mRenderer;
-  std::vector<render_light> mLights;
+  std::unordered_map<std::string, std::vector<entt::entity>> mLights = {};
+  std::vector<shader_block> mLightShaderBlocks = {};
+  std::string mLightShaderIds;
 };
 class renderpass {
 public:

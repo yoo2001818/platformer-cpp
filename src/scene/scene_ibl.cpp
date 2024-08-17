@@ -5,6 +5,7 @@
 #include "pbr/pbr.hpp"
 #include "render/cubemap.hpp"
 #include "render/geometry.hpp"
+#include "render/light.hpp"
 #include "render/load.hpp"
 #include "render/material.hpp"
 #include "render/mesh.hpp"
@@ -69,11 +70,13 @@ void scene_ibl::init(application &pApplication, game &pGame) {
     auto light = registry.create();
     auto &transformVal = registry.emplace<transform>(light);
     transformVal.position(glm::vec3(0.0, 10.0, 2.0));
-    auto &lightVal = registry.emplace<platformer::light>(light);
-    lightVal.color = glm::vec3(1.0, 1.0, 1.0);
-    lightVal.power = 100.0f;
-    lightVal.radius = 0.1f;
-    lightVal.range = 100.0f;
+    registry.emplace<light_component>(
+        light, std::make_shared<point_light>(point_light_options({
+                   .color = glm::vec3(1.0),
+                   .power = 100.0f,
+                   .radius = 0.1f,
+                   .range = 100.0f,
+               })));
     registry.emplace<name>(light, "light");
   }
   {

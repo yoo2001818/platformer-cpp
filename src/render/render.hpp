@@ -6,18 +6,6 @@
 #include <glm/glm.hpp>
 #include <unordered_map>
 namespace platformer {
-class mesh;
-
-/*
-class light {
-public:
-  glm::vec3 color;
-  float power;
-  float radius;
-  float range;
-};
-*/
-
 class asset_manager {
 public:
   template <typename T>
@@ -33,12 +21,6 @@ public:
 
 private:
   std::unordered_map<std::string, std::any> mMap;
-};
-
-struct render_light {
-  glm::vec4 position;
-  glm::vec3 color;
-  glm::vec3 range;
 };
 
 } // namespace platformer

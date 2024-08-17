@@ -1,12 +1,12 @@
 #include "render/pipeline.hpp"
 #include "game.hpp"
 #include "render/camera.hpp"
+#include "render/light.hpp"
 #include "render/mesh.hpp"
 #include "render/renderer.hpp"
 #include "render/shader.hpp"
 #include "render/shader_preprocessor.hpp"
 #include <functional>
-#include <iostream>
 #include <memory>
 #include <sstream>
 #include <vector>
@@ -20,16 +20,12 @@ void pipeline::render() {
   auto cameraEntity = this->mRenderer.camera();
   auto &cameraTransform = registry.get<transform>(cameraEntity);
   auto &cameraCamera = registry.get<platformer::camera>(cameraEntity);
-  this->collect_lights();
+  this->prepare_lights();
   auto view = registry.view<transform, mesh>();
   for (auto entity : view) {
     auto &meshVal = registry.get<mesh>(entity);
     meshVal.render(this->mRenderer, entity);
   }
-}
-
-const std::vector<render_light> &pipeline::get_lights() const {
-  return this->mLights;
 }
 
 std::shared_ptr<shader>
@@ -42,7 +38,7 @@ pipeline::get_shader(const std::string &pShaderId,
   // It is free to read any information from uniforms, varying, etc, otherwise.
   auto &assetManager = this->mRenderer.asset_manager();
   return assetManager.get<std::shared_ptr<shader>>(
-      "shader~" + pShaderId, [&]() {
+      "shader~" + pShaderId + this->mLightShaderIds, [&]() {
         // FIXME: Any light routines are omitted for now, but needs to be
         // implemented
         auto shaderBlock = pExec();
@@ -57,18 +53,31 @@ pipeline::get_shader(const std::string &pShaderId,
         fragment << "#version 330 core\n";
         fragment << "#include \"res/shader/pbr.glsl\"\n";
         for (auto &file : shaderBlock.fragment_dependencies) {
-          fragment << "#include " << file << "\n";
+          fragment << "#include \"" << file << "\"\n";
         }
+        for (auto &entry : this->mLightShaderBlocks) {
+          for (auto &file : entry.fragment_dependencies) {
+            fragment << "#include \"" << file << "\"\n";
+          }
+        }
+
         fragment << shaderBlock.fragment_header << "\n";
-        fragment << "out vec4 FragColor;\n"
+        for (auto &entry : this->mLightShaderBlocks) {
+          fragment << entry.fragment_header << "\n";
+        }
+
+        fragment << "uniform vec3 uViewPos;\n"
+                    "out vec4 FragColor;\n"
                     "void main() {\n"
                     "  MaterialInfo mInfo;\n"
                     "  {\n";
         fragment << shaderBlock.fragment_body << "\n";
         fragment << "  }\n"
-                    "  vec3 result = vec3(0.0);\n"
-                    "  result += 0.5 * mInfo.albedo;\n"
-                    "  vec3 tonemappedColor = pow(result, vec3(1.0 / 2.2));\n"
+                    "  vec3 result = vec3(0.0);\n";
+        for (auto &entry : this->mLightShaderBlocks) {
+          fragment << entry.fragment_body << "\n";
+        }
+        fragment << "  vec3 tonemappedColor = pow(result, vec3(1.0 / 2.2));\n"
                     "  FragColor = vec4(tonemappedColor, 1.0);\n"
                     "}\n";
 
@@ -80,6 +89,7 @@ pipeline::get_shader(const std::string &pShaderId,
 }
 
 void pipeline::prepare_shader(std::shared_ptr<shader> &pShader) {
+  auto &registry = this->mRenderer.game().registry();
   pShader->prepare();
   // Well, it should set the renderer state, framebuffer, etc, but we don't
   // have any of that in forward rendering
@@ -87,20 +97,40 @@ void pipeline::prepare_shader(std::shared_ptr<shader> &pShader) {
   pShader->set("uView", camHandle.view());
   pShader->set("uViewPos", camHandle.view_pos());
   pShader->set("uProjection", camHandle.projection());
+  // Set uniforms for lights
+  for (auto &entry : this->mLights) {
+    auto &entities = entry.second;
+    auto &light = registry.get<light_component>(entities[0]).light;
+    light->set_uniforms(*pShader, entities, this->mRenderer);
+  }
 }
 
-void pipeline::collect_lights() {
+void pipeline::prepare_lights() {
   auto &registry = this->mRenderer.game().registry();
+  auto view = registry.view<transform, light_component>();
   this->mLights.clear();
-  auto view = registry.view<transform, light>();
+  // Group all lights in the separate vector
   for (auto entity : view) {
-    auto &lightVal = registry.get<light>(entity);
-    auto &transformVal = registry.get<transform>(entity);
-    render_light renderLight{
-        .position = glm::vec4(transformVal.position_world(registry), 1.0f),
-        .color = lightVal.color,
-        .range = glm::vec3(lightVal.power / std::numbers::pi, lightVal.radius,
-                           lightVal.range)};
-    this->mLights.push_back(renderLight);
+    auto &light = registry.get<light_component>(entity).light;
+    auto lightType = std::string(light->type());
+    auto current = this->mLights.find(lightType);
+    if (current != this->mLights.end()) {
+      current->second.push_back(entity);
+    } else {
+      this->mLights.insert({lightType, {entity}});
+    }
+  }
+  this->mLightShaderBlocks.clear();
+  this->mLightShaderIds = "";
+  // Prepare lights and generate light shader blocks
+  for (auto &entry : this->mLights) {
+    auto &entities = entry.second;
+    auto &light = registry.get<light_component>(entities[0]).light;
+    light->prepare(entities, this->mRenderer);
+    auto shaderBlock =
+        light->get_shader_block(entities.size(), this->mRenderer);
+    this->mLightShaderBlocks.push_back(shaderBlock);
+    this->mLightShaderIds +=
+        "~" + std::string(entry.first) + "-" + shaderBlock.id;
   }
 }

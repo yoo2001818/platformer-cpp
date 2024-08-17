@@ -8,6 +8,7 @@
 namespace platformer {
 class mesh;
 
+/*
 class light {
 public:
   glm::vec3 color;
@@ -15,6 +16,7 @@ public:
   float radius;
   float range;
 };
+*/
 
 class asset_manager {
 public:

@@ -2,6 +2,7 @@
 #include "file.hpp"
 #include <optional>
 #include <regex>
+#include <unordered_set>
 #include <vector>
 
 using namespace platformer;
@@ -22,6 +23,7 @@ std::string &shader_preprocessor::get() {
     return this->mCode.value();
   }
   auto input = this->mSource;
+  std::unordered_set<std::string> includedList;
   std::string output = "";
   std::string::size_type pos = 0;
   std::string::size_type prev = 0;
@@ -39,12 +41,15 @@ std::string &shader_preprocessor::get() {
     std::smatch match;
     if (std::regex_match(line, match, includePattern)) {
       auto file_path = match[1];
-      // Since the included script won't contain a version directive, add the
-      // line here
-      output += "#line 1 1\n";
-      shader_preprocessor included(read_file_str(file_path), this->mDefines);
-      output += included.get() + '\n';
-      output += "#line " + std::to_string(lineCount) + " 0\n";
+      if (!includedList.contains(file_path)) {
+        // Since the included script won't contain a version directive, add the
+        // line here
+        output += "#line 1 1\n";
+        shader_preprocessor included(read_file_str(file_path), this->mDefines);
+        output += included.get() + '\n';
+        output += "#line " + std::to_string(lineCount) + " 0\n";
+        includedList.insert(file_path);
+      }
     } else if (std::regex_match(line, match, versionPattern)) {
       output += line + '\n';
       // If there are any defined defines, add it right below #version

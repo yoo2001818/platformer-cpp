@@ -80,6 +80,17 @@ void scene_ibl::init(application &pApplication, game &pGame) {
     registry.emplace<name>(light, "light");
   }
   {
+    auto light = registry.create();
+    auto &transformVal = registry.emplace<transform>(light);
+    transformVal.position(glm::vec3(0.0, 10.0, 2.0));
+    registry.emplace<light_component>(
+        light, std::make_shared<envmap_light>(envmap_light_options({
+                   .envMap = cubemapPbr.get_texture(),
+                   .brdfMap = brdfMap->get_texture(),
+               })));
+    registry.emplace<name>(light, "envmap");
+  }
+  {
     auto cube = registry.create();
 
     auto &trans = registry.emplace<transform>(cube);
@@ -108,11 +119,8 @@ void scene_ibl::init(application &pApplication, game &pGame) {
         auto &trans = registry.emplace<transform>(cube);
         trans.position(glm::vec3(x * 3.0f, y * 3.0f, -6.0f));
 
-        // FIXME: This should not be done like this
         auto mat = std::make_shared<standard_material>(glm::vec3(1.0f),
                                                        x / 5.0f, y / 5.0f);
-        mat->environmentTexture = cubemapPbr.get_texture();
-        mat->brdfTexture = brdfMap->get_texture();
 
         registry.emplace<mesh>(cube, mesh({{mat, model.meshes()[0].second}}));
         registry.emplace<collision>(cube);

@@ -84,13 +84,36 @@ envmap_light::~envmap_light() {}
 
 shader_block envmap_light::get_shader_block(int pNumLights,
                                             renderer &pRenderer) {
-  // Implementation of get_shader_block for envmap_light
+  return {
+      .id = "1",
+      .vertex_dependencies = {},
+      .vertex_body = "",
+      .fragment_dependencies = {"res/shader/light.glsl"},
+      .fragment_header = "uniform sampler2D uBRDFMap;\n"
+                         "uniform samplerCube uEnvironmentMap;\n"
+                         "uniform vec2 uEnvironmentMapSize;\n",
+      .fragment_body =
+          "result += calcEnvironmentMap(uViewPos, mInfo, uBRDFMap, "
+          "uEnvironmentMap, uEnvironmentMapSize.x, uEnvironmentMapSize.y);\n"};
 }
 
 void envmap_light::set_uniforms(shader &pShader,
                                 std::vector<entt::entity> pEntities,
                                 renderer &pRenderer) {
-  // Implementation of set_uniforms for envmap_light
+  auto &registry = pRenderer.registry();
+  auto light = pEntities[0];
+  auto &transformVal = registry.get<transform>(light);
+  auto &lightVal = registry.get<light_component>(light);
+  auto envmapLightVal = std::static_pointer_cast<envmap_light>(lightVal.light);
+  auto &options = envmapLightVal->options();
+  options.envMap->prepare(1);
+  options.brdfMap->prepare(2);
+  int numMipmapLevels =
+      1 + std::floor(std::log2(options.envMap->options().width));
+  pShader.set("uEnvironmentMap", 1);
+  pShader.set("uEnvironmentMapSize",
+              glm::vec2(numMipmapLevels - 3, options.power));
+  pShader.set("uBRDFMap", 2);
 }
 
 void envmap_light::prepare(std::vector<entt::entity> pEntities,
@@ -98,4 +121,10 @@ void envmap_light::prepare(std::vector<entt::entity> pEntities,
 
 entt::hashed_string envmap_light::type() const {
   return entt::hashed_string{"envmap"};
+}
+
+const envmap_light_options &envmap_light::options() { return this->mOptions; }
+
+void envmap_light::options(const envmap_light_options &pOptions) {
+  this->mOptions = pOptions;
 }

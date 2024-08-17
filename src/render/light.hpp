@@ -56,7 +56,7 @@ private:
 struct envmap_light_options {
   std::shared_ptr<texture> envMap;
   std::shared_ptr<texture> brdfMap;
-  float power;
+  float power = 1.0f;
 };
 
 class envmap_light : public light {
@@ -73,6 +73,9 @@ public:
   virtual void prepare(std::vector<entt::entity> pEntities,
                        renderer &pRenderer) override;
   virtual entt::hashed_string type() const override;
+
+  const envmap_light_options &options();
+  void options(const envmap_light_options &pOptions);
 
 private:
   envmap_light_options mOptions;

@@ -81,5 +81,17 @@ target_link_libraries(tests Catch2::Catch2WithMain)
 target_link_libraries(tests assimp)
 ]]
 
-file(COPY ${CMAKE_CURRENT_SOURCE_DIR}/res
-     DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
+file(GLOB_RECURSE RES_FILES "${CMAKE_CURRENT_SOURCE_DIR}/res/*")
+
+foreach(RES_FILE ${RES_FILES})
+  get_filename_component(RES_FILE_NAME ${RES_FILE} NAME)
+  set(DEST_FILE "${CMAKE_CURRENT_BINARY_DIR}/${RES_FILE_NAME}")
+  add_custom_command(
+    OUTPUT ${DEST_FILE}
+    COMMAND ${CMAKE_COMMAND} -E copy_if_different ${RES_FILE} ${DEST_FILE}
+    DEPENDS ${RES_FILE}
+  )
+  list(APPEND RES_FILES_OUT ${DEST_FILE})
+endforeach()
+
+add_custom_target(copy_res_files ALL DEPENDS ${RES_FILES_OUT})

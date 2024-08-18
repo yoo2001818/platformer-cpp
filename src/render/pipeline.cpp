@@ -10,7 +10,6 @@
 #include "render/shader_preprocessor.hpp"
 #include "render/texture.hpp"
 #include <functional>
-#include <iostream>
 #include <memory>
 #include <sstream>
 #include <vector>
@@ -208,8 +207,6 @@ std::shared_ptr<shader> deferred_deferred_subpipeline::get_shader(
 
         shader_preprocessor vertexProc(vertex.str());
         shader_preprocessor fragmentProc(fragment.str());
-
-        std::cout << fragment.str() << std::endl;
 
         return std::make_shared<shader>(vertexProc.get(), fragmentProc.get());
       });

@@ -351,6 +351,7 @@ void deferred_pipeline::render() {
     meshVal.render(this->mDeferredSubpipeline, entity);
   }
   this->mMeshPassFb.unbind();
+  // Do the lighting pass
   // Present the G-buffer to the screen for debugging
   auto &assetManager = this->mRenderer.asset_manager();
   auto quad = assetManager.get<std::shared_ptr<geometry>>("quad", []() {

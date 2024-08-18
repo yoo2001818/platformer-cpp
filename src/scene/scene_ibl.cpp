@@ -60,7 +60,7 @@ void scene_ibl::init(application &pApplication, game &pGame) {
     std::vector<mesh::mesh_pair> meshes{};
     meshes.push_back(
         {std::make_shared<standard_material>(imageTexture, 0.5f, 0.0f),
-         std::make_shared<geometry>(geometry::make_box())});
+         std::make_shared<geometry>(geometry::make_uv_sphere(16, 16))});
 
     registry.emplace<mesh>(cube, std::move(meshes));
     registry.emplace<collision>(cube);

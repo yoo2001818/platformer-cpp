@@ -59,6 +59,7 @@ public:
   static geometry make_box();
   static geometry make_quad(int pHSlice, int pVSlice);
   static geometry make_quad();
+  static geometry make_uv_sphere(int pSegments, int pRings);
 
 private:
   unsigned int mVbo = -1;

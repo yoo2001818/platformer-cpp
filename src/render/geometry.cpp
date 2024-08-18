@@ -1,3 +1,4 @@
+#include <glm/gtc/constants.hpp>
 #include <vector>
 #define GLM_ENABLE_EXPERIMENTAL
 #include "debug.hpp"
@@ -538,3 +539,157 @@ geometry geometry::make_quad(int pHSlice, int pVSlice) {
 }
 
 geometry geometry::make_quad() { return geometry::make_quad(1, 1); }
+
+geometry geometry::make_uv_sphere(int pSegments, int pRings) {
+  // A UV Sphere consists of many regular N-polygons, which serves as
+  // a 'ring'. Its radius gracefully goes small, and eventually reach 0
+  // at the top. A sphere is defined as x^2 + y^2 + z^2 = 1. Which converts
+  // to 1 - z^2 = x^2 + y^2. We can derive that a ring's radius is
+  // sqrt(1 - z^2) from that equation.
+  // The sphere has ring * (segment - 2) + 2 vertices. Since radius 0 means
+  // a single point, we can remove 2 rings from top and bottom.
+  // However, OpenGL requires another vertices for different normals, etc,
+  // we must use different vertices for each faces.
+  // A UV sphere can be seperated to 3 parts - Roof, Pillar, Floor.
+  // Roof consists of N triangles (N = segments), so it'd be trivial -
+  // it needs 3 * N vertices.
+  // Pillar, however, uses quads. However, we can share the vertices if
+  // it has same normal map, texture coords, etc.
+  // Pillar consists of N * (M - 3) quads (M = rings), so it uses
+  // 4 * N * (M - 3) vertices.
+  // Floor is exactly same as the roof, it needs 3 * N vertices.
+  // Adding all, it needs N * (6 + 4 * (M - 3)) vertices total, and
+  // N * (2 + 2 * (M - 3)) triangles total.
+  geometry geom;
+  std::vector<glm::vec3> positions;
+  std::vector<glm::vec2> texCoords;
+  std::vector<unsigned int> indices;
+
+  unsigned int verticesTotal = pSegments * (6 + 4 * (pRings - 3));
+  unsigned int facesTotal = pSegments * (2 + 2 * (pRings - 3));
+
+  positions.reserve(verticesTotal);
+  texCoords.reserve(verticesTotal);
+  indices.reserve(facesTotal * 3);
+
+  // Roof
+  for (unsigned int i = 0; i < pSegments; i++) {
+    float theta = 1.0f / (pRings - 1) * glm::pi<float>();
+    float y = std::cos(theta);
+    float radius = std::sin(theta);
+    float angle = i / static_cast<float>(pSegments) * glm::two_pi<float>();
+    float angleNext =
+        (i + 1) / static_cast<float>(pSegments) * glm::two_pi<float>();
+
+    // Roof left
+    positions.emplace_back(glm::cos(angle) * radius, y,
+                           glm::sin(angle) * radius);
+    // Roof top
+    positions.emplace_back(0.0f, 1.0f, 0.0f);
+    // Roof right
+    positions.emplace_back(glm::cos(angleNext) * radius, y,
+                           glm::sin(angleNext) * radius);
+
+    // Connect it
+    indices.push_back(i * 3);
+    indices.push_back(i * 3 + 1);
+    indices.push_back(i * 3 + 2);
+
+    // Texture coords
+    texCoords.emplace_back(1 - i / static_cast<float>(pSegments),
+                           1 - 1 / static_cast<float>(pRings - 1));
+    texCoords.emplace_back(1 - (i + 0.5f) / static_cast<float>(pSegments), 1);
+    texCoords.emplace_back(1 - (i + 1) / static_cast<float>(pSegments),
+                           1 - 1 / static_cast<float>(pRings - 1));
+  }
+
+  // Pillar
+  for (unsigned int j = 0; j < pRings - 3; j++) {
+    float theta = (j + 1) / static_cast<float>(pRings - 1) * glm::pi<float>();
+    float y = std::cos(theta);
+    float radius = std::sin(theta);
+    float thetaNext =
+        (j + 2) / static_cast<float>(pRings - 1) * glm::pi<float>();
+    float yNext = std::cos(thetaNext);
+    float radiusNext = std::sin(thetaNext);
+
+    for (unsigned int i = 0; i < pSegments; i++) {
+      unsigned int startPos = pSegments * (3 + 4 * j) + i * 4;
+      unsigned int startIndices = pSegments * (3 + 6 * j) + i * 6;
+      float angle = i / static_cast<float>(pSegments) * glm::two_pi<float>();
+      float angleNext =
+          (i + 1) / static_cast<float>(pSegments) * glm::two_pi<float>();
+
+      // Roof left top
+      positions.emplace_back(glm::cos(angle) * radius, y,
+                             glm::sin(angle) * radius);
+      // Roof right top
+      positions.emplace_back(glm::cos(angleNext) * radius, y,
+                             glm::sin(angleNext) * radius);
+      // Roof right bottom
+      positions.emplace_back(glm::cos(angleNext) * radiusNext, yNext,
+                             glm::sin(angleNext) * radiusNext);
+      // Roof left bottom
+      positions.emplace_back(glm::cos(angle) * radiusNext, yNext,
+                             glm::sin(angle) * radiusNext);
+
+      // Connect it
+      indices.push_back(startPos + 2);
+      indices.push_back(startPos);
+      indices.push_back(startPos + 1);
+      indices.push_back(startPos + 3);
+      indices.push_back(startPos);
+      indices.push_back(startPos + 2);
+
+      // Texture coords mapping
+      texCoords.emplace_back(1 - i / static_cast<float>(pSegments),
+                             1 - (j + 1) / static_cast<float>(pRings - 1));
+      texCoords.emplace_back(1 - (i + 1) / static_cast<float>(pSegments),
+                             1 - (j + 1) / static_cast<float>(pRings - 1));
+      texCoords.emplace_back(1 - (i + 1) / static_cast<float>(pSegments),
+                             1 - (j + 2) / static_cast<float>(pRings - 1));
+      texCoords.emplace_back(1 - i / static_cast<float>(pSegments),
+                             1 - (j + 2) / static_cast<float>(pRings - 1));
+    }
+  }
+
+  // Floor
+  for (unsigned int i = 0; i < pSegments; i++) {
+    unsigned int startPos = pSegments * (3 + 4 * (pRings - 3)) + i * 3;
+    unsigned int startIndices = pSegments * (3 + 6 * (pRings - 3)) + i * 3;
+    float theta =
+        (pRings - 2) / static_cast<float>(pRings - 1) * glm::pi<float>();
+    float y = std::cos(theta);
+    float radius = std::sin(theta);
+    float angle = i / static_cast<float>(pSegments) * glm::two_pi<float>();
+    float angleNext =
+        (i + 1) / static_cast<float>(pSegments) * glm::two_pi<float>();
+
+    // Floor left
+    positions.emplace_back(glm::cos(angle) * radius, y,
+                           glm::sin(angle) * radius);
+    // Floor top
+    positions.emplace_back(0.0f, -1.0f, 0.0f);
+    // Floor right
+    positions.emplace_back(glm::cos(angleNext) * radius, y,
+                           glm::sin(angleNext) * radius);
+
+    // Connect it
+    indices.push_back(startPos + 1);
+    indices.push_back(startPos);
+    indices.push_back(startPos + 2);
+
+    // Texture coords
+    texCoords.emplace_back(1 - i / static_cast<float>(pSegments),
+                           1 - (pRings - 2) / static_cast<float>(pRings - 1));
+    texCoords.emplace_back(1 - (i + 0.5f) / static_cast<float>(pSegments), 0);
+    texCoords.emplace_back(1 - (i + 1) / static_cast<float>(pSegments),
+                           1 - (pRings - 2) / static_cast<float>(pRings - 1));
+  }
+
+  geom.positions(positions);
+  geom.texCoords(texCoords);
+  geom.indices(indices);
+  geom.normals(positions);
+  return geom;
+}

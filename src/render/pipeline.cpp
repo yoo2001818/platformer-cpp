@@ -308,7 +308,10 @@ void deferred_light_subpipeline::prepare_shader(
   pShader->set("uGBuffer1", 4);
   this->mDepthBuffer->prepare(5);
   pShader->set("uDepthBuffer", 5);
-  this->mRenderer.apply_render_state({.depthEnabled = false});
+  this->mRenderer.apply_render_state(
+      {.blendEnabled = true,
+       .blendFunc = {GL_ONE, GL_ONE, GL_ONE, GL_ONE},
+       .depthEnabled = false});
 }
 
 deferred_pipeline::deferred_pipeline(platformer::renderer &pRenderer)
@@ -452,7 +455,6 @@ void deferred_pipeline::render() {
     light->render_deferred(this->mLightSubpipeline, entities);
   }
   this->mLightPassFb.unbind();
-  this->mRenderer.apply_render_state({});
   // Present the G-buffer to the screen for debugging
   auto &assetManager = this->mRenderer.asset_manager();
   auto quad = assetManager.get<std::shared_ptr<geometry>>("quad", []() {
@@ -473,14 +475,19 @@ void deferred_pipeline::render() {
             "in vec2 vTexCoord;\n"
             "out vec4 FragColor;\n"
             "uniform sampler2D uBuffer;\n"
+            "uniform sampler2D uDepthBuffer;\n"
             "void main() {\n"
             "  vec4 color = texture2D(uBuffer, vTexCoord);\n"
             "  FragColor = vec4(pow(color.rgb, vec3(1.0 / 2.2)), 1.0);\n"
+            "  gl_FragDepth = texture2D(uDepthBuffer, vTexCoord).r;\n"
             "}\n");
       });
   presentShader->prepare();
   quad->prepare(*presentShader);
   this->mColorBuffer->prepare(0);
   presentShader->set("uBuffer", 0);
+  this->mDepthBuffer->prepare(1);
+  presentShader->set("uDepthBuffer", 1);
+  this->mRenderer.apply_render_state({.depthFunc = GL_LESS});
   quad->render();
 }

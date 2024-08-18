@@ -77,8 +77,8 @@ void scene_bunchoftest::init(application &pApplication, game &pGame) {
     fb.bind();
     glClearColor(.5f, .5f, .5f, 0.0f);
     glClear(GL_COLOR_BUFFER_BIT);
-    glDisable(GL_CULL_FACE);
-    glDisable(GL_DEPTH_TEST);
+    pGame.renderer().apply_render_state(
+        {.cullEnabled = false, .depthEnabled = false});
     shader->prepare();
     quad.prepare(*shader);
     quad.render();
@@ -100,11 +100,24 @@ void scene_bunchoftest::init(application &pApplication, game &pGame) {
   {
     auto light = registry.create();
     auto &transformVal = registry.emplace<transform>(light);
-    transformVal.position(glm::vec3(0.0, 10.0, 2.0));
+    transformVal.position(glm::vec3(0.0, 8.0, 2.0));
     registry.emplace<light_component>(
         light, std::make_shared<point_light>(point_light_options({
                    .color = glm::vec3(1.0),
                    .power = 100.0f,
+                   .radius = 0.1f,
+                   .range = 100.0f,
+               })));
+    registry.emplace<name>(light, "light");
+  }
+  {
+    auto light = registry.create();
+    auto &transformVal = registry.emplace<transform>(light);
+    transformVal.position(glm::vec3(2.0, 2.0, 2.0));
+    registry.emplace<light_component>(
+        light, std::make_shared<point_light>(point_light_options({
+                   .color = glm::vec3(1.0, 0.0, 0.0),
+                   .power = 50.0f,
                    .radius = 0.1f,
                    .range = 100.0f,
                })));

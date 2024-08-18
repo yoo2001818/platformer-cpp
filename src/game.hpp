@@ -24,6 +24,7 @@ public:
   virtual void handle_event(application &pApplication,
                             SDL_Event &pEvent) override;
   entt::registry &registry();
+  platformer::renderer &renderer();
   void change_scene(std::shared_ptr<scene> &pScene);
   const std::shared_ptr<scene> &current_scene() const;
   application &app();
@@ -37,7 +38,7 @@ private:
   fps_movement_system mMovement;
   physics_system mPhysics;
   debug_ui_system mDebugUi;
-  renderer mRenderer;
+  platformer::renderer mRenderer;
   application *mApplication;
   std::shared_ptr<scene> mScene;
 

@@ -68,6 +68,7 @@ void shader_material::render(subpipeline &pSubpipeline, geometry &pGeometry,
     }
   }
   // Issue draw call
+  renderer.apply_render_state({.depthFunc = GL_LEQUAL});
   pGeometry.render();
 }
 

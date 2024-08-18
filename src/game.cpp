@@ -9,7 +9,6 @@
 #include <glm/ext/matrix_clip_space.hpp>
 #include <glm/ext/scalar_constants.hpp>
 #include <glm/geometric.hpp>
-#include <iostream>
 #include <vector>
 #define GLM_ENABLE_EXPERIMENTAL
 #include "SDL_events.h"
@@ -70,6 +69,7 @@ void game::handle_event(application &pApplication, SDL_Event &pEvent) {
 }
 
 entt::registry &game::registry() { return this->mRegistry; }
+platformer::renderer &game::renderer() { return this->mRenderer; }
 
 void game::make_player() {
   {

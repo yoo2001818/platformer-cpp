@@ -57,15 +57,10 @@ void framebuffer::bind() {
   glBindFramebuffer(GL_FRAMEBUFFER, this->mFramebuffer);
   if (!this->mIsValid) {
     auto &options = this->mOptions;
-    std::vector<unsigned int> colorAttachments;
     int i = 0;
     for (auto &target : options.colors) {
       this->set_item(GL_COLOR_ATTACHMENT0 + i, target);
-      colorAttachments.push_back(GL_COLOR_ATTACHMENT0 + i);
       i += 1;
-    }
-    if (colorAttachments.size() >= 1) {
-      glDrawBuffers(colorAttachments.size(), colorAttachments.data());
     }
     if (options.depth.has_value()) {
       this->set_item(GL_DEPTH_ATTACHMENT, options.depth.value());
@@ -80,12 +75,22 @@ void framebuffer::bind() {
     DEBUG("Framebuffer {} configured ({} x {})", this->mFramebuffer,
           this->mWidth, this->mHeight);
   }
+  auto &options = this->mOptions;
+  int i = 0;
+  std::vector<unsigned int> colorAttachments;
+  for (auto &target : options.colors) {
+    colorAttachments.push_back(GL_COLOR_ATTACHMENT0 + i);
+    i += 1;
+  }
+  if (colorAttachments.size() >= 1) {
+    glDrawBuffers(colorAttachments.size(), colorAttachments.data());
+  }
   glViewport(0, 0, this->mWidth, this->mHeight);
-  DEBUG("Framebuffer {} bound", this->mFramebuffer);
+  // DEBUG("Framebuffer {} bound", this->mFramebuffer);
 }
 void framebuffer::unbind() {
   glBindFramebuffer(GL_FRAMEBUFFER, 0);
-  DEBUG("Framebuffer {} unbound", this->mFramebuffer);
+  // DEBUG("Framebuffer {} unbound", this->mFramebuffer);
   // TODO: Set the viewport to match the window size
 }
 void framebuffer::dispose() {
@@ -103,6 +108,8 @@ void framebuffer::options(const framebuffer_options &pOptions) {
 const framebuffer_options &framebuffer::options() const {
   return this->mOptions;
 }
+
+void framebuffer::invalidate() { this->mIsValid = false; }
 
 void framebuffer::set_item(unsigned int mBuffer,
                            const framebuffer_target &mTarget) {

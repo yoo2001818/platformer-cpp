@@ -64,6 +64,8 @@ public:
   void options(const framebuffer_options &pOptions);
   const framebuffer_options &options() const;
 
+  void invalidate();
+
 private:
   unsigned int mFramebuffer = -1;
   framebuffer_options mOptions;

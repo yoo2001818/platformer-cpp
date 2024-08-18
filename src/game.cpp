@@ -9,6 +9,7 @@
 #include <glm/ext/matrix_clip_space.hpp>
 #include <glm/ext/scalar_constants.hpp>
 #include <glm/geometric.hpp>
+#include <iostream>
 #include <vector>
 #define GLM_ENABLE_EXPERIMENTAL
 #include "SDL_events.h"

@@ -2,7 +2,9 @@
 #define __PIPELINE_HPP__
 
 #include "entt/entity/fwd.hpp"
+#include "render/framebuffer.hpp"
 #include "render/shader.hpp"
+#include "render/texture.hpp"
 #include <functional>
 #include <memory>
 #include <string>
@@ -64,6 +66,8 @@ public:
   void prepare_lights();
 
 private:
+  // FIXME: This would be used quite a lot, but it doesn't have its place yet
+  // (it shouldn't reside inside subpipeline though)
   std::unordered_map<std::string, std::vector<entt::entity>> mLights = {};
   std::vector<shader_block> mLightShaderBlocks = {};
   std::string mLightShaderIds;
@@ -77,6 +81,57 @@ public:
 private:
   forward_forward_subpipeline mForwardSubpipeline;
 };
+
+class deferred_forward_subpipeline : public subpipeline {
+public:
+  deferred_forward_subpipeline(platformer::renderer &pRenderer,
+                               platformer::pipeline &pPipeline,
+                               framebuffer &pFramebuffer);
+
+  virtual std::shared_ptr<shader>
+  get_shader(const std::string &pShaderId,
+             const std::function<shader_block()> &pExec) override;
+  virtual void prepare_shader(std::shared_ptr<shader> &pShader) override;
+  void prepare_lights();
+
+private:
+  framebuffer &mFramebuffer;
+};
+
+class deferred_deferred_subpipeline : public subpipeline {
+public:
+  deferred_deferred_subpipeline(platformer::renderer &pRenderer,
+                                platformer::pipeline &pPipeline,
+                                framebuffer &pFramebuffer);
+
+  virtual std::shared_ptr<shader>
+  get_shader(const std::string &pShaderId,
+             const std::function<shader_block()> &pExec) override;
+  virtual void prepare_shader(std::shared_ptr<shader> &pShader) override;
+
+private:
+  framebuffer &mFramebuffer;
+};
+
+class deferred_pipeline : public pipeline {
+public:
+  deferred_pipeline(platformer::renderer &pRenderer);
+  virtual void render() override;
+
+private:
+  // - G-buffer 0 - Albedo (rgb), Roughness (a)
+  // - G-buffer 1 - Normal (rgb), Metalic (a)
+  std::shared_ptr<texture_2d> mGBuffer0;
+  std::shared_ptr<texture_2d> mGBuffer1;
+  std::shared_ptr<texture_2d> mDepthBuffer;
+  std::shared_ptr<texture_2d> mColorBuffer;
+  framebuffer mMeshPassFb;
+  framebuffer mForwardMeshPassFb;
+  framebuffer mLightPassFb;
+  deferred_forward_subpipeline mForwardSubpipeline;
+  deferred_deferred_subpipeline mDeferredSubpipeline;
+};
+
 } // namespace platformer
 
 #endif

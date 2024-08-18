@@ -13,24 +13,24 @@
 
 using namespace platformer;
 
-pipeline::pipeline(renderer &pRenderer) : mRenderer(pRenderer) {}
+pipeline::pipeline(platformer::renderer &pRenderer) : mRenderer(pRenderer) {}
+pipeline::~pipeline() {}
+platformer::renderer &pipeline::renderer() const { return this->mRenderer; }
 
-void pipeline::render() {
-  auto &registry = this->mRenderer.game().registry();
-  auto cameraEntity = this->mRenderer.camera();
-  auto &cameraTransform = registry.get<transform>(cameraEntity);
-  auto &cameraCamera = registry.get<platformer::camera>(cameraEntity);
-  this->prepare_lights();
-  auto view = registry.view<transform, mesh>();
-  for (auto entity : view) {
-    auto &meshVal = registry.get<mesh>(entity);
-    meshVal.render(this->mRenderer, entity);
-  }
-}
+subpipeline::subpipeline(platformer::renderer &pRenderer,
+                         platformer::pipeline &pPipeline)
+    : mRenderer(pRenderer), mPipeline(pPipeline) {}
+subpipeline::~subpipeline() {}
 
-std::shared_ptr<shader>
-pipeline::get_shader(const std::string &pShaderId,
-                     const std::function<shader_block()> &pExec) {
+platformer::pipeline &subpipeline::pipeline() const { return this->mPipeline; }
+platformer::renderer &subpipeline::renderer() const { return this->mRenderer; }
+
+forward_forward_subpipeline::forward_forward_subpipeline(
+    platformer::renderer &pRenderer, platformer::pipeline &pPipeline)
+    : subpipeline(pRenderer, pPipeline) {}
+
+std::shared_ptr<shader> forward_forward_subpipeline::get_shader(
+    const std::string &pShaderId, const std::function<shader_block()> &pExec) {
   // This assumes the following structure for the fragment body:
   // void material(out MaterialInfo mInfo) {
   //  ...
@@ -39,8 +39,6 @@ pipeline::get_shader(const std::string &pShaderId,
   auto &assetManager = this->mRenderer.asset_manager();
   return assetManager.get<std::shared_ptr<shader>>(
       "shader~" + pShaderId + this->mLightShaderIds, [&]() {
-        // FIXME: Any light routines are omitted for now, but needs to be
-        // implemented
         auto shaderBlock = pExec();
         std::stringstream vertex;
         vertex << "#version 330 core\n";
@@ -88,7 +86,8 @@ pipeline::get_shader(const std::string &pShaderId,
       });
 }
 
-void pipeline::prepare_shader(std::shared_ptr<shader> &pShader) {
+void forward_forward_subpipeline::prepare_shader(
+    std::shared_ptr<shader> &pShader) {
   auto &registry = this->mRenderer.game().registry();
   pShader->prepare();
   // Well, it should set the renderer state, framebuffer, etc, but we don't
@@ -105,7 +104,7 @@ void pipeline::prepare_shader(std::shared_ptr<shader> &pShader) {
   }
 }
 
-void pipeline::prepare_lights() {
+void forward_forward_subpipeline::prepare_lights() {
   auto &registry = this->mRenderer.game().registry();
   auto view = registry.view<transform, light_component>();
   this->mLights.clear();
@@ -132,5 +131,21 @@ void pipeline::prepare_lights() {
     this->mLightShaderBlocks.push_back(shaderBlock);
     this->mLightShaderIds +=
         "~" + std::string(entry.first) + "-" + shaderBlock.id;
+  }
+}
+
+forward_pipeline::forward_pipeline(platformer::renderer &pRenderer)
+    : pipeline(pRenderer), mForwardSubpipeline(pRenderer, *this) {}
+
+void forward_pipeline::render() {
+  auto &registry = this->mRenderer.game().registry();
+  auto cameraEntity = this->mRenderer.camera();
+  auto &cameraTransform = registry.get<transform>(cameraEntity);
+  auto &cameraCamera = registry.get<platformer::camera>(cameraEntity);
+  this->mForwardSubpipeline.prepare_lights();
+  auto view = registry.view<transform, mesh>();
+  for (auto entity : view) {
+    auto &meshVal = registry.get<mesh>(entity);
+    meshVal.render(this->mForwardSubpipeline, entity);
   }
 }

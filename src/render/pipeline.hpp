@@ -1,7 +1,6 @@
 #ifndef __PIPELINE_HPP__
 #define __PIPELINE_HPP__
 
-#include "entt/core/hashed_string.hpp"
 #include "entt/entity/fwd.hpp"
 #include "render/shader.hpp"
 #include <functional>
@@ -20,27 +19,63 @@ struct shader_block {
   std::string fragment_header;
   std::string fragment_body;
 };
+/**
+ * Pipeline coordinates rendering process, like ordering, buffer management.
+ */
 class pipeline {
-  // While it should support both forward and deferred in the future, let's just
-  // stick with forward rendering
 public:
-  pipeline(renderer &pRenderer);
-  void render();
-  std::shared_ptr<shader>
+  pipeline(platformer::renderer &pRenderer);
+  virtual ~pipeline();
+  virtual void render() = 0;
+  platformer::renderer &renderer() const;
+
+protected:
+  platformer::renderer &mRenderer;
+};
+/**
+ * Subpipeline handles rendering objects using designated buffer.
+ */
+class subpipeline {
+public:
+  subpipeline(platformer::renderer &pRenderer, platformer::pipeline &pPipeline);
+  virtual ~subpipeline();
+
+  virtual std::shared_ptr<shader>
   get_shader(const std::string &pShaderId,
-             const std::function<shader_block()> &pExec);
-  void prepare_shader(std::shared_ptr<shader> &pShader);
+             const std::function<shader_block()> &pExec) = 0;
+  virtual void prepare_shader(std::shared_ptr<shader> &pShader) = 0;
+  platformer::pipeline &pipeline() const;
+  platformer::renderer &renderer() const;
+
+protected:
+  platformer::pipeline &mPipeline;
+  platformer::renderer &mRenderer;
+};
+
+class forward_forward_subpipeline : public subpipeline {
+public:
+  forward_forward_subpipeline(platformer::renderer &pRenderer,
+                              platformer::pipeline &pPipeline);
+
+  virtual std::shared_ptr<shader>
+  get_shader(const std::string &pShaderId,
+             const std::function<shader_block()> &pExec) override;
+  virtual void prepare_shader(std::shared_ptr<shader> &pShader) override;
+  void prepare_lights();
 
 private:
-  void prepare_lights();
-  renderer &mRenderer;
   std::unordered_map<std::string, std::vector<entt::entity>> mLights = {};
   std::vector<shader_block> mLightShaderBlocks = {};
   std::string mLightShaderIds;
 };
-class renderpass {
+
+class forward_pipeline : public pipeline {
 public:
-  renderpass();
+  forward_pipeline(platformer::renderer &pRenderer);
+  virtual void render() override;
+
+private:
+  forward_forward_subpipeline mForwardSubpipeline;
 };
 } // namespace platformer
 

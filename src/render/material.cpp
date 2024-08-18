@@ -22,15 +22,19 @@ material::~material() {}
 shader_material::shader_material(std::string pVertex, std::string pFragment)
     : mShader(pVertex, pFragment), mUniforms() {}
 
-void shader_material::render(renderer &pRenderer, geometry &pGeometry,
+void shader_material::render(subpipeline &pSubpipeline, geometry &pGeometry,
                              entt::entity pEntity) {
-  auto &registry = pRenderer.registry();
+  // FIXME: This is not good enough; there needs to be a way to completely skip
+  // the lighting pass without referencing the renderer directly, which can
+  // cause undefined behaviors
+  auto &renderer = pSubpipeline.renderer();
+  auto &registry = renderer.registry();
   auto &transformVal = registry.get<transform>(pEntity);
   this->mShader.prepare();
   pGeometry.prepare(this->mShader);
   // Set up uniforms
   this->mShader.set("uModel", transformVal.matrix_world(registry));
-  camera_handle camHandle(pRenderer);
+  camera_handle camHandle(renderer);
   this->mShader.set("uView", camHandle.view());
   this->mShader.set("uProjection", camHandle.projection());
   this->mShader.set("uInverseView", camHandle.inverse_view());
@@ -85,16 +89,16 @@ standard_material::standard_material(std::shared_ptr<texture> pDiffuseTexture,
     : roughness(pRoughness), metalic(pMetalic), color(glm::vec3(1.0)),
       diffuseTexture(pDiffuseTexture) {}
 
-void standard_material::render(renderer &pRenderer, geometry &pGeometry,
+void standard_material::render(subpipeline &pSubpipeline, geometry &pGeometry,
                                entt::entity pEntity) {
-  auto &registry = pRenderer.registry();
+  auto &renderer = pSubpipeline.renderer();
+  auto &registry = renderer.registry();
   auto &transformVal = registry.get<transform>(pEntity);
-  auto &pipeline = pRenderer.pipeline();
   int featureFlags = 0;
   if (this->diffuseTexture != nullptr) {
     featureFlags |= 1;
   }
-  auto shaderVal = pipeline.get_shader(
+  auto shaderVal = pSubpipeline.get_shader(
       "standard_material~" + std::to_string(featureFlags), [&]() {
         std::string defines = "";
         if (featureFlags & 1) {
@@ -127,7 +131,8 @@ void standard_material::render(renderer &pRenderer, geometry &pGeometry,
         };
         return result;
       });
-  pipeline.prepare_shader(shaderVal);
+  // TODO: It could be great if this is only done once per shader
+  pSubpipeline.prepare_shader(shaderVal);
   pGeometry.prepare(*shaderVal);
   shaderVal->set("uModel", transformVal.matrix_world(registry));
   shaderVal->set("uColor", this->color);
@@ -138,65 +143,6 @@ void standard_material::render(renderer &pRenderer, geometry &pGeometry,
     shaderVal->set("uDiffuse", 0);
   }
   pGeometry.render();
-
-  /*
-  auto &transformVal = registry.get<transform>(pEntity);
-  int featureFlags = 0;
-  if (this->diffuseTexture != nullptr) {
-    featureFlags |= 1;
-  }
-  if (this->environmentTexture != nullptr) {
-    featureFlags |= 2;
-  }
-  auto shaderVal = pRenderer.asset_manager().get<std::shared_ptr<shader>>(
-      "standard_material:" + std::to_string(featureFlags), [&]() {
-        std::vector<std::string> defines;
-        if (featureFlags & 1) {
-          defines.push_back("USE_DIFFUSE_TEXTURE");
-        }
-        if (featureFlags & 2) {
-          defines.push_back("USE_ENVIRONMENT_MAP");
-        }
-
-        return std::make_shared<file_shader>("res/phong.vert", "res/phong.frag",
-                                             defines);
-      });
-  shaderVal->prepare();
-  pGeometry.prepare(*shaderVal);
-  // Set up uniforms
-  shaderVal->set("uModel", transformVal.matrix_world(registry));
-  camera_handle camHandle(pRenderer);
-  shaderVal->set("uView", camHandle.view());
-  shaderVal->set("uViewPos", camHandle.view_pos());
-  shaderVal->set("uProjection", camHandle.projection());
-  shaderVal->set("uColor", this->color);
-  shaderVal->set("uRoughness", this->roughness);
-  shaderVal->set("uMetalic", this->metalic);
-  int pos = 0;
-  for (auto &light : pRenderer.pipeline().get_lights()) {
-    shaderVal->set("uLightPositions", pos, light.position);
-    shaderVal->set("uLightColors", pos, light.color);
-    shaderVal->set("uLightRanges", pos, light.range);
-    pos += 1;
-    if (pos >= 8)
-      break;
-  }
-  shaderVal->set("uLightCount", pos);
-
-  if (this->diffuseTexture != nullptr) {
-    this->diffuseTexture->prepare(0);
-    shaderVal->set("uDiffuse", 0);
-  }
-  if (this->environmentTexture != nullptr) {
-    this->environmentTexture->prepare(1);
-    shaderVal->set("uEnvironmentMap", 1);
-    // FIXME: Yup, the resolution is hardcoded
-    shaderVal->set("uEnvironmentMapSize", glm::vec2(7.0f, 1.0f));
-    this->brdfTexture->prepare(2);
-    shaderVal->set("uBRDFMap", 2);
-  }
-  // Issue draw call
-  */
 }
 
 void standard_material::dispose() {}

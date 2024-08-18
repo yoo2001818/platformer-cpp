@@ -9,7 +9,7 @@ using namespace platformer;
 
 renderer::renderer(platformer::game &pGame)
     : mGame(pGame), mRegistry(pGame.registry()),
-      mPipeline(std::make_unique<platformer::pipeline>(*this)) {}
+      mPipeline(std::make_unique<platformer::forward_pipeline>(*this)) {}
 
 void renderer::apply_render_state(const render_state &to) {
   platformer::apply_render_state(this->mRenderState, to);

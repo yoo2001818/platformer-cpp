@@ -9,7 +9,6 @@
 #include "render/load.hpp"
 #include "render/material.hpp"
 #include "render/mesh.hpp"
-#include "render/render_state.hpp"
 #include "render/shader.hpp"
 #include "render/texture.hpp"
 #include <memory>
@@ -121,7 +120,7 @@ void scene_ibl::init(application &pApplication, game &pGame) {
         trans.position(glm::vec3(x * 3.0f, y * 3.0f, -6.0f));
 
         auto mat = std::make_shared<standard_material>(glm::vec3(1.0f),
-                                                       x / 5.0f, y / 5.0f);
+                                                       x / 4.0f, y / 4.0f);
 
         registry.emplace<mesh>(cube, mesh({{mat, model.meshes()[0].second}}));
         registry.emplace<collision>(cube);

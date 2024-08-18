@@ -6,8 +6,16 @@
 #include <glm/glm.hpp>
 #include <unordered_map>
 namespace platformer {
+template <typename T> struct asset_descriptor {
+  std::string name;
+  std::function<T()> exec;
+};
+
 class asset_manager {
 public:
+  template <typename T> T get(const asset_descriptor<T> &pDescriptor) {
+    return this->get<T>(pDescriptor.name, pDescriptor.exec);
+  }
   template <typename T>
   T get(const std::string &pName, const std::function<T()> &pExec) {
     auto cursor = mMap.find(pName);

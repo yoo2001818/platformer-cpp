@@ -24,6 +24,7 @@ void scene_ibl::init(application &pApplication, game &pGame) {
       std::make_shared<texture_2d>(
           texture_source_image({.format =
                                     {
+                                        .internalFormat = GL_RGB32F,
                                         .type = GL_FLOAT,
                                     },
                                 .filename = "res/skybox.hdr"})),
@@ -34,7 +35,7 @@ void scene_ibl::init(application &pApplication, game &pGame) {
        .width = 1024,
        .height = 1024,
        .mipmap = true},
-      {.format = GL_RGB, .internalFormat = GL_RGB, .type = GL_HALF_FLOAT}};
+      {.format = GL_RGB, .internalFormat = GL_RGB16F, .type = GL_HALF_FLOAT}};
   cubemap_pbr cubemapPbr{cubemapVal.get_texture(),
                          {.magFilter = GL_LINEAR,
                           .minFilter = GL_LINEAR_MIPMAP_LINEAR,
@@ -45,7 +46,7 @@ void scene_ibl::init(application &pApplication, game &pGame) {
                           .mipmap = true},
                          {
                              .format = GL_RGB,
-                             .internalFormat = GL_RGB,
+                             .internalFormat = GL_RGB16F,
                              .type = GL_HALF_FLOAT,
                          }};
   auto brdfMap = std::make_shared<texture_brdf>(texture_brdf(

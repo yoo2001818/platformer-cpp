@@ -21,6 +21,11 @@ struct shader_block {
   std::string fragment_header;
   std::string fragment_body;
 };
+
+void collect_lights(
+    std::unordered_map<std::string, std::vector<entt::entity>> &pLights,
+    entt::registry &pRegistry);
+
 /**
  * Pipeline coordinates rendering process, like ordering, buffer management.
  */
@@ -113,6 +118,27 @@ private:
   framebuffer &mFramebuffer;
 };
 
+class deferred_light_subpipeline : public subpipeline {
+public:
+  deferred_light_subpipeline(platformer::renderer &pRenderer,
+                             platformer::pipeline &pPipeline,
+                             const std::shared_ptr<texture_2d> &pGBuffer0,
+                             const std::shared_ptr<texture_2d> &pGBuffer1,
+                             const std::shared_ptr<texture_2d> &pDepthBuffer,
+                             framebuffer &pFramebuffer);
+
+  virtual std::shared_ptr<shader>
+  get_shader(const std::string &pShaderId,
+             const std::function<shader_block()> &pExec) override;
+  virtual void prepare_shader(std::shared_ptr<shader> &pShader) override;
+
+private:
+  std::shared_ptr<texture_2d> mGBuffer0;
+  std::shared_ptr<texture_2d> mGBuffer1;
+  std::shared_ptr<texture_2d> mDepthBuffer;
+  framebuffer &mFramebuffer;
+};
+
 class deferred_pipeline : public pipeline {
 public:
   deferred_pipeline(platformer::renderer &pRenderer);
@@ -130,6 +156,7 @@ private:
   framebuffer mLightPassFb;
   deferred_forward_subpipeline mForwardSubpipeline;
   deferred_deferred_subpipeline mDeferredSubpipeline;
+  deferred_light_subpipeline mLightSubpipeline;
 };
 
 } // namespace platformer

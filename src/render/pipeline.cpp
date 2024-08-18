@@ -10,11 +10,30 @@
 #include "render/shader_preprocessor.hpp"
 #include "render/texture.hpp"
 #include <functional>
+#include <iostream>
 #include <memory>
 #include <sstream>
 #include <vector>
 
 using namespace platformer;
+
+void platformer::collect_lights(
+    std::unordered_map<std::string, std::vector<entt::entity>> &pLights,
+    entt::registry &pRegistry) {
+  auto view = pRegistry.view<transform, light_component>();
+  pLights.clear();
+  // Group all lights in the separate vector
+  for (auto entity : view) {
+    auto &light = pRegistry.get<light_component>(entity).light;
+    auto lightType = std::string(light->type());
+    auto current = pLights.find(lightType);
+    if (current != pLights.end()) {
+      current->second.push_back(entity);
+    } else {
+      pLights.insert({lightType, {entity}});
+    }
+  }
+}
 
 pipeline::pipeline(platformer::renderer &pRenderer) : mRenderer(pRenderer) {}
 pipeline::~pipeline() {}
@@ -103,34 +122,23 @@ void forward_forward_subpipeline::prepare_shader(
   for (auto &entry : this->mLights) {
     auto &entities = entry.second;
     auto &light = registry.get<light_component>(entities[0]).light;
-    light->set_uniforms(*pShader, entities, this->mRenderer);
+    light->set_uniforms(this->mRenderer, *pShader, entities);
   }
+  this->mRenderer.apply_render_state({});
 }
 
 void forward_forward_subpipeline::prepare_lights() {
   auto &registry = this->mRenderer.game().registry();
-  auto view = registry.view<transform, light_component>();
-  this->mLights.clear();
-  // Group all lights in the separate vector
-  for (auto entity : view) {
-    auto &light = registry.get<light_component>(entity).light;
-    auto lightType = std::string(light->type());
-    auto current = this->mLights.find(lightType);
-    if (current != this->mLights.end()) {
-      current->second.push_back(entity);
-    } else {
-      this->mLights.insert({lightType, {entity}});
-    }
-  }
+  platformer::collect_lights(this->mLights, registry);
   this->mLightShaderBlocks.clear();
   this->mLightShaderIds = "";
   // Prepare lights and generate light shader blocks
   for (auto &entry : this->mLights) {
     auto &entities = entry.second;
     auto &light = registry.get<light_component>(entities[0]).light;
-    light->prepare(entities, this->mRenderer);
+    light->prepare(this->mRenderer, entities);
     auto shaderBlock =
-        light->get_shader_block(entities.size(), this->mRenderer);
+        light->get_shader_block(this->mRenderer, entities.size());
     this->mLightShaderBlocks.push_back(shaderBlock);
     this->mLightShaderIds +=
         "~" + std::string(entry.first) + "-" + shaderBlock.id;
@@ -221,6 +229,86 @@ void deferred_deferred_subpipeline::prepare_shader(
   pShader->set("uView", camHandle.view());
   pShader->set("uViewPos", camHandle.view_pos());
   pShader->set("uProjection", camHandle.projection());
+  this->mRenderer.apply_render_state({});
+}
+
+deferred_light_subpipeline::deferred_light_subpipeline(
+    platformer::renderer &pRenderer, platformer::pipeline &pPipeline,
+    const std::shared_ptr<texture_2d> &pGBuffer0,
+    const std::shared_ptr<texture_2d> &pGBuffer1,
+    const std::shared_ptr<texture_2d> &pDepthBuffer, framebuffer &pFramebuffer)
+    : subpipeline(pRenderer, pPipeline), mGBuffer0(pGBuffer0),
+      mGBuffer1(pGBuffer1), mDepthBuffer(pDepthBuffer),
+      mFramebuffer(pFramebuffer) {};
+
+std::shared_ptr<shader> deferred_light_subpipeline::get_shader(
+    const std::string &pShaderId, const std::function<shader_block()> &pExec) {
+  auto &assetManager = this->mRenderer.asset_manager();
+  return assetManager.get<std::shared_ptr<shader>>(
+      "shader~deferred-light~" + pShaderId, [&]() {
+        auto shaderBlock = pExec();
+        std::stringstream vertex;
+        vertex << "#version 330 core\n";
+        for (auto &file : shaderBlock.vertex_dependencies) {
+          vertex << "#include " << file << "\n";
+        }
+        vertex << shaderBlock.vertex_body;
+
+        std::stringstream fragment;
+        fragment << "#version 330 core\n";
+        fragment << "#include \"res/shader/pbr.glsl\"\n";
+        for (auto &file : shaderBlock.fragment_dependencies) {
+          fragment << "#include \"" << file << "\"\n";
+        }
+
+        fragment << shaderBlock.fragment_header << "\n";
+        fragment << "in vec2 vPosition;\n"
+                    "uniform vec3 uViewPos;\n"
+                    "uniform mat4 uInverseProjection;\n"
+                    "uniform mat4 uInverseView;\n"
+                    "uniform sampler2D uGBuffer0;\n"
+                    "uniform sampler2D uGBuffer1;\n"
+                    "uniform sampler2D uDepthBuffer;\n"
+                    "out vec4 FragColor;\n"
+                    "void main() {\n"
+                    "  vec2 uv = vPosition * 0.5 + 0.5;\n"
+                    "  float depth = texture(uDepthBuffer, uv).r;\n"
+                    "  vec4 values[2];\n"
+                    "  values[0] = texture(uGBuffer0, uv);\n"
+                    "  values[1] = texture(uGBuffer1, uv);\n"
+                    "  MaterialInfo mInfo;\n"
+                    "  unpackMaterialInfo(depth, values, vPosition, "
+                    "uInverseProjection, uInverseView, mInfo);\n"
+                    "  vec3 result = vec3(0.0);\n";
+        fragment << shaderBlock.fragment_body << "\n";
+        fragment << "  FragColor = vec4(result, 1.0);\n"
+                    "}\n";
+
+        shader_preprocessor vertexProc(vertex.str());
+        shader_preprocessor fragmentProc(fragment.str());
+
+        return std::make_shared<shader>(vertexProc.get(), fragmentProc.get());
+      });
+}
+
+void deferred_light_subpipeline::prepare_shader(
+    std::shared_ptr<shader> &pShader) {
+  this->mFramebuffer.bind();
+  auto &registry = this->mRenderer.game().registry();
+  pShader->prepare();
+  camera_handle camHandle(this->mRenderer);
+  pShader->set("uViewPos", camHandle.view_pos());
+  pShader->set("uView", camHandle.view());
+  pShader->set("uProjection", camHandle.projection());
+  pShader->set("uInverseView", camHandle.inverse_view());
+  pShader->set("uInverseProjection", camHandle.inverse_projection());
+  this->mGBuffer0->prepare(3);
+  pShader->set("uGBuffer0", 3);
+  this->mGBuffer1->prepare(4);
+  pShader->set("uGBuffer1", 4);
+  this->mDepthBuffer->prepare(5);
+  pShader->set("uDepthBuffer", 5);
+  this->mRenderer.apply_render_state({.depthEnabled = false});
 }
 
 deferred_pipeline::deferred_pipeline(platformer::renderer &pRenderer)
@@ -239,7 +327,9 @@ deferred_pipeline::deferred_pipeline(platformer::renderer &pRenderer)
           .depth = {{this->mDepthBuffer}},
       }),
       mForwardSubpipeline(pRenderer, *this, mForwardMeshPassFb),
-      mDeferredSubpipeline(pRenderer, *this, mMeshPassFb) {}
+      mDeferredSubpipeline(pRenderer, *this, mMeshPassFb),
+      mLightSubpipeline(pRenderer, *this, mGBuffer0, mGBuffer1, mDepthBuffer,
+                        mLightPassFb) {}
 
 void deferred_pipeline::render() {
   auto &renderer = this->renderer();
@@ -260,8 +350,8 @@ void deferred_pipeline::render() {
         .height = renderer.height(),
     });
     this->mGBuffer0->options({
-        .magFilter = GL_LINEAR,
-        .minFilter = GL_LINEAR,
+        .magFilter = GL_NEAREST,
+        .minFilter = GL_NEAREST,
         .wrapS = GL_CLAMP,
         .wrapT = GL_CLAMP,
         .width = renderer.width(),
@@ -272,15 +362,15 @@ void deferred_pipeline::render() {
         .format =
             {
                 .format = GL_RGBA,
-                .internalFormat = GL_RGBA,
-                .type = GL_UNSIGNED_BYTE,
+                .internalFormat = GL_RGB10_A2,
+                .type = GL_UNSIGNED_SHORT,
             },
         .width = renderer.width(),
         .height = renderer.height(),
     });
     this->mGBuffer1->options({
-        .magFilter = GL_LINEAR,
-        .minFilter = GL_LINEAR,
+        .magFilter = GL_NEAREST,
+        .minFilter = GL_NEAREST,
         .wrapS = GL_CLAMP,
         .wrapT = GL_CLAMP,
         .width = renderer.width(),
@@ -298,8 +388,8 @@ void deferred_pipeline::render() {
         .height = renderer.height(),
     });
     this->mDepthBuffer->options({
-        .magFilter = GL_LINEAR,
-        .minFilter = GL_LINEAR,
+        .magFilter = GL_NEAREST,
+        .minFilter = GL_NEAREST,
         .wrapS = GL_CLAMP,
         .wrapT = GL_CLAMP,
         .width = renderer.width(),
@@ -310,15 +400,15 @@ void deferred_pipeline::render() {
         .format =
             {
                 .format = GL_RGB,
-                .internalFormat = GL_RGB,
+                .internalFormat = GL_RGB16F,
                 .type = GL_HALF_FLOAT,
             },
         .width = renderer.width(),
         .height = renderer.height(),
     });
     this->mColorBuffer->options({
-        .magFilter = GL_LINEAR,
-        .minFilter = GL_LINEAR,
+        .magFilter = GL_NEAREST,
+        .minFilter = GL_NEAREST,
         .wrapS = GL_CLAMP,
         .wrapT = GL_CLAMP,
         .width = renderer.width(),
@@ -331,7 +421,7 @@ void deferred_pipeline::render() {
   }
   // Clear depth and color buffer
   this->mMeshPassFb.bind();
-  glClearColor(1.0f, 0.0f, 1.0f, 0.0f);
+  glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
   glDrawBuffer(GL_COLOR_ATTACHMENT0);
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
   glDrawBuffer(GL_COLOR_ATTACHMENT1);
@@ -352,6 +442,17 @@ void deferred_pipeline::render() {
   }
   this->mMeshPassFb.unbind();
   // Do the lighting pass
+  std::unordered_map<std::string, std::vector<entt::entity>> lights;
+  collect_lights(lights, registry);
+  // this->mLightPassFb.bind();
+  for (auto &entry : lights) {
+    auto &entities = entry.second;
+    auto &light = registry.get<light_component>(entities[0]).light;
+    light->prepare(this->mRenderer, entities);
+    light->render_deferred(this->mLightSubpipeline, entities);
+  }
+  this->mLightPassFb.unbind();
+  this->mRenderer.apply_render_state({});
   // Present the G-buffer to the screen for debugging
   auto &assetManager = this->mRenderer.asset_manager();
   auto quad = assetManager.get<std::shared_ptr<geometry>>("quad", []() {
@@ -374,12 +475,12 @@ void deferred_pipeline::render() {
             "uniform sampler2D uBuffer;\n"
             "void main() {\n"
             "  vec4 color = texture2D(uBuffer, vTexCoord);\n"
-            "  FragColor = vec4(color.rgb, 1.0);\n"
+            "  FragColor = vec4(pow(color.rgb, vec3(1.0 / 2.2)), 1.0);\n"
             "}\n");
       });
   presentShader->prepare();
   quad->prepare(*presentShader);
-  this->mGBuffer0->prepare(0);
+  this->mColorBuffer->prepare(0);
   presentShader->set("uBuffer", 0);
   quad->render();
 }

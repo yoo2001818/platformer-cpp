@@ -3,6 +3,8 @@
 
 #include "entt/core/hashed_string.hpp"
 #include "entt/entity/fwd.hpp"
+#include "render/geometry.hpp"
+#include "render/pipeline.hpp"
 #include "render/renderer.hpp"
 #include "render/shader.hpp"
 #include "render/texture.hpp"
@@ -14,13 +16,14 @@ class light {
 public:
   light() {};
   virtual ~light() {};
-  virtual shader_block get_shader_block(int pNumLights,
-                                        renderer &pRenderer) = 0;
-  virtual void set_uniforms(shader &pShader,
-                            std::vector<entt::entity> pEntities,
-                            renderer &pRenderer) = 0;
-  virtual void prepare(std::vector<entt::entity> pEntities,
-                       renderer &pRenderer) = 0;
+  virtual shader_block get_shader_block(renderer &pRenderer,
+                                        int pNumLights) = 0;
+  virtual void set_uniforms(renderer &pRenderer, shader &pShader,
+                            const std::vector<entt::entity> &pEntities) = 0;
+  virtual void prepare(renderer &pRenderer,
+                       const std::vector<entt::entity> &pEntities);
+  virtual void render_deferred(subpipeline &pSubpipeline,
+                               const std::vector<entt::entity> &pEntities);
   virtual entt::hashed_string type() const = 0;
 };
 
@@ -37,13 +40,11 @@ public:
   point_light(const point_light_options &pOptions);
   virtual ~point_light();
 
-  virtual shader_block get_shader_block(int pNumLights,
-                                        renderer &pRenderer) override;
-  virtual void set_uniforms(shader &pShader,
-                            std::vector<entt::entity> pEntities,
-                            renderer &pRenderer) override;
-  virtual void prepare(std::vector<entt::entity> pEntities,
-                       renderer &pRenderer) override;
+  virtual shader_block get_shader_block(renderer &pRenderer,
+                                        int pNumLights) override;
+  virtual void
+  set_uniforms(renderer &pRenderer, shader &pShader,
+               const std::vector<entt::entity> &pEntities) override;
   virtual entt::hashed_string type() const override;
 
   const point_light_options &options();
@@ -65,13 +66,13 @@ public:
   envmap_light(const envmap_light_options &pOptions);
   virtual ~envmap_light();
 
-  virtual shader_block get_shader_block(int pNumLights,
-                                        renderer &pRenderer) override;
-  virtual void set_uniforms(shader &pShader,
-                            std::vector<entt::entity> pEntities,
-                            renderer &pRenderer) override;
-  virtual void prepare(std::vector<entt::entity> pEntities,
-                       renderer &pRenderer) override;
+  virtual shader_block get_shader_block(renderer &pRenderer,
+                                        int pNumLights) override;
+  virtual void
+  set_uniforms(renderer &pRenderer, shader &pShader,
+               const std::vector<entt::entity> &pEntities) override;
+  virtual void prepare(renderer &pRenderer,
+                       const std::vector<entt::entity> &pEntities) override;
   virtual entt::hashed_string type() const override;
 
   const envmap_light_options &options();

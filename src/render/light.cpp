@@ -1,11 +1,48 @@
 #include "light.hpp"
 #include "entt/core/hashed_string.hpp"
+#include "entt/entity/fwd.hpp"
 #include "pipeline.hpp"
+#include "render/geometry.hpp"
 #include "transform.hpp"
 #include <memory>
 #include <string>
 
 using namespace platformer;
+
+void light::prepare(renderer &pRenderer,
+                    const std::vector<entt::entity> &pEntities) {}
+void light::render_deferred(subpipeline &pSubpipeline,
+                            const std::vector<entt::entity> &pEntities) {
+  auto &renderer = pSubpipeline.renderer();
+  // TODO: This is literally used everywhere. Couldn't it use global variables?
+  auto quad =
+      renderer.asset_manager().get<std::shared_ptr<geometry>>("quad2", [&]() {
+        return std::make_shared<geometry>(geometry::make_quad());
+      });
+  std::string id = "quad-" + std::to_string(this->type()) + "-" +
+                   std::to_string(pEntities.size());
+  auto shader = pSubpipeline.get_shader(id, [&]() {
+    auto shaderBlock = this->get_shader_block(renderer, pEntities.size());
+    return shader_block{
+        .id = "",
+        .vertex_dependencies = {},
+        .vertex_body = "layout(location = 0) in vec3 aPosition;\n"
+                       "layout(location = 1) in vec2 aTexCoord;\n"
+                       "out vec2 vPosition;\n"
+                       "void main() {\n"
+                       "  gl_Position = vec4(aPosition.xy, 1.0, 1.0);\n"
+                       "  vPosition = aPosition.xy;\n"
+                       "}\n",
+        .fragment_dependencies = shaderBlock.fragment_dependencies,
+        .fragment_header = shaderBlock.fragment_header,
+        .fragment_body = shaderBlock.fragment_body,
+    };
+  });
+  pSubpipeline.prepare_shader(shader);
+  quad->prepare(*shader);
+  this->set_uniforms(renderer, *shader, pEntities);
+  quad->render();
+}
 
 point_light::point_light() {}
 
@@ -14,8 +51,8 @@ point_light::point_light(const point_light_options &pOptions)
 
 point_light::~point_light() {}
 
-shader_block point_light::get_shader_block(int pNumLights,
-                                           renderer &pRenderer) {
+shader_block point_light::get_shader_block(renderer &pRenderer,
+                                           int pNumLights) {
   return {.id = std::to_string(pNumLights),
           .vertex_dependencies = {},
           .vertex_body = "",
@@ -42,9 +79,8 @@ shader_block point_light::get_shader_block(int pNumLights,
               "}\n"};
 }
 
-void point_light::set_uniforms(shader &pShader,
-                               std::vector<entt::entity> pEntities,
-                               renderer &pRenderer) {
+void point_light::set_uniforms(renderer &pRenderer, shader &pShader,
+                               const std::vector<entt::entity> &pEntities) {
   auto &registry = pRenderer.registry();
   int pos = 0;
   for (auto &light : pEntities) {
@@ -61,9 +97,6 @@ void point_light::set_uniforms(shader &pShader,
   }
   pShader.set("uPointLightCount", pos);
 }
-
-void point_light::prepare(std::vector<entt::entity> pEntities,
-                          renderer &pRenderer) {}
 
 entt::hashed_string point_light::type() const {
   return entt::hashed_string{"point"};
@@ -82,8 +115,8 @@ envmap_light::envmap_light(const envmap_light_options &pOptions)
 
 envmap_light::~envmap_light() {}
 
-shader_block envmap_light::get_shader_block(int pNumLights,
-                                            renderer &pRenderer) {
+shader_block envmap_light::get_shader_block(renderer &pRenderer,
+                                            int pNumLights) {
   return {
       .id = "1",
       .vertex_dependencies = {},
@@ -97,9 +130,8 @@ shader_block envmap_light::get_shader_block(int pNumLights,
           "uEnvironmentMap, uEnvironmentMapSize.x, uEnvironmentMapSize.y);\n"};
 }
 
-void envmap_light::set_uniforms(shader &pShader,
-                                std::vector<entt::entity> pEntities,
-                                renderer &pRenderer) {
+void envmap_light::set_uniforms(renderer &pRenderer, shader &pShader,
+                                const std::vector<entt::entity> &pEntities) {
   auto &registry = pRenderer.registry();
   auto light = pEntities[0];
   auto &transformVal = registry.get<transform>(light);
@@ -116,8 +148,8 @@ void envmap_light::set_uniforms(shader &pShader,
   pShader.set("uBRDFMap", 2);
 }
 
-void envmap_light::prepare(std::vector<entt::entity> pEntities,
-                           renderer &pRenderer) {}
+void envmap_light::prepare(renderer &pRenderer,
+                           const std::vector<entt::entity> &pEntities) {}
 
 entt::hashed_string envmap_light::type() const {
   return entt::hashed_string{"envmap"};

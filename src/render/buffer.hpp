@@ -2,13 +2,13 @@
 #define __BUFFER_HPP__
 #include <vector>
 namespace platformer {
-class buffer {
+class gl_buffer {
 public:
-  buffer(int pType, int pUsage);
-  virtual ~buffer();
+  gl_buffer(int pType, int pUsage);
+  virtual ~gl_buffer();
 
   unsigned int length();
-  virtual void bind();
+  void bind();
   void dispose();
 
   void set(void *pData, unsigned int pLength, unsigned int pDataSize);
@@ -18,12 +18,20 @@ public:
   void buffer_data(void *pData, unsigned int pLength);
   void buffer_sub_data(void *pData, unsigned int pOffset, unsigned int pLength);
 
-private:
+protected:
   int mType;
   int mUsage;
   int mDataSize = 1;
   int mByteLength = 0;
   unsigned int mBuffer = -1;
+};
+
+class gl_array_buffer : gl_buffer {
+  gl_array_buffer(int pUsage);
+};
+
+class gl_element_array_buffer : gl_buffer {
+  gl_element_array_buffer(int pUsage);
 };
 
 } // namespace platformer

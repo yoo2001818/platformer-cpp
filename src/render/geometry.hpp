@@ -1,5 +1,7 @@
 #ifndef __RENDER_GEOMETRY_HPP__
 #define __RENDER_GEOMETRY_HPP__
+#include "buffer.hpp"
+#include <GL/glew.h>
 #include <entt/entt.hpp>
 #include <glm/fwd.hpp>
 #include <glm/glm.hpp>
@@ -62,8 +64,8 @@ public:
   static geometry make_uv_sphere(int pSegments, int pRings);
 
 private:
-  unsigned int mVbo = -1;
-  unsigned int mEbo = -1;
+  gl_array_buffer mVbo{GL_STATIC_DRAW};
+  gl_element_array_buffer mEbo{GL_STATIC_DRAW};
   unsigned int mVao = -1;
   std::vector<glm::vec3> mPositions{};
   std::vector<glm::vec2> mTexCoords{};

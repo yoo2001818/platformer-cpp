@@ -128,12 +128,6 @@ int geometry::size() {
 }
 
 void geometry::prepare(shader &pShader) {
-  if (this->mVbo == -1) {
-    glGenBuffers(1, &(this->mVbo));
-  }
-  if (this->mEbo == -1) {
-    glGenBuffers(1, &(this->mEbo));
-  }
   if (this->mVao == -1) {
     // FIXME: VAO is unique to each geometry/shader pair, so it shouldn't be
     // managed in here...
@@ -142,7 +136,7 @@ void geometry::prepare(shader &pShader) {
   if (this->mIsDirty) {
     glBindVertexArray(this->mVao);
     {
-      glBindBuffer(GL_ARRAY_BUFFER, this->mVbo);
+      this->mVbo.bind();
       // Estimate total size of attributes
       auto size = this->mPositions.size();
       auto byteSize = sizeof(glm::vec3) * size;
@@ -156,32 +150,26 @@ void geometry::prepare(shader &pShader) {
         byteSize += sizeof(glm::vec4) * size;
       }
       // Upload each buffer
-      glBufferData(GL_ARRAY_BUFFER, byteSize, nullptr, GL_STATIC_DRAW);
+      this->mVbo.buffer_data(nullptr, byteSize);
       auto pos = 0;
-      glBufferSubData(GL_ARRAY_BUFFER, pos, sizeof(glm::vec3) * size,
-                      mPositions.data());
+      this->mVbo.set(mPositions, pos);
       pos += sizeof(glm::vec3) * size;
       if (!this->mTexCoords.empty()) {
-        glBufferSubData(GL_ARRAY_BUFFER, pos, sizeof(glm::vec2) * size,
-                        mTexCoords.data());
+        this->mVbo.set(mTexCoords, pos);
         pos += sizeof(glm::vec2) * size;
       }
       if (!this->mNormals.empty()) {
-        glBufferSubData(GL_ARRAY_BUFFER, pos, sizeof(glm::vec3) * size,
-                        mNormals.data());
+        this->mVbo.set(mNormals, pos);
         pos += sizeof(glm::vec3) * size;
       }
       if (!this->mTangents.empty()) {
-        glBufferSubData(GL_ARRAY_BUFFER, pos, sizeof(glm::vec4) * size,
-                        mTangents.data());
+        this->mVbo.set(mTangents, pos);
         pos += sizeof(glm::vec4) * size;
       }
     }
     if (!this->mIndices.empty()) {
-      glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, this->mEbo);
-      glBufferData(GL_ELEMENT_ARRAY_BUFFER,
-                   sizeof(unsigned int) * this->mIndices.size(),
-                   this->mIndices.data(), GL_STATIC_DRAW);
+      this->mEbo.bind();
+      this->mEbo.set(this->mIndices);
     }
     {
       auto pos = 0;
@@ -206,12 +194,11 @@ void geometry::prepare(shader &pShader) {
       }
     }
     this->mIsDirty = false;
-    DEBUG("Geometry {} uploaded ({} tris)", this->mVbo,
-          this->mIndices.size() / 3);
+    DEBUG("Geometry uploaded ({} tris)", this->mIndices.size() / 3);
   } else {
     glBindVertexArray(this->mVao);
     if (!this->mIndices.empty()) {
-      glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, this->mEbo);
+      this->mEbo.bind();
     }
   }
 }
@@ -239,15 +226,6 @@ void geometry::dispose() {
   if (this->mVao != -1) {
     glDeleteVertexArrays(1, &(this->mVao));
     this->mVao = -1;
-  }
-  if (this->mVbo != -1) {
-    glDeleteBuffers(1, &(this->mVbo));
-    DEBUG("Geometry {} destroyed", this->mVbo);
-    this->mVbo = -1;
-  }
-  if (this->mEbo != -1) {
-    glDeleteBuffers(1, &(this->mEbo));
-    this->mEbo = -1;
   }
   this->mIsDirty = true;
 }

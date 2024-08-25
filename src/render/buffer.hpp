@@ -11,12 +11,21 @@ public:
   void bind();
   void dispose();
 
-  void set(void *pData, unsigned int pLength, unsigned int pDataSize);
+  void set(const void *pData, unsigned int pLength, unsigned int pDataSize);
+  void set(const void *pData, unsigned int pLength, unsigned int pOffset,
+           unsigned int pDataSize);
   template <typename T> void set(const std::vector<T> &pData) {
-    this->set(pData.data(), pData.size() * sizeof(T), sizeof(T));
+    this->set(static_cast<const void *>(pData.data()), pData.size() * sizeof(T),
+              sizeof(T));
   }
-  void buffer_data(void *pData, unsigned int pLength);
-  void buffer_sub_data(void *pData, unsigned int pOffset, unsigned int pLength);
+  template <typename T>
+  void set(const std::vector<T> &pData, unsigned int pOffset) {
+    this->set(static_cast<const void *>(pData.data()), pOffset,
+              pData.size() * sizeof(T), sizeof(T));
+  }
+  void buffer_data(const void *pData, unsigned int pLength);
+  void buffer_sub_data(const void *pData, unsigned int pOffset,
+                       unsigned int pLength);
 
 protected:
   int mType;
@@ -26,11 +35,13 @@ protected:
   unsigned int mBuffer = -1;
 };
 
-class gl_array_buffer : gl_buffer {
+class gl_array_buffer : public gl_buffer {
+public:
   gl_array_buffer(int pUsage);
 };
 
-class gl_element_array_buffer : gl_buffer {
+class gl_element_array_buffer : public gl_buffer {
+public:
   gl_element_array_buffer(int pUsage);
 };
 

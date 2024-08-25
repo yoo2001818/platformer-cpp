@@ -22,17 +22,23 @@ void gl_buffer::dispose() {
   }
 }
 
-void gl_buffer::set(void *pData, unsigned int pLength, unsigned int pDataSize) {
+void gl_buffer::set(const void *pData, unsigned int pLength,
+                    unsigned int pDataSize) {
   this->mDataSize = pDataSize;
   this->buffer_data(pData, pLength);
 }
 
-void gl_buffer::buffer_data(void *pData, unsigned int pLength) {
+void gl_buffer::set(const void *pData, unsigned int pLength,
+                    unsigned int pOffset, unsigned int pDataSize) {
+  this->buffer_sub_data(pData, pOffset, pLength);
+}
+
+void gl_buffer::buffer_data(const void *pData, unsigned int pLength) {
   this->bind();
   glBufferData(this->mType, pLength, pData, this->mUsage);
 }
 
-void gl_buffer::buffer_sub_data(void *pData, unsigned int pOffset,
+void gl_buffer::buffer_sub_data(const void *pData, unsigned int pOffset,
                                 unsigned int pLength) {
   this->bind();
   glBufferSubData(this->mType, pOffset, pLength, pData);

@@ -12,7 +12,7 @@ public:
   void dispose();
 
   void set(const void *pData, unsigned int pLength, unsigned int pDataSize);
-  void set(const void *pData, unsigned int pLength, unsigned int pOffset,
+  void set(const void *pData, unsigned pOffset, unsigned int pLength,
            unsigned int pDataSize);
   template <typename T> void set(const std::vector<T> &pData) {
     this->set(static_cast<const void *>(pData.data()), pData.size() * sizeof(T),

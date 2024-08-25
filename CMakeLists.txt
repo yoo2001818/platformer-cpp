@@ -84,8 +84,11 @@ target_link_libraries(tests assimp)
 file(GLOB_RECURSE RES_FILES "${CMAKE_CURRENT_SOURCE_DIR}/res/*")
 
 foreach(RES_FILE ${RES_FILES})
-  get_filename_component(RES_FILE_NAME ${RES_FILE} NAME)
-  set(DEST_FILE "${CMAKE_CURRENT_BINARY_DIR}/${RES_FILE_NAME}")
+  file(RELATIVE_PATH RES_FILE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/res" ${RES_FILE})
+  set(DEST_FILE "${CMAKE_CURRENT_BINARY_DIR}/res/${RES_FILE_PATH}")
+  get_filename_component(DEST_DIR ${DEST_FILE} DIRECTORY)
+  file(MAKE_DIRECTORY ${DEST_DIR})
+
   add_custom_command(
     OUTPUT ${DEST_FILE}
     COMMAND ${CMAKE_COMMAND} -E copy_if_different ${RES_FILE} ${DEST_FILE}

@@ -1,6 +1,7 @@
 #include "scene.hpp"
+#include "scene/scene_bunchoftest.hpp"
 #include "scene/scene_ibl.hpp"
-#include "scene_bunchoftest.hpp"
+#include "scene/scene_instancing.hpp"
 #include <memory>
 
 using namespace platformer;
@@ -19,6 +20,7 @@ std::vector<std::shared_ptr<scene>> &scene_registry::getScenes() {
   if (scenes.empty()) {
     scenes.push_back(std::make_shared<scene_bunchoftest>());
     scenes.push_back(std::make_shared<scene_ibl>());
+    scenes.push_back(std::make_shared<scene_instancing>());
   }
   return scenes;
 }

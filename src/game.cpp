@@ -90,7 +90,7 @@ void game::make_player() {
     auto player = this->mRegistry.create();
     {
       auto &transformVal = this->mRegistry.emplace<transform>(player);
-      transformVal.position(glm::vec3(0.0, 5.0, 0.0));
+      transformVal.position(glm::vec3(0.0, 0.0, 0.0));
 
       auto playerBody = this->mRegistry.create();
       auto &transformBodyVal = this->mRegistry.emplace<transform>(playerBody);

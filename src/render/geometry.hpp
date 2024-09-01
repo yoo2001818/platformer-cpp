@@ -53,6 +53,7 @@ public:
   // NOTE: Shader program must be prepared first
   void prepare(shader &pShader);
   void render();
+  void render(int pPrimCount);
   void dispose();
 
   static void calc_normals(geometry &pGeometry);

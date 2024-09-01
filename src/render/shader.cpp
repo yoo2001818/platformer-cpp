@@ -166,6 +166,28 @@ void shader::set(const std::string &pName, int pOffset,
   glUniformMatrix4fv(pos + pOffset, 1, false, glm::value_ptr(pValue));
 }
 
+void shader::set_attribute(const std::string &pName, int pSize, int pType,
+                           bool pNormalized, int pStride, size_t pPointer) {
+  auto index = glGetAttribLocation(mProgramId, pName.c_str());
+  if (index == -1)
+    return;
+  glVertexAttribPointer(index, pSize, pType, pNormalized, pStride,
+                        (void *)pPointer);
+  glEnableVertexAttribArray(index);
+}
+
+void shader::set_attribute(const std::string &pName, int pOffset, int pSize,
+                           int pType, bool pNormalized, int pStride,
+                           size_t pPointer, int pDivisor) {
+  auto index = glGetAttribLocation(mProgramId, pName.c_str());
+  if (index == -1)
+    return;
+  glVertexAttribPointer(index + pOffset, pSize, pType, pNormalized, pStride,
+                        (void *)pPointer);
+  glVertexAttribDivisor(index + pOffset, pDivisor);
+  glEnableVertexAttribArray(index + pOffset);
+}
+
 void shader::prepare() {
   if (this->mIsDirty) {
     this->dispose();

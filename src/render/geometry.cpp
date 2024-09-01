@@ -174,22 +174,22 @@ void geometry::prepare(shader &pShader) {
     {
       auto pos = 0;
       auto size = this->mPositions.size();
-      this->setAttribute(pShader, "aPosition", 3, GL_FLOAT, GL_FALSE,
-                         sizeof(glm::vec3), pos);
+      pShader.set_attribute("aPosition", 3, GL_FLOAT, GL_FALSE,
+                            sizeof(glm::vec3), pos);
       pos += sizeof(glm::vec3) * size;
       if (!this->mTexCoords.empty()) {
-        this->setAttribute(pShader, "aTexCoord", 2, GL_FLOAT, GL_FALSE,
-                           sizeof(glm::vec2), pos);
+        pShader.set_attribute("aTexCoord", 2, GL_FLOAT, GL_FALSE,
+                              sizeof(glm::vec2), pos);
         pos += sizeof(glm::vec2) * size;
       }
       if (!this->mNormals.empty()) {
-        this->setAttribute(pShader, "aNormal", 3, GL_FLOAT, GL_FALSE,
-                           sizeof(glm::vec3), pos);
+        pShader.set_attribute("aNormal", 3, GL_FLOAT, GL_FALSE,
+                              sizeof(glm::vec3), pos);
         pos += sizeof(glm::vec3) * size;
       }
       if (!this->mTangents.empty()) {
-        this->setAttribute(pShader, "aTangent", 4, GL_FLOAT, GL_FALSE,
-                           sizeof(glm::vec4), pos);
+        pShader.set_attribute("aTangent", 4, GL_FLOAT, GL_FALSE,
+                              sizeof(glm::vec4), pos);
         pos += sizeof(glm::vec4) * size;
       }
     }
@@ -203,22 +203,20 @@ void geometry::prepare(shader &pShader) {
   }
 }
 
-void geometry::setAttribute(shader &pShader, const std::string &pName,
-                            int pSize, int pType, bool pNormalized, int pStride,
-                            size_t pPointer) {
-  auto index = glGetAttribLocation(pShader.mProgramId, pName.c_str());
-  if (index == -1)
-    return;
-  glVertexAttribPointer(index, pSize, pType, pNormalized, pStride,
-                        (void *)pPointer);
-  glEnableVertexAttribArray(index);
-}
-
 void geometry::render() {
   if (this->mIndices.empty()) {
     glDrawArrays(GL_TRIANGLES, 0, this->mPositions.size());
   } else {
     glDrawElements(GL_TRIANGLES, this->mIndices.size(), GL_UNSIGNED_INT, 0);
+  }
+}
+
+void geometry::render(int pPrimCount) {
+  if (this->mIndices.empty()) {
+    glDrawArraysInstanced(GL_TRIANGLES, 0, this->mPositions.size(), pPrimCount);
+  } else {
+    glDrawElementsInstanced(GL_TRIANGLES, this->mIndices.size(),
+                            GL_UNSIGNED_INT, 0, pPrimCount);
   }
 }
 

@@ -1,5 +1,6 @@
 #include "render/material.hpp"
 #include "file.hpp"
+#include "render/buffer.hpp"
 #include "render/camera.hpp"
 #include "render/geometry.hpp"
 #include "render/pipeline.hpp"
@@ -12,6 +13,7 @@
 #include <memory>
 #include <stdexcept>
 #include <string>
+#include <vector>
 
 using namespace platformer;
 
@@ -109,7 +111,7 @@ void standard_material::render(subpipeline &pSubpipeline, geometry &pGeometry,
 
         shader_block result{
             .vertex_dependencies = {},
-            .vertex_body = read_file_str("res/shader/standard.vert"),
+            .vertex_body = read_file_str("res/shader/standardInstanced.vert"),
             .fragment_dependencies = {},
             .fragment_header = defines + "in vec3 vPosition;\n"
                                          "in vec3 vNormal;\n"
@@ -142,11 +144,25 @@ void standard_material::render(subpipeline &pSubpipeline, geometry &pGeometry,
     this->diffuseTexture->prepare(0);
     shaderVal->set("uDiffuse", 0);
   }
+  gl_array_buffer buffer{GL_STREAM_DRAW};
+  std::vector<glm::mat4> models;
+  models.reserve(pEntities.size());
   for (auto entity : pEntities) {
     auto &transformVal = registry.get<transform>(entity);
-    shaderVal->set("uModel", transformVal.matrix_world(registry));
-    pGeometry.render();
+    models.push_back(transformVal.matrix_world(registry));
   }
+  buffer.set(models);
+  buffer.bind();
+  shaderVal->set_attribute("aModel", 0, 4, GL_FLOAT, GL_FLOAT,
+                           sizeof(glm::mat4), 0, 1);
+  shaderVal->set_attribute("aModel", 1, 4, GL_FLOAT, GL_FLOAT,
+                           sizeof(glm::mat4), sizeof(glm::vec4), 1);
+  shaderVal->set_attribute("aModel", 2, 4, GL_FLOAT, GL_FLOAT,
+                           sizeof(glm::mat4), sizeof(glm::vec4) * 2, 1);
+  shaderVal->set_attribute("aModel", 3, 4, GL_FLOAT, GL_FLOAT,
+                           sizeof(glm::mat4), sizeof(glm::vec4) * 3, 1);
+  pGeometry.render(pEntities.size());
+  buffer.dispose();
 }
 
 void standard_material::dispose() {}

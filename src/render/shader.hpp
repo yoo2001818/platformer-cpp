@@ -45,6 +45,12 @@ public:
   void set(const std::string &pName, int pOffset, const glm::mat3 &pValue);
   void set(const std::string &pName, int pOffset, const glm::mat4 &pValue);
 
+  void set_attribute(const std::string &pName, int pSize, int pType,
+                     bool pNormalized, int pStride, size_t pPointer);
+  void set_attribute(const std::string &pName, int pOffset, int pSize,
+                     int pType, bool pNormalized, int pStride, size_t pPointer,
+                     int pDivisor);
+
   void prepare();
   void dispose();
 

@@ -10,7 +10,6 @@
 #include "render/shader_preprocessor.hpp"
 #include "render/texture.hpp"
 #include <functional>
-#include <iostream>
 #include <memory>
 #include <sstream>
 #include <vector>
@@ -31,6 +30,35 @@ void platformer::collect_lights(
       current->second.push_back(entity);
     } else {
       pLights.insert({lightType, {entity}});
+    }
+  }
+}
+
+void platformer::collect_meshes(
+    shared_ptr_unordered_map<mesh, std::vector<entt::entity>> &pMeshes,
+    entt::registry &pRegistry) {
+  auto view = pRegistry.view<transform, mesh_component>();
+  pMeshes.clear();
+  for (auto entity : view) {
+    auto &mesh = pRegistry.get<mesh_component>(entity).mesh;
+    auto current = pMeshes.find(mesh);
+    if (current != pMeshes.end()) {
+      current->second.push_back(entity);
+    } else {
+      pMeshes.insert({mesh, {entity}});
+    }
+  }
+}
+
+void platformer::collect_submeshes(std::vector<submesh_group> &pSubmeshGroups,
+                                   entt::registry &pRegistry) {
+  shared_ptr_unordered_map<mesh, std::vector<entt::entity>> meshMap;
+  collect_meshes(meshMap, pRegistry);
+  pSubmeshGroups.clear();
+  for (const auto &[mesh, entities] : meshMap) {
+    for (const auto &[material, geometry] : mesh->meshes()) {
+      submesh_group group{material, geometry, mesh, entities};
+      pSubmeshGroups.push_back(std::move(group));
     }
   }
 }
@@ -154,10 +182,10 @@ void forward_pipeline::render() {
   auto &cameraTransform = registry.get<transform>(cameraEntity);
   auto &cameraCamera = registry.get<platformer::camera>(cameraEntity);
   this->mForwardSubpipeline.prepare_lights();
-  auto view = registry.view<transform, mesh>();
-  for (auto entity : view) {
-    auto &meshVal = registry.get<mesh>(entity);
-    meshVal.render(this->mForwardSubpipeline, entity);
+  std::vector<submesh_group> submeshGroups;
+  platformer::collect_submeshes(submeshGroups, registry);
+  for (auto &[material, geometry, mesh, entities] : submeshGroups) {
+    material->render(this->mForwardSubpipeline, *geometry, entities);
   }
 }
 
@@ -436,17 +464,17 @@ void deferred_pipeline::render() {
   this->mForwardSubpipeline.prepare_lights();
   // Render objects
   auto &registry = this->mRenderer.game().registry();
-  auto view = registry.view<transform, mesh>();
   this->mMeshPassFb.bind();
-  for (auto entity : view) {
+  std::vector<submesh_group> submeshGroups;
+  platformer::collect_submeshes(submeshGroups, registry);
+  for (auto &[material, geometry, mesh, entities] : submeshGroups) {
     this->mMeshPassFb.unbind();
-    auto &meshVal = registry.get<mesh>(entity);
-    meshVal.render(this->mDeferredSubpipeline, entity);
+    material->render(this->mDeferredSubpipeline, *geometry, entities);
   }
   this->mMeshPassFb.unbind();
   // Do the lighting pass
   std::unordered_map<std::string, std::vector<entt::entity>> lights;
-  collect_lights(lights, registry);
+  platformer::collect_lights(lights, registry);
   // this->mLightPassFb.bind();
   for (auto &entry : lights) {
     auto &entities = entry.second;

@@ -101,7 +101,8 @@ void game::make_player() {
                             glm::vec3(1.0f, 0.1f, 0.1f), 0.5f, 0.0f),
                         std::make_shared<geometry>(geometry::make_box())});
 
-      this->mRegistry.emplace<mesh>(playerBody, std::move(meshes));
+      this->mRegistry.emplace<mesh_component>(
+          playerBody, std::make_shared<mesh>(std::move(meshes)));
       this->mRegistry.emplace<name>(playerBody, "playerBody");
       this->mMovement.body_mesh_entity(playerBody);
 
@@ -125,7 +126,8 @@ void game::make_player() {
                             glm::vec3(0.1f, 1.0f, 0.1f), 0.5f, 0.0f),
                         std::make_shared<geometry>(geometry::make_box())});
 
-      this->mRegistry.emplace<mesh>(playerHead, std::move(meshes));
+      this->mRegistry.emplace<mesh_component>(
+          playerHead, std::make_shared<mesh>(std::move(meshes)));
       this->mRegistry.emplace<fps_movement>(playerHead);
       this->mRegistry.emplace<name>(playerHead, "playerHead");
       this->mMovement.head_entity(playerHead);

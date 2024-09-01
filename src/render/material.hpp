@@ -2,7 +2,6 @@
 #define __RENDER_MATERIAL_HPP__
 #include "entt/entt.hpp"
 #include "render/geometry.hpp"
-#include "render/pipeline.hpp"
 #include "render/shader.hpp"
 #include "render/texture.hpp"
 #include <any>
@@ -12,13 +11,14 @@
 
 namespace platformer {
 class renderer;
+class subpipeline;
 class material {
 public:
   material();
   virtual ~material();
 
   virtual void render(subpipeline &pSubpipeline, geometry &pGeometry,
-                      entt::entity pEntity) = 0;
+                      std::vector<entt::entity> &pEntities) = 0;
   virtual void dispose() = 0;
 };
 
@@ -27,7 +27,7 @@ public:
   shader_material(std::string pVertex, std::string pFragment);
 
   virtual void render(subpipeline &pSubpipeline, geometry &pGeometry,
-                      entt::entity pEntity) override;
+                      std::vector<entt::entity> &pEntities) override;
   virtual void dispose() override;
 
   std::map<std::string, std::any> &uniforms();
@@ -45,7 +45,7 @@ public:
                     float pMetalic);
 
   virtual void render(subpipeline &pSubpipeline, geometry &pGeometry,
-                      entt::entity pEntity) override;
+                      std::vector<entt::entity> &pEntities) override;
   virtual void dispose() override;
 
   float roughness;
@@ -54,20 +54,5 @@ public:
   std::shared_ptr<texture> diffuseTexture = nullptr;
 };
 
-class armature_material : public material {
-public:
-  // This should be supported outside materials, but pipeline is not implemented
-  // yet
-  armature_material();
-
-  virtual void render(subpipeline &pSubpipeline, geometry &pGeometry,
-                      entt::entity pEntity) override;
-  virtual void dispose() override;
-
-private:
-  shader mShader;
-
-  static shader create_shader();
-};
 } // namespace platformer
 #endif

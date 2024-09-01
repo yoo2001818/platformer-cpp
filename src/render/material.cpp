@@ -23,17 +23,14 @@ shader_material::shader_material(std::string pVertex, std::string pFragment)
     : mShader(pVertex, pFragment), mUniforms() {}
 
 void shader_material::render(subpipeline &pSubpipeline, geometry &pGeometry,
-                             entt::entity pEntity) {
+                             std::vector<entt::entity> &pEntities) {
   // FIXME: This is not good enough; there needs to be a way to completely skip
   // the lighting pass without referencing the renderer directly, which can
   // cause undefined behaviors
   auto &renderer = pSubpipeline.renderer();
   auto &registry = renderer.registry();
-  auto &transformVal = registry.get<transform>(pEntity);
   this->mShader.prepare();
   pGeometry.prepare(this->mShader);
-  // Set up uniforms
-  this->mShader.set("uModel", transformVal.matrix_world(registry));
   camera_handle camHandle(renderer);
   this->mShader.set("uView", camHandle.view());
   this->mShader.set("uProjection", camHandle.projection());
@@ -69,7 +66,12 @@ void shader_material::render(subpipeline &pSubpipeline, geometry &pGeometry,
   }
   // Issue draw call
   renderer.apply_render_state({.depthFunc = GL_LEQUAL});
-  pGeometry.render();
+  for (auto entity : pEntities) {
+    // Set up uniforms
+    auto &transformVal = registry.get<transform>(entity);
+    this->mShader.set("uModel", transformVal.matrix_world(registry));
+    pGeometry.render();
+  }
 }
 
 void shader_material::dispose() { this->mShader.dispose(); }
@@ -91,10 +93,9 @@ standard_material::standard_material(std::shared_ptr<texture> pDiffuseTexture,
       diffuseTexture(pDiffuseTexture) {}
 
 void standard_material::render(subpipeline &pSubpipeline, geometry &pGeometry,
-                               entt::entity pEntity) {
+                               std::vector<entt::entity> &pEntities) {
   auto &renderer = pSubpipeline.renderer();
   auto &registry = renderer.registry();
-  auto &transformVal = registry.get<transform>(pEntity);
   int featureFlags = 0;
   if (this->diffuseTexture != nullptr) {
     featureFlags |= 1;
@@ -132,10 +133,8 @@ void standard_material::render(subpipeline &pSubpipeline, geometry &pGeometry,
         };
         return result;
       });
-  // TODO: It could be great if this is only done once per shader
   pSubpipeline.prepare_shader(shaderVal);
   pGeometry.prepare(*shaderVal);
-  shaderVal->set("uModel", transformVal.matrix_world(registry));
   shaderVal->set("uColor", this->color);
   shaderVal->set("uRoughness", this->roughness);
   shaderVal->set("uMetalic", this->metalic);
@@ -143,7 +142,11 @@ void standard_material::render(subpipeline &pSubpipeline, geometry &pGeometry,
     this->diffuseTexture->prepare(0);
     shaderVal->set("uDiffuse", 0);
   }
-  pGeometry.render();
+  for (auto entity : pEntities) {
+    auto &transformVal = registry.get<transform>(entity);
+    shaderVal->set("uModel", transformVal.matrix_world(registry));
+    pGeometry.render();
+  }
 }
 
 void standard_material::dispose() {}

@@ -28,7 +28,7 @@ void scene_bunchoftest::init(application &pApplication, game &pGame) {
         {std::make_shared<standard_material>(imageTexture, 0.5f, 0.0f),
          std::make_shared<geometry>(geometry::make_box())});
 
-    registry.emplace<mesh>(cube, std::move(meshes));
+    registry.emplace<mesh_component>(cube, std::make_shared<mesh>(meshes));
     registry.emplace<collision>(cube);
     registry.emplace<name>(cube, "cube");
   }
@@ -38,7 +38,7 @@ void scene_bunchoftest::init(application &pApplication, game &pGame) {
     trans.position(glm::vec3(0.0f, 0.0f, 0.0f));
 
     mesh model = load_file_to_mesh("res/bunny.gltf");
-    registry.emplace<mesh>(cube, model);
+    registry.emplace<mesh_component>(cube, std::make_shared<mesh>(model));
     registry.emplace<collision>(cube);
     registry.emplace<name>(cube, "bunny");
   }
@@ -94,7 +94,7 @@ void scene_bunchoftest::init(application &pApplication, game &pGame) {
     meshes.push_back(
         {material, std::make_shared<geometry>(geometry::make_quad())});
 
-    registry.emplace<mesh>(ent, std::move(meshes));
+    registry.emplace<mesh_component>(ent, std::make_shared<mesh>(meshes));
     registry.emplace<name>(ent, "quad");
   }
   {

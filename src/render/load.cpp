@@ -178,7 +178,7 @@ void iterate_entity(const aiScene *pScene, entt::registry &pRegistry,
       auto mesh_pair = read_mesh(pScene, origMesh);
       pairs.push_back(mesh_pair);
     }
-    pRegistry.emplace<mesh>(entity, pairs);
+    pRegistry.emplace<mesh_component>(entity, std::make_shared<mesh>(pairs));
   }
 
   // TODO: scan animation / lights / camera and attach it (perhaps it'd be

@@ -3,7 +3,6 @@
 
 #include "render/geometry.hpp"
 #include "render/material.hpp"
-#include "render/pipeline.hpp"
 
 namespace platformer {
 class renderer;
@@ -19,11 +18,13 @@ public:
   bool shouldRender() const;
   void shouldRender(bool mValue);
 
-  void render(subpipeline &pSubpipeline, entt::entity pEntity);
-
 private:
   std::vector<mesh_pair> mMeshes;
   bool mShouldRender = true;
+};
+
+struct mesh_component {
+  std::shared_ptr<platformer::mesh> mesh;
 };
 
 }; // namespace platformer

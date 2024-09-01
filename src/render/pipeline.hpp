@@ -3,6 +3,9 @@
 
 #include "entt/entity/fwd.hpp"
 #include "render/framebuffer.hpp"
+#include "render/geometry.hpp"
+#include "render/material.hpp"
+#include "render/mesh.hpp"
 #include "render/shader.hpp"
 #include "render/texture.hpp"
 #include <functional>
@@ -25,6 +28,42 @@ struct shader_block {
 void collect_lights(
     std::unordered_map<std::string, std::vector<entt::entity>> &pLights,
     entt::registry &pRegistry);
+
+// Custom hash function for std::shared_ptr
+struct shared_ptr_hash {
+  template <typename T>
+  std::size_t operator()(const std::shared_ptr<T> &ptr) const {
+    return std::hash<T *>()(ptr.get());
+  }
+};
+
+// Custom equality function for std::shared_ptr
+struct shared_ptr_equal {
+  template <typename T>
+  bool operator()(const std::shared_ptr<T> &lhs,
+                  const std::shared_ptr<T> &rhs) const {
+    return lhs == rhs;
+  }
+};
+
+template <typename Key, typename T>
+using shared_ptr_unordered_map =
+    std::unordered_map<std::shared_ptr<Key>, T, shared_ptr_hash,
+                       shared_ptr_equal>;
+
+void collect_meshes(
+    shared_ptr_unordered_map<mesh, std::vector<entt::entity>> &pMeshes,
+    entt::registry &pRegistry);
+
+struct submesh_group {
+  std::shared_ptr<platformer::material> material;
+  std::shared_ptr<platformer::geometry> geometry;
+  std::shared_ptr<platformer::mesh> mesh;
+  std::vector<entt::entity> entities;
+};
+
+void collect_submeshes(std::vector<submesh_group> &pSubmeshGroups,
+                       entt::registry &pRegistry);
 
 /**
  * Pipeline coordinates rendering process, like ordering, buffer management.

@@ -54,6 +54,8 @@ void scene_instancing::init(application &pApplication, game &pGame) {
   auto box = std::make_shared<geometry>(geometry::make_box());
   auto imgMaterial =
       std::make_shared<standard_material>(imageTexture, 0.5f, 0.0f);
+  auto boxMesh =
+      std::make_shared<mesh>(std::vector<mesh::mesh_pair>{{imgMaterial, box}});
 
   for (int i = 0; i < 100; i++) {
     auto cube = registry.create();
@@ -62,10 +64,7 @@ void scene_instancing::init(application &pApplication, game &pGame) {
         glm::vec3(((i % 10) - 5) * 0.5f, 0.0f, std::floor(i / 10 - 5) * 0.5f));
     trans.scale(glm::vec3(0.2));
 
-    std::vector<mesh::mesh_pair> meshes{};
-    meshes.push_back({imgMaterial, box});
-
-    registry.emplace<mesh>(cube, std::move(meshes));
+    registry.emplace<mesh_component>(cube, boxMesh);
     registry.emplace<collision>(cube);
     registry.emplace<name>(cube, "cube");
   }
@@ -96,7 +95,8 @@ void scene_instancing::init(application &pApplication, game &pGame) {
     meshes.push_back(
         {material, std::make_shared<geometry>(geometry::make_quad())});
 
-    registry.emplace<mesh>(cube, std::move(meshes));
+    registry.emplace<mesh_component>(cube,
+                                     std::make_shared<mesh>(std::move(meshes)));
     registry.emplace<collision>(cube);
     registry.emplace<name>(cube, "skybox");
   }

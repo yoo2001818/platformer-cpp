@@ -62,7 +62,7 @@ void scene_ibl::init(application &pApplication, game &pGame) {
         {std::make_shared<standard_material>(imageTexture, 0.5f, 0.0f),
          std::make_shared<geometry>(geometry::make_uv_sphere(16, 16))});
 
-    registry.emplace<mesh>(cube, std::move(meshes));
+    registry.emplace<mesh_component>(cube, std::make_shared<mesh>(meshes));
     registry.emplace<collision>(cube);
     registry.emplace<name>(cube, "cube");
   }
@@ -106,7 +106,7 @@ void scene_ibl::init(application &pApplication, game &pGame) {
     meshes.push_back(
         {material, std::make_shared<geometry>(geometry::make_quad())});
 
-    registry.emplace<mesh>(cube, std::move(meshes));
+    registry.emplace<mesh_component>(cube, std::make_shared<mesh>(meshes));
     registry.emplace<collision>(cube);
     registry.emplace<name>(cube, "skybox");
   }
@@ -122,7 +122,9 @@ void scene_ibl::init(application &pApplication, game &pGame) {
         auto mat = std::make_shared<standard_material>(glm::vec3(1.0f),
                                                        x / 4.0f, y / 4.0f);
 
-        registry.emplace<mesh>(cube, mesh({{mat, model.meshes()[0].second}}));
+        registry.emplace<mesh_component>(
+            cube, std::make_shared<mesh>(std::vector<mesh::mesh_pair>{
+                      {mat, model.meshes()[0].second}}));
         registry.emplace<collision>(cube);
         registry.emplace<name>(cube, "bunny");
       }

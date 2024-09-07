@@ -4,6 +4,7 @@
 #include "render/pipeline.hpp"
 #include "render/render.hpp"
 #include <memory>
+#include <vector>
 
 using namespace platformer;
 
@@ -47,3 +48,6 @@ platformer::asset_manager &renderer::asset_manager() {
 }
 entt::registry &renderer::registry() { return this->mRegistry; }
 platformer::pipeline &renderer::pipeline() { return *this->mPipeline; }
+std::vector<std::shared_ptr<gizmo>> &renderer::gizmos() {
+  return this->mGizmos;
+}

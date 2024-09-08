@@ -28,7 +28,14 @@ void renderer::clear() {
   this->apply_render_state({});
 }
 
-void renderer::render() { this->mPipeline->render(); }
+void renderer::render() {
+  this->mPipeline->render();
+  // Gizmos are drawn after the pipeline is finished - they're independent from
+  // the pipeline
+  for (auto &gizmo : this->mGizmos) {
+    gizmo->render();
+  }
+}
 
 entt::entity renderer::camera() const { return mCamera; }
 

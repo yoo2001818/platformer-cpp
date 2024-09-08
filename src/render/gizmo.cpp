@@ -1,5 +1,6 @@
 #include "gizmo.hpp"
 #include "render/renderer.hpp"
+#include "transform.hpp"
 
 using namespace platformer;
 
@@ -10,4 +11,9 @@ platformer::renderer &gizmo::renderer() const { return this->mRenderer; }
 
 entity_gizmo::entity_gizmo(platformer::renderer &pRenderer)
     : gizmo(pRenderer) {}
-void entity_gizmo::render() {}
+void entity_gizmo::render() {
+  auto &registry = this->renderer().registry();
+  auto view = registry.view<transform>();
+  for (auto entity : view) {
+  }
+}

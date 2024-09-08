@@ -3,6 +3,7 @@
 #include "physics.hpp"
 #include "render/camera.hpp"
 #include "render/geometry.hpp"
+#include "render/gizmo.hpp"
 #include "render/renderer.hpp"
 #include "render/shader.hpp"
 #include "scene/scene.hpp"
@@ -37,6 +38,8 @@ void game::init(application &pApplication) {
   this->mName.init(this->mRegistry);
   this->mTransform.init(this->mRegistry);
   this->mMovement.init(*this);
+
+  this->mRenderer.gizmos().push_back(std::make_shared<entity_gizmo>());
 
   this->change_scene(scene_registry::getScenes()[0]);
 }

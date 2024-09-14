@@ -39,7 +39,8 @@ void game::init(application &pApplication) {
   this->mTransform.init(this->mRegistry);
   this->mMovement.init(*this);
 
-  this->mRenderer.gizmos().push_back(std::make_shared<entity_gizmo>());
+  this->mRenderer.gizmos().push_back(
+      std::make_shared<entity_gizmo>(this->mRenderer));
 
   this->change_scene(scene_registry::getScenes()[0]);
 }

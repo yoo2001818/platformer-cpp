@@ -3,6 +3,7 @@
 #include "game.hpp"
 #include "render/pipeline.hpp"
 #include "render/render.hpp"
+#include <GL/glew.h>
 #include <memory>
 #include <vector>
 
@@ -19,6 +20,7 @@ void renderer::apply_render_state(const render_state &to) {
 void renderer::init() {
   SDL_GL_GetDrawableSize(this->mGame.app().window(), &(this->mWidth),
                          &(this->mHeight));
+  glEnable(GL_TEXTURE_CUBE_MAP_SEAMLESS);
 }
 
 void renderer::clear() {

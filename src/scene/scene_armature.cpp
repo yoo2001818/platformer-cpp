@@ -25,7 +25,7 @@ void scene_armature::init(application &pApplication, game &pGame) {
                                         .internalFormat = GL_RGB32F,
                                         .type = GL_FLOAT,
                                     },
-                                .filename = "res/skybox.hdr"})),
+                                .filename = "res/skybox2.hdr"})),
       {.magFilter = GL_LINEAR,
        .minFilter = GL_LINEAR_MIPMAP_LINEAR,
        .wrapS = GL_CLAMP_TO_EDGE,

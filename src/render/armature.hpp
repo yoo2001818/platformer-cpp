@@ -2,16 +2,23 @@
 #define __RENDER_ARMATURE_HPP__
 
 #include "entt/entity/fwd.hpp"
+#include <glm/fwd.hpp>
 #include <glm/glm.hpp>
-#include <optional>
 #include <vector>
 namespace platformer {
-class armature {
-public:
-  std::vector<glm::mat4> inverseBindMatrices;
-  std::vector<entt::entity> joints;
-  std::optional<entt::entity> skeleton;
+struct bone {
+  glm::mat4 inverseBindMatrix;
+  entt::entity joint;
 };
+
+class armature_component {
+public:
+  std::vector<glm::mat4> bone_matrices(entt::registry &pRegistry);
+
+  std::vector<bone> bones;
+  entt::entity root;
+};
+
 } // namespace platformer
 
 #endif

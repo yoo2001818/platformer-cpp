@@ -44,6 +44,22 @@ public:
   void tangents(const std::vector<glm::vec4> &pValue);
   void tangents(std::vector<glm::vec4> &&pValue);
 
+  const std::vector<glm::vec2> &texCoords2() const;
+  void texCoords2(const std::vector<glm::vec2> &pValue);
+  void texCoords2(std::vector<glm::vec2> &&pValue);
+
+  const std::vector<glm::vec4> &colors() const;
+  void colors(const std::vector<glm::vec4> &pValue);
+  void colors(std::vector<glm::vec4> &&pValue);
+
+  const std::vector<glm::ivec4> &boneIds() const;
+  void boneIds(const std::vector<glm::ivec4> &pValue);
+  void boneIds(std::vector<glm::ivec4> &&pValue);
+
+  const std::vector<glm::vec4> &boneWeights() const;
+  void boneWeights(const std::vector<glm::vec4> &pValue);
+  void boneWeights(std::vector<glm::vec4> &&pValue);
+
   const std::vector<unsigned int> &indices() const;
   void indices(const std::vector<unsigned int> &pValue);
   void indices(std::vector<unsigned int> &&pValue);
@@ -72,6 +88,10 @@ private:
   std::vector<glm::vec2> mTexCoords{};
   std::vector<glm::vec3> mNormals{};
   std::vector<glm::vec4> mTangents{};
+  std::vector<glm::vec2> mTexCoords2{};
+  std::vector<glm::vec4> mColors{};
+  std::vector<glm::ivec4> mBoneIds{};
+  std::vector<glm::vec4> mBoneWeights{};
   std::vector<unsigned int> mIndices{};
   bool mIsDirty = true;
 

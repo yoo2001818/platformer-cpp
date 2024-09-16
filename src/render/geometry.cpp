@@ -104,6 +104,60 @@ void geometry::tangents(std::vector<glm::vec4> &&pValue) {
   this->mIsDirty = true;
 }
 
+const std::vector<glm::vec2> &geometry::texCoords2() const {
+  return this->mTexCoords2;
+}
+
+void geometry::texCoords2(const std::vector<glm::vec2> &pValue) {
+  this->mTexCoords2 = pValue;
+  this->mIsDirty = true;
+}
+
+void geometry::texCoords2(std::vector<glm::vec2> &&pValue) {
+  this->mTexCoords2 = std::move(pValue);
+  this->mIsDirty = true;
+}
+
+const std::vector<glm::vec4> &geometry::colors() const { return this->mColors; }
+
+void geometry::colors(const std::vector<glm::vec4> &pValue) {
+  this->mColors = pValue;
+  this->mIsDirty = true;
+}
+
+void geometry::colors(std::vector<glm::vec4> &&pValue) {
+  this->mColors = std::move(pValue);
+  this->mIsDirty = true;
+}
+
+const std::vector<glm::ivec4> &geometry::boneIds() const {
+  return this->mBoneIds;
+}
+
+void geometry::boneIds(const std::vector<glm::ivec4> &pValue) {
+  this->mBoneIds = pValue;
+  this->mIsDirty = true;
+}
+
+void geometry::boneIds(std::vector<glm::ivec4> &&pValue) {
+  this->mBoneIds = std::move(pValue);
+  this->mIsDirty = true;
+}
+
+const std::vector<glm::vec4> &geometry::boneWeights() const {
+  return this->mBoneWeights;
+}
+
+void geometry::boneWeights(const std::vector<glm::vec4> &pValue) {
+  this->mBoneWeights = pValue;
+  this->mIsDirty = true;
+}
+
+void geometry::boneWeights(std::vector<glm::vec4> &&pValue) {
+  this->mBoneWeights = std::move(pValue);
+  this->mIsDirty = true;
+}
+
 const std::vector<unsigned int> &geometry::indices() const {
   return this->mIndices;
 }
@@ -149,6 +203,18 @@ void geometry::prepare(shader &pShader) {
       if (!this->mTangents.empty()) {
         byteSize += sizeof(glm::vec4) * size;
       }
+      if (!this->mTexCoords2.empty()) {
+        byteSize += sizeof(glm::vec2) * size;
+      }
+      if (!this->mColors.empty()) {
+        byteSize += sizeof(glm::vec4) * size;
+      }
+      if (!this->mBoneIds.empty()) {
+        byteSize += sizeof(glm::ivec4) * size;
+      }
+      if (!this->mBoneWeights.empty()) {
+        byteSize += sizeof(glm::vec4) * size;
+      }
       // Upload each buffer
       this->mVbo.buffer_data(nullptr, byteSize);
       auto pos = 0;
@@ -164,6 +230,22 @@ void geometry::prepare(shader &pShader) {
       }
       if (!this->mTangents.empty()) {
         this->mVbo.set(mTangents, pos);
+        pos += sizeof(glm::vec4) * size;
+      }
+      if (!this->mTexCoords2.empty()) {
+        this->mVbo.set(mTexCoords2, pos);
+        pos += sizeof(glm::vec2) * size;
+      }
+      if (!this->mColors.empty()) {
+        this->mVbo.set(mColors, pos);
+        pos += sizeof(glm::vec4) * size;
+      }
+      if (!this->mBoneIds.empty()) {
+        this->mVbo.set(mBoneIds, pos);
+        pos += sizeof(glm::ivec4) * size;
+      }
+      if (!this->mBoneWeights.empty()) {
+        this->mVbo.set(mBoneWeights, pos);
         pos += sizeof(glm::vec4) * size;
       }
     }
@@ -189,6 +271,26 @@ void geometry::prepare(shader &pShader) {
       }
       if (!this->mTangents.empty()) {
         pShader.set_attribute("aTangent", 4, GL_FLOAT, GL_FALSE,
+                              sizeof(glm::vec4), pos);
+        pos += sizeof(glm::vec4) * size;
+      }
+      if (!this->mTexCoords2.empty()) {
+        pShader.set_attribute("aTexCoord2", 2, GL_FLOAT, GL_FALSE,
+                              sizeof(glm::vec4), pos);
+        pos += sizeof(glm::vec2) * size;
+      }
+      if (!this->mColors.empty()) {
+        pShader.set_attribute("aColor", 4, GL_FLOAT, GL_FALSE,
+                              sizeof(glm::vec4), pos);
+        pos += sizeof(glm::vec4) * size;
+      }
+      if (!this->mBoneIds.empty()) {
+        pShader.set_attribute("aBoneIds", 4, GL_INT, GL_FALSE,
+                              sizeof(glm::ivec4), pos);
+        pos += sizeof(glm::ivec4) * size;
+      }
+      if (!this->mBoneWeights.empty()) {
+        pShader.set_attribute("aBoneWeights", 4, GL_FLOAT, GL_FALSE,
                               sizeof(glm::vec4), pos);
         pos += sizeof(glm::vec4) * size;
       }

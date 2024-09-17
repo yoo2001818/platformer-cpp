@@ -13,6 +13,7 @@
 #include <assimp/Importer.hpp>
 #include <assimp/postprocess.h>
 #include <assimp/scene.h>
+#include <glm/fwd.hpp>
 #include <memory>
 #include <stdexcept>
 #include <string>
@@ -114,6 +115,23 @@ entity_loader::entity_loader(const std::string &pFilename,
                              entt::registry &pRegistry)
     : mFilename(pFilename), mRegistry(pRegistry) {}
 
+std::shared_ptr<material> entity_loader::read_material(aiMaterial *pMaterial) {
+  std::shared_ptr<standard_material> mat =
+      std::make_shared<standard_material>();
+  aiColor3D base;
+  float metalic;
+  float roughness;
+
+  pMaterial->Get(AI_MATKEY_BASE_COLOR, base);
+  pMaterial->Get(AI_MATKEY_METALLIC_FACTOR, metalic);
+  pMaterial->Get(AI_MATKEY_ROUGHNESS_FACTOR, roughness);
+  mat->color = convert_ai_to_glm(base);
+  mat->metalic = metalic;
+  mat->roughness = roughness;
+
+  return mat;
+}
+
 mesh::mesh_pair entity_loader::read_mesh(aiMesh *pMesh) {
   // Create geometry
   std::shared_ptr<geometry> geom = std::make_shared<geometry>();
@@ -168,8 +186,51 @@ mesh::mesh_pair entity_loader::read_mesh(aiMesh *pMesh) {
   }
 
   if (pMesh->mNumBones > 0) {
-    // This is kinda weird, given that
-    auto &bone = pMesh->mBones[0];
+    // This is kinda weird, given that GLTF already packs the data neatly
+    std::vector<std::array<int, 4>> boneIds(pMesh->mNumVertices);
+    std::vector<std::array<float, 4>> boneWeights(pMesh->mNumVertices);
+    // Assign bone ids
+    for (int boneIndex = 0; boneIndex < pMesh->mNumBones; boneIndex += 1) {
+      auto bone = pMesh->mBones[boneIndex];
+      for (int weightIndex = 0; weightIndex < bone->mNumWeights;
+           weightIndex += 1) {
+        auto weight = bone->mWeights[weightIndex];
+        int vertexId = weight.mVertexId;
+        for (int i = 0; i < 4; i += 1) {
+          if (boneWeights[vertexId][i] == 0.0f) {
+            boneIds[vertexId][i] = boneIndex;
+            boneWeights[vertexId][i] = weight.mWeight;
+            break;
+          }
+        }
+      }
+    }
+    // Normalize weights
+    for (int i = 0; i < pMesh->mNumVertices; i += 1) {
+      float total = 0.0f;
+      for (int j = 0; j < 4; j += 1) {
+        total += boneWeights[i][j];
+      }
+      if (total > 0.0f) {
+        float coeff = 1.0f / total;
+        for (int j = 0; j < 4; j += 1) {
+          boneWeights[i][j] *= coeff;
+        }
+      }
+    }
+    std::vector<glm::ivec4> boneIdsVec(pMesh->mNumVertices);
+    std::vector<glm::vec4> boneWeightsVec(pMesh->mNumVertices);
+    for (int i = 0; i < pMesh->mNumVertices; i += 1) {
+      boneIdsVec[i] = glm::ivec4(boneIds[i][0], boneIds[i][1], boneIds[i][2],
+                                 boneIds[i][3]);
+      boneWeightsVec[i] = glm::vec4(boneWeights[i][0], boneWeights[i][1],
+                                    boneWeights[i][2], boneWeights[i][3]);
+    }
+    geom->boneIds(boneIdsVec);
+    geom->boneWeights(boneWeightsVec);
+
+    // NOTE: If a bone data is provided, the entity with the mesh should contain
+    // bone data (which is not the scope of here)
   }
 
   std::vector<unsigned int> indices;
@@ -188,18 +249,7 @@ mesh::mesh_pair entity_loader::read_mesh(aiMesh *pMesh) {
 
   // Create material
   auto origMat = this->mScene->mMaterials[pMesh->mMaterialIndex];
-  std::shared_ptr<standard_material> mat =
-      std::make_shared<standard_material>();
-  aiColor3D base;
-  float metalic;
-  float roughness;
-
-  origMat->Get(AI_MATKEY_BASE_COLOR, base);
-  origMat->Get(AI_MATKEY_METALLIC_FACTOR, metalic);
-  origMat->Get(AI_MATKEY_ROUGHNESS_FACTOR, roughness);
-  mat->color = convert_ai_to_glm(base);
-  mat->metalic = metalic;
-  mat->roughness = roughness;
+  auto mat = this->read_material(origMat);
 
   return std::make_pair(mat, geom);
 }
@@ -243,7 +293,8 @@ void entity_loader::load() {
 
   const aiScene *scene = importer.ReadFile(
       this->mFilename, aiProcess_Triangulate | aiProcess_JoinIdenticalVertices |
-                           aiProcess_GenNormals | aiProcess_CalcTangentSpace);
+                           aiProcess_GenNormals | aiProcess_CalcTangentSpace |
+                           aiProcess_PopulateArmatureData);
   if (scene == nullptr) {
     throw std::runtime_error(importer.GetErrorString());
   }

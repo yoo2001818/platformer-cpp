@@ -1,7 +1,9 @@
 #ifndef __RENDER_LOAD_HPP__
 #define __RENDER_LOAD_HPP__
+#include "assimp/material.h"
 #include "assimp/scene.h"
 #include "entt/entity/fwd.hpp"
+#include "render/material.hpp"
 #include "render/mesh.hpp"
 #include <glm/glm.hpp>
 #include <string>
@@ -21,6 +23,7 @@ private:
   entt::registry &mRegistry;
   const aiScene *mScene = nullptr;
 
+  std::shared_ptr<material> read_material(aiMaterial *pMaterial);
   mesh::mesh_pair read_mesh(aiMesh *pMesh);
   void iterate_entity(aiNode *pNode, entt::entity pParent);
 };

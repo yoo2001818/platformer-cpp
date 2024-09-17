@@ -3,6 +3,7 @@
 #include "assimp/mesh.h"
 #include "assimp/types.h"
 #include "entt/entity/entity.hpp"
+#include "entt/entity/fwd.hpp"
 #include "entt/entt.hpp"
 #include "name.hpp"
 #include "render/geometry.hpp"
@@ -14,6 +15,7 @@
 #include <assimp/scene.h>
 #include <memory>
 #include <stdexcept>
+#include <string>
 #include <utility>
 
 using namespace platformer;
@@ -24,6 +26,10 @@ glm::vec3 convert_ai_to_glm(aiVector3D pValue) {
 
 glm::vec3 convert_ai_to_glm(aiColor3D pValue) {
   return glm::vec3(pValue.r, pValue.g, pValue.b);
+}
+
+glm::vec4 convert_ai_to_glm(aiColor4D pValue) {
+  return glm::vec4(pValue.r, pValue.g, pValue.b, pValue.a);
 }
 
 glm::mat4 convert_ai_to_glm(const aiMatrix4x4 &from) {
@@ -104,7 +110,11 @@ mesh platformer::load_file_to_mesh(const std::string &pFilename) {
   return mesh(pairs);
 }
 
-mesh::mesh_pair read_mesh(const aiScene *pScene, aiMesh *pMesh) {
+entity_loader::entity_loader(const std::string &pFilename,
+                             entt::registry &pRegistry)
+    : mFilename(pFilename), mRegistry(pRegistry) {}
+
+mesh::mesh_pair entity_loader::read_mesh(aiMesh *pMesh) {
   // Create geometry
   std::shared_ptr<geometry> geom = std::make_shared<geometry>();
 
@@ -120,12 +130,46 @@ mesh::mesh_pair read_mesh(const aiScene *pScene, aiMesh *pMesh) {
   }
   geom->normals(std::move(normals));
 
+  if (pMesh->mTangents != nullptr) {
+    std::vector<glm::vec4> tangents(pMesh->mNumVertices);
+    for (int j = 0; j < pMesh->mNumVertices; j += 1) {
+      glm::vec3 normal = convert_ai_to_glm(pMesh->mNormals[j]);
+      glm::vec3 tangent = convert_ai_to_glm(pMesh->mTangents[j]);
+      glm::vec3 bitangent = convert_ai_to_glm(pMesh->mBitangents[j]);
+      auto leftBitangent = glm::cross(glm::vec3(tangent), normal);
+      auto modifier = glm::dot(bitangent, tangent);
+      tangents[j] = glm::vec4(tangent, modifier < 0.0f ? -1.0f : 1.0f);
+    }
+    geom->tangents(std::move(tangents));
+  }
+
   if (pMesh->mTextureCoords[0] != nullptr) {
     std::vector<glm::vec2> texCoords(pMesh->mNumVertices);
     for (int j = 0; j < pMesh->mNumVertices; j += 1) {
       texCoords[j] = convert_ai_to_glm(pMesh->mTextureCoords[0][j]);
     }
     geom->texCoords(std::move(texCoords));
+  }
+
+  if (pMesh->mTextureCoords[1] != nullptr) {
+    std::vector<glm::vec2> texCoords2(pMesh->mNumVertices);
+    for (int j = 0; j < pMesh->mNumVertices; j += 1) {
+      texCoords2[j] = convert_ai_to_glm(pMesh->mTextureCoords[1][j]);
+    }
+    geom->texCoords2(std::move(texCoords2));
+  }
+
+  if (pMesh->mColors[0] != nullptr) {
+    std::vector<glm::vec4> colors(pMesh->mNumVertices);
+    for (int j = 0; j < pMesh->mNumVertices; j += 1) {
+      colors[j] = convert_ai_to_glm(pMesh->mColors[0][j]);
+    }
+    geom->colors(std::move(colors));
+  }
+
+  if (pMesh->mNumBones > 0) {
+    // This is kinda weird, given that
+    auto &bone = pMesh->mBones[0];
   }
 
   std::vector<unsigned int> indices;
@@ -138,8 +182,12 @@ mesh::mesh_pair read_mesh(const aiScene *pScene, aiMesh *pMesh) {
   }
   geom->indices(std::move(indices));
 
+  if (geom->tangents().empty() && !geom->texCoords().empty()) {
+    geometry::calc_tangents(*geom);
+  }
+
   // Create material
-  auto origMat = pScene->mMaterials[pMesh->mMaterialIndex];
+  auto origMat = this->mScene->mMaterials[pMesh->mMaterialIndex];
   std::shared_ptr<standard_material> mat =
       std::make_shared<standard_material>();
   aiColor3D base;
@@ -156,15 +204,14 @@ mesh::mesh_pair read_mesh(const aiScene *pScene, aiMesh *pMesh) {
   return std::make_pair(mat, geom);
 }
 
-void iterate_entity(const aiScene *pScene, entt::registry &pRegistry,
-                    aiNode *pNode, entt::entity pParent) {
-  auto entity = pRegistry.create();
-  pRegistry.emplace<name>(entity, std::string{pNode->mName.C_Str()});
+void entity_loader::iterate_entity(aiNode *pNode, entt::entity pParent) {
+  auto entity = mRegistry.create();
+  mRegistry.emplace<name>(entity, std::string{pNode->mName.C_Str()});
   if (pParent != entt::null) {
-    pRegistry.emplace<transform>(entity, pParent,
+    mRegistry.emplace<transform>(entity, pParent,
                                  convert_ai_to_glm(pNode->mTransformation));
   } else {
-    pRegistry.emplace<transform>(entity,
+    mRegistry.emplace<transform>(entity,
                                  convert_ai_to_glm(pNode->mTransformation));
   }
 
@@ -172,13 +219,13 @@ void iterate_entity(const aiScene *pScene, entt::registry &pRegistry,
     std::vector<mesh::mesh_pair> pairs;
     for (int i = 0; i < pNode->mNumMeshes; i += 1) {
       int meshIndex = pNode->mMeshes[i];
-      auto origMesh = pScene->mMeshes[meshIndex];
+      auto origMesh = mScene->mMeshes[meshIndex];
 
       // Read out mesh and convert it to the mesh object
-      auto mesh_pair = read_mesh(pScene, origMesh);
+      auto mesh_pair = read_mesh(origMesh);
       pairs.push_back(mesh_pair);
     }
-    pRegistry.emplace<mesh_component>(entity, std::make_shared<mesh>(pairs));
+    mRegistry.emplace<mesh_component>(entity, std::make_shared<mesh>(pairs));
   }
 
   // TODO: scan animation / lights / camera and attach it (perhaps it'd be
@@ -187,20 +234,27 @@ void iterate_entity(const aiScene *pScene, entt::registry &pRegistry,
 
   for (int i = 0; i < pNode->mNumChildren; i += 1) {
     auto childNode = pNode->mChildren[i];
-    iterate_entity(pScene, pRegistry, childNode, entity);
+    iterate_entity(childNode, entity);
   }
+}
+
+void entity_loader::load() {
+  Assimp::Importer importer;
+
+  const aiScene *scene = importer.ReadFile(
+      this->mFilename, aiProcess_Triangulate | aiProcess_JoinIdenticalVertices |
+                           aiProcess_GenNormals | aiProcess_CalcTangentSpace);
+  if (scene == nullptr) {
+    throw std::runtime_error(importer.GetErrorString());
+  }
+  this->mScene = scene;
+  iterate_entity(scene->mRootNode, entt::null);
+  this->mScene = nullptr;
+  importer.FreeScene();
 }
 
 void platformer::load_file_to_entity(const std::string &pFilename,
                                      entt::registry &pRegistry) {
-  Assimp::Importer importer;
-
-  const aiScene *scene = importer.ReadFile(
-      pFilename, aiProcess_Triangulate | aiProcess_JoinIdenticalVertices |
-                     aiProcess_GenNormals | aiProcess_CalcTangentSpace);
-  if (scene == nullptr) {
-    throw std::runtime_error(importer.GetErrorString());
-  }
-
-  iterate_entity(scene, pRegistry, scene->mRootNode, entt::null);
+  entity_loader loader(pFilename, pRegistry);
+  loader.load();
 }

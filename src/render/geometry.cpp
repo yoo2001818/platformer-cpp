@@ -253,55 +253,57 @@ void geometry::prepare(shader &pShader) {
       this->mEbo.bind();
       this->mEbo.set(this->mIndices);
     }
-    {
-      auto pos = 0;
-      auto size = this->mPositions.size();
-      pShader.set_attribute("aPosition", 3, GL_FLOAT, GL_FALSE,
-                            sizeof(glm::vec3), pos);
-      pos += sizeof(glm::vec3) * size;
-      if (!this->mTexCoords.empty()) {
-        pShader.set_attribute("aTexCoord", 2, GL_FLOAT, GL_FALSE,
-                              sizeof(glm::vec2), pos);
-        pos += sizeof(glm::vec2) * size;
-      }
-      if (!this->mNormals.empty()) {
-        pShader.set_attribute("aNormal", 3, GL_FLOAT, GL_FALSE,
-                              sizeof(glm::vec3), pos);
-        pos += sizeof(glm::vec3) * size;
-      }
-      if (!this->mTangents.empty()) {
-        pShader.set_attribute("aTangent", 4, GL_FLOAT, GL_FALSE,
-                              sizeof(glm::vec4), pos);
-        pos += sizeof(glm::vec4) * size;
-      }
-      if (!this->mTexCoords2.empty()) {
-        pShader.set_attribute("aTexCoord2", 2, GL_FLOAT, GL_FALSE,
-                              sizeof(glm::vec4), pos);
-        pos += sizeof(glm::vec2) * size;
-      }
-      if (!this->mColors.empty()) {
-        pShader.set_attribute("aColor", 4, GL_FLOAT, GL_FALSE,
-                              sizeof(glm::vec4), pos);
-        pos += sizeof(glm::vec4) * size;
-      }
-      if (!this->mBoneIds.empty()) {
-        pShader.set_attribute("aBoneIds", 4, GL_INT, GL_FALSE,
-                              sizeof(glm::ivec4), pos);
-        pos += sizeof(glm::ivec4) * size;
-      }
-      if (!this->mBoneWeights.empty()) {
-        pShader.set_attribute("aBoneWeights", 4, GL_FLOAT, GL_FALSE,
-                              sizeof(glm::vec4), pos);
-        pos += sizeof(glm::vec4) * size;
-      }
-    }
     this->mIsDirty = false;
     DEBUG("Geometry uploaded ({} tris)", this->mIndices.size() / 3);
-  } else {
+  }
+  // TODO: VAO needs consistent layout, which we don't have right now
+  // Hence we're resetting attributes every time
+  {
     glBindVertexArray(this->mVao);
-    if (!this->mIndices.empty()) {
-      this->mEbo.bind();
+    this->mVbo.bind();
+    auto pos = 0;
+    auto size = this->mPositions.size();
+    pShader.set_attribute("aPosition", 3, GL_FLOAT, GL_FALSE, sizeof(glm::vec3),
+                          pos);
+    pos += sizeof(glm::vec3) * size;
+    if (!this->mTexCoords.empty()) {
+      pShader.set_attribute("aTexCoord", 2, GL_FLOAT, GL_FALSE,
+                            sizeof(glm::vec2), pos);
+      pos += sizeof(glm::vec2) * size;
     }
+    if (!this->mNormals.empty()) {
+      pShader.set_attribute("aNormal", 3, GL_FLOAT, GL_FALSE, sizeof(glm::vec3),
+                            pos);
+      pos += sizeof(glm::vec3) * size;
+    }
+    if (!this->mTangents.empty()) {
+      pShader.set_attribute("aTangent", 4, GL_FLOAT, GL_FALSE,
+                            sizeof(glm::vec4), pos);
+      pos += sizeof(glm::vec4) * size;
+    }
+    if (!this->mTexCoords2.empty()) {
+      pShader.set_attribute("aTexCoord2", 2, GL_FLOAT, GL_FALSE,
+                            sizeof(glm::vec4), pos);
+      pos += sizeof(glm::vec2) * size;
+    }
+    if (!this->mColors.empty()) {
+      pShader.set_attribute("aColor", 4, GL_FLOAT, GL_FALSE, sizeof(glm::vec4),
+                            pos);
+      pos += sizeof(glm::vec4) * size;
+    }
+    if (!this->mBoneIds.empty()) {
+      pShader.set_attribute("aBoneIds", 4, GL_INT, GL_FALSE, sizeof(glm::ivec4),
+                            pos);
+      pos += sizeof(glm::ivec4) * size;
+    }
+    if (!this->mBoneWeights.empty()) {
+      pShader.set_attribute("aBoneWeights", 4, GL_FLOAT, GL_FALSE,
+                            sizeof(glm::vec4), pos);
+      pos += sizeof(glm::vec4) * size;
+    }
+  }
+  if (!this->mIndices.empty()) {
+    this->mEbo.bind();
   }
 }
 

@@ -102,20 +102,30 @@ void standard_material::render(subpipeline &pSubpipeline, geometry &pGeometry,
   if (this->diffuseTexture != nullptr) {
     featureFlags |= 1;
   }
+  if (!pGeometry.colors().empty()) {
+    featureFlags |= 2;
+  }
   auto shaderVal = pSubpipeline.get_shader(
       "standard_material~" + std::to_string(featureFlags), [&]() {
         std::string defines = "";
         if (featureFlags & 1) {
           defines += "#define USE_DIFFUSE_TEXTURE\n";
         }
+        if (featureFlags & 2) {
+          defines += "#define USE_VERTEX_COLOR\n";
+        }
 
         shader_block result{
             .vertex_dependencies = {},
-            .vertex_body = read_file_str("res/shader/standardInstanced.vert"),
+            .vertex_body =
+                defines + read_file_str("res/shader/standardInstanced.vert"),
             .fragment_dependencies = {},
             .fragment_header = defines + "in vec3 vPosition;\n"
                                          "in vec3 vNormal;\n"
                                          "in vec2 vTexCoord;\n"
+                                         "#ifdef USE_VERTEX_COLOR\n"
+                                         "in vec4 vColor;\n"
+                                         "#endif\n"
                                          "uniform float uRoughness;\n"
                                          "uniform float uMetalic;\n"
                                          "uniform vec3 uColor;\n"
@@ -127,6 +137,9 @@ void standard_material::render(subpipeline &pSubpipeline, geometry &pGeometry,
                              "vTexCoord).rgb, vec3(2.2));\n"
                              "#else\n"
                              "mInfo.albedo = uColor;\n"
+                             "#endif\n"
+                             "#ifdef USE_VERTEX_COLOR\n"
+                             "mInfo.albedo = mInfo.albedo * vColor.rgb;\n"
                              "#endif\n"
                              "mInfo.normal = normalize(vNormal);\n"
                              "mInfo.position = vPosition;\n"

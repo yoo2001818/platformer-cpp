@@ -125,6 +125,35 @@ std::shared_ptr<material> entity_loader::read_material(int pIndex) {
 
   auto material = this->mScene->mMaterials[pIndex];
   DEBUG("Read material {} ({:x})", pIndex, (uintptr_t)material);
+
+  for (int i = 0; i < material->mNumProperties; i += 1) {
+    auto prop = material->mProperties[i];
+    switch (prop->mType) {
+    case aiPTI_Float:
+      DEBUG("Material prop (float) {}, {} bytes",
+            std::string(prop->mKey.C_Str()), prop->mDataLength);
+      break;
+    case aiPTI_Double:
+      DEBUG("Material prop (double) {}, {} bytes",
+            std::string(prop->mKey.C_Str()), prop->mDataLength);
+      break;
+    case aiPTI_String:
+      DEBUG("Material prop (string) {}, {} bytes",
+            std::string(prop->mKey.C_Str()), prop->mDataLength);
+      break;
+    case aiPTI_Integer:
+      DEBUG("Material prop (int) {}, {} bytes", std::string(prop->mKey.C_Str()),
+            prop->mDataLength);
+      break;
+    case aiPTI_Buffer:
+      DEBUG("Material prop (buf) {}, {} bytes", std::string(prop->mKey.C_Str()),
+            prop->mDataLength);
+      break;
+    default:
+      break;
+    }
+  }
+
   std::shared_ptr<standard_material> mat =
       std::make_shared<standard_material>();
   aiColor3D base;

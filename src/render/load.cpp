@@ -2,6 +2,7 @@
 #include "assimp/material.h"
 #include "assimp/mesh.h"
 #include "assimp/types.h"
+#include "debug.hpp"
 #include "entt/entity/entity.hpp"
 #include "entt/entity/fwd.hpp"
 #include "entt/entt.hpp"
@@ -14,6 +15,7 @@
 #include <assimp/Importer.hpp>
 #include <assimp/postprocess.h>
 #include <assimp/scene.h>
+#include <cstdint>
 #include <glm/fwd.hpp>
 #include <memory>
 #include <stdexcept>
@@ -122,6 +124,7 @@ std::shared_ptr<material> entity_loader::read_material(int pIndex) {
   }
 
   auto material = this->mScene->mMaterials[pIndex];
+  DEBUG("Read material {} ({:x})", pIndex, (uintptr_t)material);
   std::shared_ptr<standard_material> mat =
       std::make_shared<standard_material>();
   aiColor3D base;
@@ -146,6 +149,7 @@ std::shared_ptr<geometry> entity_loader::read_geometry(int pIndex) {
   }
 
   auto mesh = this->mScene->mMeshes[pIndex];
+  DEBUG("Read geometry {} ({:x})", pIndex, (uintptr_t)mesh);
   // Create geometry
   std::shared_ptr<geometry> geom = std::make_shared<geometry>();
 
@@ -319,12 +323,12 @@ void entity_loader::attach_entity(aiNode *pNode, entt::entity pEntity) {
     for (int i = 0; i < pNode->mNumMeshes; i += 1) {
       int meshIndex = pNode->mMeshes[i];
       auto mesh = mScene->mMeshes[meshIndex];
-      if (mesh->mNumBones > 0) {
+      auto mesh_pair = read_mesh(meshIndex);
+      pairs.push_back(mesh_pair);
+      if (mesh->mNumBones > 0 && i == 0) {
         mRegistry.emplace<armature_component>(pEntity,
                                               read_mesh_armature(meshIndex));
       }
-      auto mesh_pair = read_mesh(meshIndex);
-      pairs.push_back(mesh_pair);
     }
     mRegistry.emplace<mesh_component>(pEntity, std::make_shared<mesh>(pairs));
   }
@@ -346,8 +350,8 @@ void entity_loader::load() {
   }
   this->mScene = scene;
   this->mEntities.clear();
-  this->mMaterials.reserve(scene->mNumMaterials);
-  this->mGeometries.reserve(scene->mNumMeshes);
+  this->mMaterials.resize(scene->mNumMaterials, nullptr);
+  this->mGeometries.resize(scene->mNumMeshes, nullptr);
   iterate_entity(scene->mRootNode, entt::null);
   // Construct armature_component for each skeleton, and assign it to meshes
   // Attach lights

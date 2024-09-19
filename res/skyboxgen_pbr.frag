@@ -80,7 +80,7 @@ void main() {
   vec3 result;
   if(uMipLevel < uMaxMipLevel) {
     // radiance calculation
-    result = runSample(dir, pow(min(float(uMipLevel) / (float(uMaxMipLevel) - 1.0), 1.0), 2.0), uResolution);
+    result = runSample(dir, min(float(uMipLevel) / (float(uMaxMipLevel) - 1.0), 1.0), uResolution);
   } else if(uMipLevel == uMaxMipLevel) {
     // irradiance calculation
     result = runIrradianceSample(dir);

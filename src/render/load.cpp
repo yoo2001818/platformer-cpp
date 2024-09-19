@@ -134,6 +134,7 @@ std::shared_ptr<material> entity_loader::read_material(int pIndex) {
   material->Get(AI_MATKEY_BASE_COLOR, base);
   material->Get(AI_MATKEY_METALLIC_FACTOR, metalic);
   material->Get(AI_MATKEY_ROUGHNESS_FACTOR, roughness);
+  DEBUG("Metalic {}, Roughness {}", metalic, roughness);
   mat->color = convert_ai_to_glm(base);
   mat->metalic = metalic;
   mat->roughness = roughness;

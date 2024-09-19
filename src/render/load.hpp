@@ -1,9 +1,9 @@
 #ifndef __RENDER_LOAD_HPP__
 #define __RENDER_LOAD_HPP__
-#include "assimp/material.h"
 #include "assimp/mesh.h"
 #include "assimp/scene.h"
 #include "entt/entity/fwd.hpp"
+#include "render/armature.hpp"
 #include "render/geometry.hpp"
 #include "render/material.hpp"
 #include "render/mesh.hpp"
@@ -31,9 +31,10 @@ private:
   std::unordered_map<aiNode *, entt::entity> mEntities;
   std::unordered_map<std::string, entt::entity> mEntityByNames;
 
-  std::shared_ptr<material> read_material(uint pIndex);
-  std::shared_ptr<geometry> read_geometry(uint pIndex);
-  mesh::mesh_pair read_mesh(uint pIndex);
+  std::shared_ptr<material> read_material(int pIndex);
+  std::shared_ptr<geometry> read_geometry(int pIndex);
+  mesh::mesh_pair read_mesh(int pIndex);
+  armature_component read_mesh_armature(int pIndex);
   void iterate_entity(aiNode *pNode, entt::entity pParent);
   void attach_entity(aiNode *pNode, entt::entity pEntity);
 };

@@ -6,6 +6,7 @@
 #include "entt/entity/fwd.hpp"
 #include "entt/entt.hpp"
 #include "name.hpp"
+#include "render/armature.hpp"
 #include "render/geometry.hpp"
 #include "render/material.hpp"
 #include "render/mesh.hpp"
@@ -115,7 +116,7 @@ entity_loader::entity_loader(const std::string &pFilename,
                              entt::registry &pRegistry)
     : mFilename(pFilename), mRegistry(pRegistry) {}
 
-std::shared_ptr<material> entity_loader::read_material(uint pIndex) {
+std::shared_ptr<material> entity_loader::read_material(int pIndex) {
   if (this->mMaterials[pIndex] != nullptr) {
     return this->mMaterials[pIndex];
   }
@@ -139,7 +140,7 @@ std::shared_ptr<material> entity_loader::read_material(uint pIndex) {
   return mat;
 }
 
-std::shared_ptr<geometry> entity_loader::read_geometry(uint pIndex) {
+std::shared_ptr<geometry> entity_loader::read_geometry(int pIndex) {
   if (this->mGeometries[pIndex] != nullptr) {
     return this->mGeometries[pIndex];
   }
@@ -242,7 +243,7 @@ std::shared_ptr<geometry> entity_loader::read_geometry(uint pIndex) {
     geom->boneWeights(boneWeightsVec);
 
     // NOTE: If a bone data is provided, the entity with the mesh should contain
-    // bone data (which is not the scope of here)
+    // bone data.
   }
 
   std::vector<unsigned int> indices;
@@ -264,7 +265,27 @@ std::shared_ptr<geometry> entity_loader::read_geometry(uint pIndex) {
   return geom;
 }
 
-mesh::mesh_pair entity_loader::read_mesh(uint pIndex) {
+armature_component entity_loader::read_mesh_armature(int pIndex) {
+  auto mesh = this->mScene->mMeshes[pIndex];
+  // FIXME: This only supports one armature per entity, which is obviously
+  // problematic. For instance, how is it possible to support multi-material
+  // with this?
+  if (mesh->mNumBones == 0)
+    return {};
+  armature_component component;
+  component.bones.reserve(mesh->mNumBones);
+  for (int boneId = 0; boneId < mesh->mNumBones; boneId += 1) {
+    auto bone = mesh->mBones[boneId];
+    platformer::bone targetBone;
+    targetBone.inverseBindMatrix = convert_ai_to_glm(bone->mOffsetMatrix);
+    targetBone.joint = this->mEntities[bone->mNode];
+    component.bones.push_back(targetBone);
+    component.root = this->mEntities[bone->mArmature];
+  }
+  return component;
+}
+
+mesh::mesh_pair entity_loader::read_mesh(int pIndex) {
   auto mesh = this->mScene->mMeshes[pIndex];
   auto geometry = this->read_geometry(pIndex);
   auto material = this->read_material(mesh->mMaterialIndex);
@@ -297,6 +318,11 @@ void entity_loader::attach_entity(aiNode *pNode, entt::entity pEntity) {
     std::vector<mesh::mesh_pair> pairs;
     for (int i = 0; i < pNode->mNumMeshes; i += 1) {
       int meshIndex = pNode->mMeshes[i];
+      auto mesh = mScene->mMeshes[meshIndex];
+      if (mesh->mNumBones > 0) {
+        mRegistry.emplace<armature_component>(pEntity,
+                                              read_mesh_armature(meshIndex));
+      }
       auto mesh_pair = read_mesh(meshIndex);
       pairs.push_back(mesh_pair);
     }

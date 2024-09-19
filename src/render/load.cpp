@@ -115,45 +115,57 @@ entity_loader::entity_loader(const std::string &pFilename,
                              entt::registry &pRegistry)
     : mFilename(pFilename), mRegistry(pRegistry) {}
 
-std::shared_ptr<material> entity_loader::read_material(aiMaterial *pMaterial) {
+std::shared_ptr<material> entity_loader::read_material(uint pIndex) {
+  if (this->mMaterials[pIndex] != nullptr) {
+    return this->mMaterials[pIndex];
+  }
+
+  auto material = this->mScene->mMaterials[pIndex];
   std::shared_ptr<standard_material> mat =
       std::make_shared<standard_material>();
   aiColor3D base;
   float metalic;
   float roughness;
 
-  pMaterial->Get(AI_MATKEY_BASE_COLOR, base);
-  pMaterial->Get(AI_MATKEY_METALLIC_FACTOR, metalic);
-  pMaterial->Get(AI_MATKEY_ROUGHNESS_FACTOR, roughness);
+  material->Get(AI_MATKEY_BASE_COLOR, base);
+  material->Get(AI_MATKEY_METALLIC_FACTOR, metalic);
+  material->Get(AI_MATKEY_ROUGHNESS_FACTOR, roughness);
   mat->color = convert_ai_to_glm(base);
   mat->metalic = metalic;
   mat->roughness = roughness;
 
+  this->mMaterials[pIndex] = mat;
+
   return mat;
 }
 
-mesh::mesh_pair entity_loader::read_mesh(aiMesh *pMesh) {
+std::shared_ptr<geometry> entity_loader::read_geometry(uint pIndex) {
+  if (this->mGeometries[pIndex] != nullptr) {
+    return this->mGeometries[pIndex];
+  }
+
+  auto mesh = this->mScene->mMeshes[pIndex];
   // Create geometry
   std::shared_ptr<geometry> geom = std::make_shared<geometry>();
 
-  std::vector<glm::vec3> positions(pMesh->mNumVertices);
-  for (int j = 0; j < pMesh->mNumVertices; j += 1) {
-    positions[j] = convert_ai_to_glm(pMesh->mVertices[j]);
+  std::vector<glm::vec3> positions(mesh->mNumVertices);
+  for (int j = 0; j < mesh->mNumVertices; j += 1) {
+    positions[j] = convert_ai_to_glm(mesh->mVertices[j]);
   }
   geom->positions(std::move(positions));
 
-  std::vector<glm::vec3> normals(pMesh->mNumVertices);
-  for (int j = 0; j < pMesh->mNumVertices; j += 1) {
-    normals[j] = convert_ai_to_glm(pMesh->mNormals[j]);
+  std::vector<glm::vec3> normals(mesh->mNumVertices);
+  for (int j = 0; j < mesh->mNumVertices; j += 1) {
+    normals[j] = convert_ai_to_glm(mesh->mNormals[j]);
   }
   geom->normals(std::move(normals));
 
-  if (pMesh->mTangents != nullptr) {
-    std::vector<glm::vec4> tangents(pMesh->mNumVertices);
-    for (int j = 0; j < pMesh->mNumVertices; j += 1) {
-      glm::vec3 normal = convert_ai_to_glm(pMesh->mNormals[j]);
-      glm::vec3 tangent = convert_ai_to_glm(pMesh->mTangents[j]);
-      glm::vec3 bitangent = convert_ai_to_glm(pMesh->mBitangents[j]);
+  if (mesh->mTangents != nullptr) {
+    std::vector<glm::vec4> tangents(mesh->mNumVertices);
+    for (int j = 0; j < mesh->mNumVertices; j += 1) {
+      glm::vec3 normal = convert_ai_to_glm(mesh->mNormals[j]);
+      glm::vec3 tangent = convert_ai_to_glm(mesh->mTangents[j]);
+      glm::vec3 bitangent = convert_ai_to_glm(mesh->mBitangents[j]);
       auto leftBitangent = glm::cross(glm::vec3(tangent), normal);
       auto modifier = glm::dot(bitangent, tangent);
       tangents[j] = glm::vec4(tangent, modifier < 0.0f ? -1.0f : 1.0f);
@@ -161,37 +173,37 @@ mesh::mesh_pair entity_loader::read_mesh(aiMesh *pMesh) {
     geom->tangents(std::move(tangents));
   }
 
-  if (pMesh->mTextureCoords[0] != nullptr) {
-    std::vector<glm::vec2> texCoords(pMesh->mNumVertices);
-    for (int j = 0; j < pMesh->mNumVertices; j += 1) {
-      texCoords[j] = convert_ai_to_glm(pMesh->mTextureCoords[0][j]);
+  if (mesh->mTextureCoords[0] != nullptr) {
+    std::vector<glm::vec2> texCoords(mesh->mNumVertices);
+    for (int j = 0; j < mesh->mNumVertices; j += 1) {
+      texCoords[j] = convert_ai_to_glm(mesh->mTextureCoords[0][j]);
     }
     geom->texCoords(std::move(texCoords));
   }
 
-  if (pMesh->mTextureCoords[1] != nullptr) {
-    std::vector<glm::vec2> texCoords2(pMesh->mNumVertices);
-    for (int j = 0; j < pMesh->mNumVertices; j += 1) {
-      texCoords2[j] = convert_ai_to_glm(pMesh->mTextureCoords[1][j]);
+  if (mesh->mTextureCoords[1] != nullptr) {
+    std::vector<glm::vec2> texCoords2(mesh->mNumVertices);
+    for (int j = 0; j < mesh->mNumVertices; j += 1) {
+      texCoords2[j] = convert_ai_to_glm(mesh->mTextureCoords[1][j]);
     }
     geom->texCoords2(std::move(texCoords2));
   }
 
-  if (pMesh->mColors[0] != nullptr) {
-    std::vector<glm::vec4> colors(pMesh->mNumVertices);
-    for (int j = 0; j < pMesh->mNumVertices; j += 1) {
-      colors[j] = convert_ai_to_glm(pMesh->mColors[0][j]);
+  if (mesh->mColors[0] != nullptr) {
+    std::vector<glm::vec4> colors(mesh->mNumVertices);
+    for (int j = 0; j < mesh->mNumVertices; j += 1) {
+      colors[j] = convert_ai_to_glm(mesh->mColors[0][j]);
     }
     geom->colors(std::move(colors));
   }
 
-  if (pMesh->mNumBones > 0) {
+  if (mesh->mNumBones > 0) {
     // This is kinda weird, given that GLTF already packs the data neatly
-    std::vector<std::array<int, 4>> boneIds(pMesh->mNumVertices);
-    std::vector<std::array<float, 4>> boneWeights(pMesh->mNumVertices);
+    std::vector<std::array<int, 4>> boneIds(mesh->mNumVertices);
+    std::vector<std::array<float, 4>> boneWeights(mesh->mNumVertices);
     // Assign bone ids
-    for (int boneIndex = 0; boneIndex < pMesh->mNumBones; boneIndex += 1) {
-      auto bone = pMesh->mBones[boneIndex];
+    for (int boneIndex = 0; boneIndex < mesh->mNumBones; boneIndex += 1) {
+      auto bone = mesh->mBones[boneIndex];
       for (int weightIndex = 0; weightIndex < bone->mNumWeights;
            weightIndex += 1) {
         auto weight = bone->mWeights[weightIndex];
@@ -206,7 +218,7 @@ mesh::mesh_pair entity_loader::read_mesh(aiMesh *pMesh) {
       }
     }
     // Normalize weights
-    for (int i = 0; i < pMesh->mNumVertices; i += 1) {
+    for (int i = 0; i < mesh->mNumVertices; i += 1) {
       float total = 0.0f;
       for (int j = 0; j < 4; j += 1) {
         total += boneWeights[i][j];
@@ -218,9 +230,9 @@ mesh::mesh_pair entity_loader::read_mesh(aiMesh *pMesh) {
         }
       }
     }
-    std::vector<glm::ivec4> boneIdsVec(pMesh->mNumVertices);
-    std::vector<glm::vec4> boneWeightsVec(pMesh->mNumVertices);
-    for (int i = 0; i < pMesh->mNumVertices; i += 1) {
+    std::vector<glm::ivec4> boneIdsVec(mesh->mNumVertices);
+    std::vector<glm::vec4> boneWeightsVec(mesh->mNumVertices);
+    for (int i = 0; i < mesh->mNumVertices; i += 1) {
       boneIdsVec[i] = glm::ivec4(boneIds[i][0], boneIds[i][1], boneIds[i][2],
                                  boneIds[i][3]);
       boneWeightsVec[i] = glm::vec4(boneWeights[i][0], boneWeights[i][1],
@@ -234,8 +246,8 @@ mesh::mesh_pair entity_loader::read_mesh(aiMesh *pMesh) {
   }
 
   std::vector<unsigned int> indices;
-  for (int j = 0; j < pMesh->mNumFaces; j += 1) {
-    auto &face = pMesh->mFaces[j];
+  for (int j = 0; j < mesh->mNumFaces; j += 1) {
+    auto &face = mesh->mFaces[j];
     for (int k = 0; k < face.mNumIndices; k += 1) {
       // We expect that the data is triangulated
       indices.push_back(face.mIndices[k]);
@@ -247,16 +259,25 @@ mesh::mesh_pair entity_loader::read_mesh(aiMesh *pMesh) {
     geometry::calc_tangents(*geom);
   }
 
-  // Create material
-  auto origMat = this->mScene->mMaterials[pMesh->mMaterialIndex];
-  auto mat = this->read_material(origMat);
+  this->mGeometries[pIndex] = geom;
 
-  return std::make_pair(mat, geom);
+  return geom;
+}
+
+mesh::mesh_pair entity_loader::read_mesh(uint pIndex) {
+  auto mesh = this->mScene->mMeshes[pIndex];
+  auto geometry = this->read_geometry(pIndex);
+  auto material = this->read_material(mesh->mMaterialIndex);
+
+  return std::make_pair(material, geometry);
 }
 
 void entity_loader::iterate_entity(aiNode *pNode, entt::entity pParent) {
   auto entity = mRegistry.create();
-  mRegistry.emplace<name>(entity, std::string{pNode->mName.C_Str()});
+  auto nameVal = std::string{pNode->mName.C_Str()};
+  mRegistry.emplace<name>(entity, nameVal);
+  this->mEntities.insert({pNode, entity});
+  this->mEntityByNames.insert({nameVal, entity});
   if (pParent != entt::null) {
     mRegistry.emplace<transform>(entity, pParent,
                                  convert_ai_to_glm(pNode->mTransformation));
@@ -265,27 +286,26 @@ void entity_loader::iterate_entity(aiNode *pNode, entt::entity pParent) {
                                  convert_ai_to_glm(pNode->mTransformation));
   }
 
+  for (int i = 0; i < pNode->mNumChildren; i += 1) {
+    auto childNode = pNode->mChildren[i];
+    iterate_entity(childNode, entity);
+  }
+}
+
+void entity_loader::attach_entity(aiNode *pNode, entt::entity pEntity) {
   if (pNode->mNumMeshes > 0) {
     std::vector<mesh::mesh_pair> pairs;
     for (int i = 0; i < pNode->mNumMeshes; i += 1) {
       int meshIndex = pNode->mMeshes[i];
-      auto origMesh = mScene->mMeshes[meshIndex];
-
-      // Read out mesh and convert it to the mesh object
-      auto mesh_pair = read_mesh(origMesh);
+      auto mesh_pair = read_mesh(meshIndex);
       pairs.push_back(mesh_pair);
     }
-    mRegistry.emplace<mesh_component>(entity, std::make_shared<mesh>(pairs));
+    mRegistry.emplace<mesh_component>(pEntity, std::make_shared<mesh>(pairs));
   }
 
   // TODO: scan animation / lights / camera and attach it (perhaps it'd be
   // better to do it afterwards, as the index is already formed after creating
   // the tree)
-
-  for (int i = 0; i < pNode->mNumChildren; i += 1) {
-    auto childNode = pNode->mChildren[i];
-    iterate_entity(childNode, entity);
-  }
 }
 
 void entity_loader::load() {
@@ -299,8 +319,20 @@ void entity_loader::load() {
     throw std::runtime_error(importer.GetErrorString());
   }
   this->mScene = scene;
+  this->mEntities.clear();
+  this->mMaterials.reserve(scene->mNumMaterials);
+  this->mGeometries.reserve(scene->mNumMeshes);
   iterate_entity(scene->mRootNode, entt::null);
+  // Construct armature_component for each skeleton, and assign it to meshes
+  // Attach lights
+  // Attach cameras
+  for (auto [node, entity] : this->mEntities) {
+    this->attach_entity(node, entity);
+  }
   this->mScene = nullptr;
+  this->mEntities.clear();
+  this->mMaterials.clear();
+  this->mGeometries.clear();
   importer.FreeScene();
 }
 

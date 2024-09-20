@@ -1,6 +1,7 @@
 #include "armature.hpp"
 #include "entt/entt.hpp"
 #include "transform.hpp"
+#include <glm/ext/matrix_transform.hpp>
 #include <glm/fwd.hpp>
 #include <vector>
 
@@ -13,7 +14,7 @@ armature_component::bone_matrices(entt::registry &pRegistry) {
   if (rootTransform != nullptr) {
     invMatrix = rootTransform->matrix_world_inverse(pRegistry);
   } else {
-    invMatrix = glm::mat4(1.0);
+    invMatrix = glm::identity<glm::mat4>();
   }
 
   std::vector<glm::mat4> matrices;
@@ -23,7 +24,7 @@ armature_component::bone_matrices(entt::registry &pRegistry) {
     if (transformVal != nullptr) {
       matrices.push_back(invMatrix * transformVal->matrix_world(pRegistry));
     } else {
-      matrices.push_back(glm::mat4());
+      matrices.push_back(glm::identity<glm::mat4>());
     }
   }
 

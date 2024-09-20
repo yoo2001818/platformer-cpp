@@ -49,6 +49,9 @@ void gl_buffer::buffer_sub_data(const void *pData, unsigned int pOffset,
   // pOffset);
 }
 
+gl_texture_buffer::gl_texture_buffer(int pUsage)
+    : gl_buffer(GL_TEXTURE_BUFFER, pUsage) {}
+
 gl_array_buffer::gl_array_buffer(int pUsage)
     : gl_buffer(GL_ARRAY_BUFFER, pUsage) {}
 

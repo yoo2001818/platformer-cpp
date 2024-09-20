@@ -1,9 +1,11 @@
 #include "render/texture.hpp"
 #include "debug.hpp"
+#include "render/buffer.hpp"
 #include "stb_image.h"
 #include <GL/glew.h>
 #include <GL/glu.h>
 #include <cstdint>
+#include <memory>
 #include <stdexcept>
 #include <variant>
 
@@ -49,13 +51,13 @@ void texture::prepare(int pSlot) {
   if (!this->mIsValid) {
     this->init();
     this->mIsValid = true;
-    DEBUG("Texture {} initialized", this->mTexture);
+    // DEBUG("Texture {} initialized", this->mTexture);
   }
 }
 void texture::dispose() {
   if (this->mTexture != -1) {
     glDeleteTextures(1, &this->mTexture);
-    DEBUG("Texture {} disposed", this->mTexture);
+    // DEBUG("Texture {} disposed", this->mTexture);
     this->mTexture = -1;
   }
 }
@@ -291,3 +293,16 @@ void texture_cube::init() {
 }
 
 int texture_cube::type() { return GL_TEXTURE_CUBE_MAP; }
+
+texture_buffer::texture_buffer(
+    const std::shared_ptr<gl_texture_buffer> &pBuffer, int pInternalFormat)
+    : mBuffer(pBuffer), mInternalFormat(pInternalFormat) {}
+
+texture_buffer::~texture_buffer() {}
+
+void texture_buffer::init() {
+  this->mBuffer->bind();
+  glTexBuffer(GL_TEXTURE_BUFFER, mInternalFormat, mBuffer->mBuffer);
+}
+
+int texture_buffer::type() { return GL_TEXTURE_BUFFER; }

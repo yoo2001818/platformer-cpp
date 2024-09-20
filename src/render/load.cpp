@@ -308,6 +308,7 @@ armature_component entity_loader::read_mesh_armature(int pIndex) {
     return {};
   armature_component component;
   component.bones.reserve(mesh->mNumBones);
+  DEBUG("Loading bones ({} bones)", mesh->mNumBones);
   for (int boneId = 0; boneId < mesh->mNumBones; boneId += 1) {
     auto bone = mesh->mBones[boneId];
     platformer::bone targetBone;

@@ -1,7 +1,9 @@
 #ifndef __RENDER_TEXTURE_HPP__
 #define __RENDER_TEXTURE_HPP__
 
+#include "render/buffer.hpp"
 #include <GL/glew.h>
+#include <memory>
 #include <optional>
 #include <string>
 #include <variant>
@@ -135,6 +137,22 @@ protected:
 
 private:
   texture_cube_source mSource{};
+};
+
+class texture_buffer : public texture {
+public:
+  texture_buffer(const std::shared_ptr<gl_texture_buffer> &pBuffer,
+                 int pInternalFormat);
+
+  virtual ~texture_buffer();
+
+protected:
+  virtual void init() override;
+  virtual int type() override;
+
+private:
+  std::shared_ptr<gl_texture_buffer> mBuffer;
+  int mInternalFormat;
 };
 } // namespace platformer
 

@@ -171,8 +171,12 @@ void shader::set_attribute(const std::string &pName, int pSize, int pType,
   auto index = glGetAttribLocation(mProgramId, pName.c_str());
   if (index == -1)
     return;
-  glVertexAttribPointer(index, pSize, pType, pNormalized, pStride,
-                        (void *)pPointer);
+  if (pType == GL_INT && pNormalized == GL_FALSE) {
+    glVertexAttribIPointer(index, pSize, pType, pStride, (void *)pPointer);
+  } else {
+    glVertexAttribPointer(index, pSize, pType, pNormalized, pStride,
+                          (void *)pPointer);
+  }
   glEnableVertexAttribArray(index);
 }
 

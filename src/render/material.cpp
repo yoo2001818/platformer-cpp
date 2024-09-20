@@ -1,5 +1,10 @@
 #include "render/material.hpp"
+#include "debug.hpp"
 #include "file.hpp"
+#include <iostream>
+#define GLM_ENABLE_EXPERIMENTAL
+#include "glm/gtx/string_cast.hpp"
+#include "render/armature.hpp"
 #include "render/buffer.hpp"
 #include "render/camera.hpp"
 #include "render/geometry.hpp"
@@ -98,27 +103,45 @@ void standard_material::render(subpipeline &pSubpipeline, geometry &pGeometry,
                                std::vector<entt::entity> &pEntities) {
   auto &renderer = pSubpipeline.renderer();
   auto &registry = renderer.registry();
+  bool useInstancing = true;
+  bool useArmature = false;
+  // FIXME: It should be possible to render armatures without armature component
+  if (!pGeometry.boneIds().empty()) {
+    useInstancing = false;
+    useArmature = true;
+  }
   int featureFlags = 0;
-  if (this->diffuseTexture != nullptr) {
+  if (useInstancing) {
     featureFlags |= 1;
   }
-  if (!pGeometry.colors().empty()) {
+  if (useArmature) {
     featureFlags |= 2;
+  }
+  if (this->diffuseTexture != nullptr) {
+    featureFlags |= 4;
+  }
+  if (!pGeometry.colors().empty()) {
+    featureFlags |= 8;
   }
   auto shaderVal = pSubpipeline.get_shader(
       "standard_material~" + std::to_string(featureFlags), [&]() {
         std::string defines = "";
         if (featureFlags & 1) {
-          defines += "#define USE_DIFFUSE_TEXTURE\n";
+          defines += "#define USE_INSTANCING\n";
         }
         if (featureFlags & 2) {
+          defines += "#define USE_ARMATURE\n";
+        }
+        if (featureFlags & 4) {
+          defines += "#define USE_DIFFUSE_TEXTURE\n";
+        }
+        if (featureFlags & 8) {
           defines += "#define USE_VERTEX_COLOR\n";
         }
 
         shader_block result{
             .vertex_dependencies = {},
-            .vertex_body =
-                defines + read_file_str("res/shader/standardInstanced.vert"),
+            .vertex_body = defines + read_file_str("res/shader/standard.vert"),
             .fragment_dependencies = {},
             .fragment_header = defines + "in vec3 vPosition;\n"
                                          "in vec3 vNormal;\n"
@@ -157,25 +180,54 @@ void standard_material::render(subpipeline &pSubpipeline, geometry &pGeometry,
     this->diffuseTexture->prepare(0);
     shaderVal->set("uDiffuse", 0);
   }
-  gl_array_buffer buffer{GL_STREAM_DRAW};
-  std::vector<glm::mat4> models;
-  models.reserve(pEntities.size());
-  for (auto entity : pEntities) {
-    auto &transformVal = registry.get<transform>(entity);
-    models.push_back(transformVal.matrix_world(registry));
+  if (useInstancing) {
+    gl_array_buffer buffer{GL_STREAM_DRAW};
+    std::vector<glm::mat4> models;
+    models.reserve(pEntities.size());
+    for (auto entity : pEntities) {
+      auto &transformVal = registry.get<transform>(entity);
+      models.push_back(transformVal.matrix_world(registry));
+    }
+    buffer.set(models);
+    buffer.bind();
+    shaderVal->set_attribute("aModel", 0, 4, GL_FLOAT, GL_FLOAT,
+                             sizeof(glm::mat4), 0, 1);
+    shaderVal->set_attribute("aModel", 1, 4, GL_FLOAT, GL_FLOAT,
+                             sizeof(glm::mat4), sizeof(glm::vec4), 1);
+    shaderVal->set_attribute("aModel", 2, 4, GL_FLOAT, GL_FLOAT,
+                             sizeof(glm::mat4), sizeof(glm::vec4) * 2, 1);
+    shaderVal->set_attribute("aModel", 3, 4, GL_FLOAT, GL_FLOAT,
+                             sizeof(glm::mat4), sizeof(glm::vec4) * 3, 1);
+    pGeometry.render(pEntities.size());
+    buffer.dispose();
+  } else {
+    for (auto entity : pEntities) {
+      auto &transformVal = registry.get<transform>(entity);
+      shaderVal->set("uModel", transformVal.matrix_world(registry));
+      if (useArmature) {
+        auto armatureVal = registry.try_get<armature_component>(entity);
+        if (armatureVal == nullptr) {
+          continue;
+        }
+        auto matrices = armatureVal->bone_matrices(registry);
+        auto boneMatricesBuf =
+            renderer.asset_manager().get<std::shared_ptr<gl_texture_buffer>>(
+                "bone_matrices_buffer", []() {
+                  return std::make_shared<gl_texture_buffer>(GL_STREAM_DRAW);
+                });
+        auto boneMatricesTex =
+            renderer.asset_manager().get<std::shared_ptr<texture_buffer>>(
+                "bone_matrices_texture", [&]() {
+                  return std::make_shared<texture_buffer>(boneMatricesBuf,
+                                                          GL_RGBA32F);
+                });
+        boneMatricesBuf->set(matrices);
+        boneMatricesTex->prepare(5);
+        shaderVal->set("uBoneMatrices", 5);
+      }
+      pGeometry.render();
+    }
   }
-  buffer.set(models);
-  buffer.bind();
-  shaderVal->set_attribute("aModel", 0, 4, GL_FLOAT, GL_FLOAT,
-                           sizeof(glm::mat4), 0, 1);
-  shaderVal->set_attribute("aModel", 1, 4, GL_FLOAT, GL_FLOAT,
-                           sizeof(glm::mat4), sizeof(glm::vec4), 1);
-  shaderVal->set_attribute("aModel", 2, 4, GL_FLOAT, GL_FLOAT,
-                           sizeof(glm::mat4), sizeof(glm::vec4) * 2, 1);
-  shaderVal->set_attribute("aModel", 3, 4, GL_FLOAT, GL_FLOAT,
-                           sizeof(glm::mat4), sizeof(glm::vec4) * 3, 1);
-  pGeometry.render(pEntities.size());
-  buffer.dispose();
 }
 
 void standard_material::dispose() {}

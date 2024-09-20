@@ -2,6 +2,7 @@
 #define __BUFFER_HPP__
 #include <vector>
 namespace platformer {
+class texture_buffer;
 class gl_buffer {
 public:
   gl_buffer(int pType, int pUsage);
@@ -33,6 +34,12 @@ protected:
   int mDataSize = 1;
   int mByteLength = 0;
   unsigned int mBuffer = -1;
+  friend texture_buffer;
+};
+
+class gl_texture_buffer : public gl_buffer {
+public:
+  gl_texture_buffer(int pUsage);
 };
 
 class gl_array_buffer : public gl_buffer {

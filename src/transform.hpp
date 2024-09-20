@@ -77,6 +77,7 @@ public:
 protected:
   friend transform_system;
   void mark_parent_indexed();
+  void register_registry(entt::registry *pRegistry);
 
 private:
   void update_component();
@@ -109,6 +110,7 @@ private:
   std::optional<entt::entity> mPreviousParent = std::nullopt;
   std::optional<entt::entity> mParent = std::nullopt;
   std::vector<entt::entity> mChildren{};
+  entt::registry *mRegistry;
 };
 } // namespace platformer
 

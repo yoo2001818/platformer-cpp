@@ -29,6 +29,8 @@ void transform_system::update_global_version() { this->mGlobalVersion += 1; }
 
 void transform_system::on_construct(entt::registry &pRegistry,
                                     entt::entity pEntity) {
+  auto &transformVal = pRegistry.get<transform>(pEntity);
+  transformVal.register_registry(&pRegistry);
   this->handle_change(pRegistry, pEntity);
 }
 void transform_system::on_update(entt::registry &pRegistry,
@@ -329,15 +331,10 @@ void transform::update_matrix() {
 
 void transform::update_world_matrix(entt::registry &pRegistry) {
   auto &transformSys = pRegistry.ctx().get<transform_system>();
-  this->update_matrix();
-  // FIXME: This should be done for every local operation. However, the registry
-  // is inaccessible to the transform variable, so it's difficult
-  if (this->mWorldMatrixVersion != this->mMatrixVersion) {
-    transformSys.update_global_version();
-  }
   if (transformSys.global_version() == this->mGlobalVersion) {
     return;
   }
+  this->update_matrix();
   transform *parent = nullptr;
   if (this->mParent != std::nullopt) {
     parent = pRegistry.try_get<transform>(this->mParent.value());
@@ -373,8 +370,26 @@ void transform::update_world_inverse_matrix(entt::registry &pRegistry) {
   }
 }
 
-void transform::mark_component_changed() { this->mComponentVersion += 1; }
+void transform::mark_component_changed() {
+  this->mComponentVersion += 1;
+  auto registry = this->mRegistry;
+  if (registry != nullptr) {
+    auto &transformSys = registry->ctx().get<transform_system>();
+    transformSys.update_global_version();
+  }
+}
 
-void transform::mark_matrix_changed() { this->mMatrixVersion += 1; }
+void transform::mark_matrix_changed() {
+  this->mMatrixVersion += 1;
+  auto registry = this->mRegistry;
+  if (registry != nullptr) {
+    auto &transformSys = registry->ctx().get<transform_system>();
+    transformSys.update_global_version();
+  }
+}
 
 void transform::mark_parent_indexed() { this->mPreviousParent = this->mParent; }
+
+void transform::register_registry(entt::registry *pRegistry) {
+  this->mRegistry = pRegistry;
+}

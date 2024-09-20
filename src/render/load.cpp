@@ -1,6 +1,7 @@
 #include "render/load.hpp"
 #include "assimp/material.h"
 #include "assimp/mesh.h"
+#include "assimp/texture.h"
 #include "assimp/types.h"
 #include "debug.hpp"
 #include "entt/entity/entity.hpp"
@@ -11,11 +12,13 @@
 #include "render/geometry.hpp"
 #include "render/material.hpp"
 #include "render/mesh.hpp"
+#include "render/texture.hpp"
 #include "transform.hpp"
 #include <assimp/Importer.hpp>
 #include <assimp/postprocess.h>
 #include <assimp/scene.h>
 #include <cstdint>
+#include <filesystem>
 #include <glm/fwd.hpp>
 #include <memory>
 #include <stdexcept>
@@ -118,6 +121,38 @@ entity_loader::entity_loader(const std::string &pFilename,
                              entt::registry &pRegistry)
     : mFilename(pFilename), mRegistry(pRegistry) {}
 
+std::shared_ptr<texture> entity_loader::read_texture(std::string pFilename) {
+  auto tex = mScene->GetEmbeddedTexture(pFilename.data());
+  if (tex != nullptr) {
+    // Try to read texture from it
+    if (tex->mHeight == 0) {
+      std::byte *byteData =
+          static_cast<std::byte *>(static_cast<void *>(tex->pcData));
+      auto texture =
+          std::make_shared<texture_2d>(texture_source(texture_source_image{
+              .format = {GL_RGBA, GL_RGBA, GL_UNSIGNED_BYTE},
+              .filename = std::string(tex->mFilename.C_Str()),
+              .data = std::vector<std::byte>(byteData, byteData + tex->mWidth),
+          }));
+      return texture;
+    } else {
+      // Not supported
+      return nullptr;
+    }
+  } else {
+    // Read from the file (which is already provided as a path)
+    std::filesystem::path path(this->mFilename);
+    auto dir = path.parent_path();
+    auto texPath = dir / tex->mFilename.C_Str();
+    auto texture =
+        std::make_shared<texture_2d>(texture_source(texture_source_image{
+            .format = {GL_RGBA, GL_RGBA, GL_UNSIGNED_BYTE},
+            .filename = std::string(texPath),
+        }));
+    return texture;
+  }
+}
+
 std::shared_ptr<material> entity_loader::read_material(int pIndex) {
   if (this->mMaterials[pIndex] != nullptr) {
     return this->mMaterials[pIndex];
@@ -167,6 +202,20 @@ std::shared_ptr<material> entity_loader::read_material(int pIndex) {
   mat->color = convert_ai_to_glm(base);
   mat->metalic = metalic;
   mat->roughness = roughness;
+
+  if (material->GetTextureCount(aiTextureType_DIFFUSE) > 0) {
+    aiString texPath;
+    // Disregard texture op and stuff (it's invalid in GLTF anyway)
+    material->GetTexture(aiTextureType_DIFFUSE, 0, &texPath);
+    mat->diffuseTexture = this->read_texture(texPath.C_Str());
+  }
+
+  if (material->GetTextureCount(aiTextureType_NORMALS) > 0) {
+    aiString texPath;
+    // Disregard texture op and stuff (it's invalid in GLTF anyway)
+    material->GetTexture(aiTextureType_NORMALS, 0, &texPath);
+    mat->normalTexture = this->read_texture(texPath.C_Str());
+  }
 
   this->mMaterials[pIndex] = mat;
 

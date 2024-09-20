@@ -212,3 +212,18 @@ void unpackMaterialInfo(
     mOut.normal = normalize(vecIn[1].rgb * 2.0 - 1.0);
     mOut.metalic = vecIn[1].a;
 }
+
+vec3 calcNormalMap(
+    vec3 normal,
+    vec4 tangent,
+    vec3 input
+) {
+    vec3 N = normalize(normal);
+    vec3 T = normalize(tangent.xyz);
+    T = normalize(T - dot(T, N) * N);
+    vec3 B = cross(T, N) * tangent.w;
+    mat3 tanMat = mat3(T, B, N);
+    vec3 input2 = input;
+    input2.y = -input2.y;
+    return tanMat * normalize(input2);
+}

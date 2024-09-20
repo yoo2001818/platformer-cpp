@@ -31,6 +31,7 @@ private:
   std::unordered_map<aiNode *, entt::entity> mEntities;
   std::unordered_map<std::string, entt::entity> mEntityByNames;
 
+  std::shared_ptr<texture> read_texture(std::string pFilename);
   std::shared_ptr<material> read_material(int pIndex);
   std::shared_ptr<geometry> read_geometry(int pIndex);
   mesh::mesh_pair read_mesh(int pIndex);

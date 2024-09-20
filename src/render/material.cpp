@@ -1,7 +1,5 @@
 #include "render/material.hpp"
-#include "debug.hpp"
 #include "file.hpp"
-#include <iostream>
 #define GLM_ENABLE_EXPERIMENTAL
 #include "glm/gtx/string_cast.hpp"
 #include "render/armature.hpp"
@@ -123,6 +121,9 @@ void standard_material::render(subpipeline &pSubpipeline, geometry &pGeometry,
   if (!pGeometry.colors().empty()) {
     featureFlags |= 8;
   }
+  if (this->normalTexture != nullptr) {
+    featureFlags |= 16;
+  }
   auto shaderVal = pSubpipeline.get_shader(
       "standard_material~" + std::to_string(featureFlags), [&]() {
         std::string defines = "";
@@ -138,14 +139,20 @@ void standard_material::render(subpipeline &pSubpipeline, geometry &pGeometry,
         if (featureFlags & 8) {
           defines += "#define USE_VERTEX_COLOR\n";
         }
+        if (featureFlags & 16) {
+          defines += "#define USE_NORMAL_TEXTURE\n";
+        }
 
         shader_block result{
             .vertex_dependencies = {},
             .vertex_body = defines + read_file_str("res/shader/standard.vert"),
-            .fragment_dependencies = {},
+            .fragment_dependencies = {"res/shader/pbr.glsl"},
             .fragment_header = defines + "in vec3 vPosition;\n"
                                          "in vec3 vNormal;\n"
                                          "in vec2 vTexCoord;\n"
+                                         "#ifdef USE_NORMAL_TEXTURE\n"
+                                         "in vec4 vTangent;\n"
+                                         "#endif\n"
                                          "#ifdef USE_VERTEX_COLOR\n"
                                          "in vec4 vColor;\n"
                                          "#endif\n"
@@ -153,21 +160,30 @@ void standard_material::render(subpipeline &pSubpipeline, geometry &pGeometry,
                                          "uniform float uMetalic;\n"
                                          "uniform vec3 uColor;\n"
                                          "#ifdef USE_DIFFUSE_TEXTURE\n"
-                                         "uniform sampler2D uDiffuse;\n"
-                                         "#endif",
-            .fragment_body = "#ifdef USE_DIFFUSE_TEXTURE\n"
-                             "mInfo.albedo = pow(texture(uDiffuse, "
-                             "vTexCoord).rgb, vec3(2.2));\n"
-                             "#else\n"
-                             "mInfo.albedo = uColor;\n"
-                             "#endif\n"
-                             "#ifdef USE_VERTEX_COLOR\n"
-                             "mInfo.albedo = mInfo.albedo * vColor.rgb;\n"
-                             "#endif\n"
-                             "mInfo.normal = normalize(vNormal);\n"
-                             "mInfo.position = vPosition;\n"
-                             "mInfo.roughness = uRoughness;\n"
-                             "mInfo.metalic = uMetalic;\n",
+                                         "uniform sampler2D uDiffuseMap;\n"
+                                         "#endif\n"
+                                         "#ifdef USE_NORMAL_TEXTURE\n"
+                                         "uniform sampler2D uNormalMap;\n"
+                                         "#endif\n",
+            .fragment_body =
+                "#ifdef USE_DIFFUSE_TEXTURE\n"
+                "mInfo.albedo = pow(texture(uDiffuseMap, "
+                "vTexCoord).rgb, vec3(2.2));\n"
+                "#else\n"
+                "mInfo.albedo = uColor;\n"
+                "#endif\n"
+                "#ifdef USE_VERTEX_COLOR\n"
+                "mInfo.albedo = mInfo.albedo * vColor.rgb;\n"
+                "#endif\n"
+                "#ifdef USE_NORMAL_TEXTURE\n"
+                "mInfo.normal = calcNormalMap(vNormal, vTangent, "
+                "texture2D(uNormalMap, vTexCoord).xyz * 2.0 - 1.0);\n"
+                "#else\n"
+                "mInfo.normal = normalize(vNormal);\n"
+                "#endif\n"
+                "mInfo.position = vPosition;\n"
+                "mInfo.roughness = uRoughness;\n"
+                "mInfo.metalic = uMetalic;\n",
         };
         return result;
       });
@@ -178,7 +194,11 @@ void standard_material::render(subpipeline &pSubpipeline, geometry &pGeometry,
   shaderVal->set("uMetalic", this->metalic);
   if (this->diffuseTexture != nullptr) {
     this->diffuseTexture->prepare(0);
-    shaderVal->set("uDiffuse", 0);
+    shaderVal->set("uDiffuseMap", 0);
+  }
+  if (this->normalTexture != nullptr) {
+    this->normalTexture->prepare(1);
+    shaderVal->set("uNormalMap", 1);
   }
   if (useInstancing) {
     gl_array_buffer buffer{GL_STREAM_DRAW};

@@ -52,6 +52,7 @@ public:
   float metalic;
   glm::vec3 color;
   std::shared_ptr<texture> diffuseTexture = nullptr;
+  std::shared_ptr<texture> normalTexture = nullptr;
 };
 
 } // namespace platformer

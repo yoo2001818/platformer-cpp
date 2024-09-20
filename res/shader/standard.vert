@@ -1,7 +1,9 @@
 layout(location = 0) in vec3 aPosition;
 layout(location = 1) in vec2 aTexCoord;
 layout(location = 2) in vec3 aNormal;
+#ifdef USE_NORMAL_TEXTURE
 layout(location = 3) in vec4 aTangent;
+#endif
 #ifdef USE_VERTEX_COLOR
 in vec4 aColor;
 #endif
@@ -15,7 +17,9 @@ in vec4 aBoneWeights;
 out vec3 vPosition;
 out vec3 vNormal;
 out vec2 vTexCoord;
+#ifdef USE_NORMAL_TEXTURE
 out vec4 vTangent;
+#endif
 #ifdef USE_VERTEX_COLOR
 out vec4 vColor;
 #endif
@@ -49,7 +53,9 @@ void main() {
   vNormal = (model * vec4(aNormal, 0.0)).xyz;
   vPosition = (model * vec4(aPosition, 1.0)).xyz;
   vTexCoord = aTexCoord;
-  vTangent = aTangent;
+  #ifdef USE_NORMAL_TEXTURE
+  vTangent = vec4((model * vec4(aTangent.xyz, 0.0)).xyz, aTangent.w);
+  #endif
   #ifdef USE_VERTEX_COLOR
   vColor = aColor;
   #endif

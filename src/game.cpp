@@ -36,11 +36,14 @@ void game::init(application &pApplication) {
   this->mApplication = &pApplication;
   this->mRenderer.init();
   this->mName.init(this->mRegistry);
-  this->mTransform.init(this->mRegistry);
+  auto &transformSys = this->mRegistry.ctx().emplace<transform_system>();
+  transformSys.init(this->mRegistry);
   this->mMovement.init(*this);
 
-  this->mRenderer.gizmos().push_back(
-      std::make_shared<entity_gizmo>(this->mRenderer));
+  /*
+    this->mRenderer.gizmos().push_back(
+        std::make_shared<entity_gizmo>(this->mRenderer));
+  */
 
   this->change_scene(scene_registry::getScenes()[0]);
 }

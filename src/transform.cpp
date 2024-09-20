@@ -23,6 +23,10 @@ void transform_system::init(entt::registry &pRegistry) {
       *this);
 };
 
+int transform_system::global_version() const { return this->mGlobalVersion; }
+
+void transform_system::update_global_version() { this->mGlobalVersion += 1; }
+
 void transform_system::on_construct(entt::registry &pRegistry,
                                     entt::entity pEntity) {
   this->handle_change(pRegistry, pEntity);
@@ -61,12 +65,12 @@ void transform_system::handle_change(entt::registry &pRegistry,
   }
 }
 
-transform::transform(){};
-transform::transform(const entt::entity &pParent) : mParent(pParent){};
+transform::transform() {};
+transform::transform(const entt::entity &pParent) : mParent(pParent) {};
 transform::transform(const entt::entity &pParent, const glm::mat4 &pMatrix)
-    : mParent(pParent), mMatrix(pMatrix), mMatrixVersion(1){};
+    : mParent(pParent), mMatrix(pMatrix), mMatrixVersion(1) {};
 transform::transform(const glm::mat4 &pMatrix)
-    : mMatrix(pMatrix), mMatrixVersion(1){};
+    : mMatrix(pMatrix), mMatrixVersion(1) {};
 
 const glm::vec3 &transform::position() {
   this->update_component();
@@ -324,7 +328,16 @@ void transform::update_matrix() {
 }
 
 void transform::update_world_matrix(entt::registry &pRegistry) {
+  auto &transformSys = pRegistry.ctx().get<transform_system>();
   this->update_matrix();
+  // FIXME: This should be done for every local operation. However, the registry
+  // is inaccessible to the transform variable, so it's difficult
+  if (this->mWorldMatrixVersion != this->mMatrixVersion) {
+    transformSys.update_global_version();
+  }
+  if (transformSys.global_version() == this->mGlobalVersion) {
+    return;
+  }
   transform *parent = nullptr;
   if (this->mParent != std::nullopt) {
     parent = pRegistry.try_get<transform>(this->mParent.value());
@@ -339,6 +352,7 @@ void transform::update_world_matrix(entt::registry &pRegistry) {
       this->mWorldParentVersion = target_version;
       this->mWorldVersion += 1;
     }
+    this->mGlobalVersion = transformSys.global_version();
   } else {
     if (this->mMatrixVersion != this->mWorldMatrixVersion ||
         this->mWorldParentVersion != 0) {
@@ -347,6 +361,7 @@ void transform::update_world_matrix(entt::registry &pRegistry) {
       this->mWorldParentVersion = 0;
       this->mWorldVersion += 1;
     }
+    this->mGlobalVersion = transformSys.global_version();
   }
 }
 

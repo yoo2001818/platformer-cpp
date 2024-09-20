@@ -10,7 +10,6 @@
 #include "physics.hpp"
 #include "render/renderer.hpp"
 #include "scene/scene.hpp"
-#include "transform.hpp"
 #include <entt/entt.hpp>
 #include <memory>
 
@@ -34,7 +33,6 @@ private:
   entt::entity mPlayer;
   entt::entity mPlayerHead;
   name_system mName;
-  transform_system mTransform;
   fps_movement_system mMovement;
   physics_system mPhysics;
   debug_ui_system mDebugUi;

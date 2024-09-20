@@ -15,11 +15,16 @@ class transform_system {
 public:
   void init(entt::registry &pRegistry);
 
+  int global_version() const;
+  void update_global_version();
+
 private:
   void on_construct(entt::registry &pRegistry, entt::entity pEntity);
   void on_update(entt::registry &pRegistry, entt::entity pEntity);
   void on_destroy(entt::registry &pRegistry, entt::entity pEntity);
   void handle_change(entt::registry &pRegistry, entt::entity pEntity);
+
+  int mGlobalVersion = 0;
 };
 class transform {
 public:
@@ -98,6 +103,7 @@ private:
   int mWorldParentVersion = 0;
   int mWorldVersion = 0;
   int mWorldInverseVersion = 0;
+  int mGlobalVersion = 0;
   glm::mat4 mMatrixWorld{1.0};
   glm::mat4 mMatrixWorldInverse{1.0};
   std::optional<entt::entity> mPreviousParent = std::nullopt;

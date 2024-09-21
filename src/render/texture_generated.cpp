@@ -1,4 +1,4 @@
-#include "texture_generated.hpp"
+#include "render/texture_generated.hpp"
 
 using namespace platformer;
 

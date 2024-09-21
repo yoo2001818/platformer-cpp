@@ -1,4 +1,4 @@
-#include "cubemap.hpp"
+#include "render/cubemap.hpp"
 #include "render/framebuffer.hpp"
 #include "render/shader.hpp"
 #include "render/texture.hpp"

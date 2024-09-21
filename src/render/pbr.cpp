@@ -1,5 +1,5 @@
-#include "pbr.hpp"
-#include "render/geometry.hpp"
+#include "render/pbr.hpp"
+#include "geometry/geometry.hpp"
 #include "render/shader.hpp"
 
 using namespace platformer;

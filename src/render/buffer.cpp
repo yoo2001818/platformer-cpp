@@ -1,5 +1,4 @@
-#include "buffer.hpp"
-#include "debug.hpp"
+#include "render/buffer.hpp"
 #include <GL/glew.h>
 
 using namespace platformer;

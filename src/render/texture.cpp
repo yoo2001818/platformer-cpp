@@ -1,7 +1,7 @@
 #include "render/texture.hpp"
-#include "debug.hpp"
 #include "render/buffer.hpp"
 #include "stb_image.h"
+#include "util/debug.hpp"
 #include <GL/glew.h>
 #include <GL/glu.h>
 #include <cstdint>

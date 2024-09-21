@@ -3,7 +3,7 @@
 
 #include "entt/core/hashed_string.hpp"
 #include "entt/entity/fwd.hpp"
-#include "render/geometry.hpp"
+#include "geometry/geometry.hpp"
 #include "render/pipeline.hpp"
 #include "render/renderer.hpp"
 #include "render/shader.hpp"

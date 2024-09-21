@@ -1,8 +1,8 @@
 #ifndef __RENDER_MESH_HPP__
 #define __RENDER_MESH_HPP__
 
-#include "render/geometry.hpp"
-#include "render/material.hpp"
+#include "geometry/geometry.hpp"
+#include "material/material.hpp"
 
 namespace platformer {
 class renderer;

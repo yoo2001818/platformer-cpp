@@ -1,7 +1,7 @@
 #ifndef __CAMERA_HPP__
 #define __CAMERA_HPP__
 
-#include "transform.hpp"
+#include "scenegraph/transform.hpp"
 #include <glm/glm.hpp>
 
 namespace platformer {

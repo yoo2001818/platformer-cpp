@@ -1,12 +1,12 @@
 #define GLM_ENABLE_EXPERIMENTAL
-#include "movement.hpp"
+#include "physics/movement.hpp"
 #include "SDL_events.h"
 #include "SDL_keycode.h"
 #include "SDL_mouse.h"
 #include "game.hpp"
-#include "physics.hpp"
-#include "render/mesh.hpp"
-#include "transform.hpp"
+#include "physics/physics.hpp"
+#include "scenegraph/mesh.hpp"
+#include "scenegraph/transform.hpp"
 #include <glm/ext/matrix_transform.hpp>
 #include <glm/ext/quaternion_common.hpp>
 #include <glm/ext/quaternion_transform.hpp>

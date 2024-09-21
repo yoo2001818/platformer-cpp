@@ -1,9 +1,8 @@
-#include "physics.hpp"
+#include "physics/physics.hpp"
 #include "game.hpp"
 #define GLM_ENABLE_EXPERIMENTAL
 #include "glm/gtx/string_cast.hpp"
-#include "transform.hpp"
-#include <iostream>
+#include "scenegraph/transform.hpp"
 
 using namespace platformer;
 

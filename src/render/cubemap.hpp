@@ -1,9 +1,9 @@
 #ifndef __CUBEMAP_HPP__
 #define __CUBEMAP_HPP__
-#include "framebuffer.hpp"
-#include "geometry.hpp"
-#include "shader.hpp"
-#include "texture.hpp"
+#include "geometry/geometry.hpp"
+#include "render/framebuffer.hpp"
+#include "render/shader.hpp"
+#include "render/texture.hpp"
 #include <glm/fwd.hpp>
 #include <glm/glm.hpp>
 #include <memory>

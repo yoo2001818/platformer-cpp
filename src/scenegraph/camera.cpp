@@ -1,4 +1,4 @@
-#include "render/camera.hpp"
+#include "scenegraph/camera.hpp"
 #include "render/renderer.hpp"
 #include <glm/ext/matrix_clip_space.hpp>
 #include <glm/glm.hpp>

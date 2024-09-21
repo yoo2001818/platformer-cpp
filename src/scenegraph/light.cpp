@@ -1,9 +1,9 @@
-#include "light.hpp"
+#include "scenegraph/light.hpp"
 #include "entt/core/hashed_string.hpp"
 #include "entt/entity/fwd.hpp"
-#include "pipeline.hpp"
-#include "render/geometry.hpp"
-#include "transform.hpp"
+#include "geometry/geometry.hpp"
+#include "render/pipeline.hpp"
+#include "scenegraph/transform.hpp"
 #include <memory>
 #include <string>
 

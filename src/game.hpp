@@ -3,13 +3,13 @@
 
 #include "SDL_events.h"
 #include "application.hpp"
-#include "debug_ui.hpp"
 #include "entt/entity/fwd.hpp"
-#include "movement.hpp"
-#include "name.hpp"
-#include "physics.hpp"
+#include "physics/movement.hpp"
+#include "physics/physics.hpp"
 #include "render/renderer.hpp"
 #include "scene/scene.hpp"
+#include "scenegraph/name.hpp"
+#include "ui/debug_ui.hpp"
 #include <entt/entt.hpp>
 #include <memory>
 

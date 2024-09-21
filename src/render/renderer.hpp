@@ -2,7 +2,7 @@
 #define __RENDERER_HPP__
 
 #include "entt/entity/fwd.hpp"
-#include "render/gizmo.hpp"
+#include "gizmo/gizmo.hpp"
 #include "render/pipeline.hpp"
 #include "render/render.hpp"
 #include "render/render_state.hpp"

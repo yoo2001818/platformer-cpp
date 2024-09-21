@@ -1,15 +1,15 @@
 #include "scene_instancing.hpp"
 #include "application.hpp"
-#include "file.hpp"
 #include "game.hpp"
-#include "pbr/pbr.hpp"
+#include "geometry/geometry.hpp"
+#include "material/material.hpp"
 #include "render/cubemap.hpp"
-#include "render/geometry.hpp"
-#include "render/light.hpp"
-#include "render/material.hpp"
-#include "render/mesh.hpp"
+#include "render/pbr.hpp"
 #include "render/shader.hpp"
 #include "render/texture.hpp"
+#include "scenegraph/light.hpp"
+#include "scenegraph/mesh.hpp"
+#include "util/file.hpp"
 #include <cmath>
 #include <memory>
 

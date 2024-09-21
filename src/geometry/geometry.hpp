@@ -1,6 +1,6 @@
 #ifndef __RENDER_GEOMETRY_HPP__
 #define __RENDER_GEOMETRY_HPP__
-#include "buffer.hpp"
+#include "render/buffer.hpp"
 #include <GL/glew.h>
 #include <entt/entt.hpp>
 #include <glm/fwd.hpp>

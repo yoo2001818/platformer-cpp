@@ -3,10 +3,10 @@
 #include "assimp/mesh.h"
 #include "assimp/scene.h"
 #include "entt/entity/fwd.hpp"
-#include "render/armature.hpp"
-#include "render/geometry.hpp"
-#include "render/material.hpp"
-#include "render/mesh.hpp"
+#include "geometry/geometry.hpp"
+#include "material/material.hpp"
+#include "scenegraph/armature.hpp"
+#include "scenegraph/mesh.hpp"
 #include <glm/glm.hpp>
 #include <memory>
 #include <string>

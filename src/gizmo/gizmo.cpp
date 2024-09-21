@@ -1,11 +1,11 @@
-#include "gizmo.hpp"
+#include "gizmo/gizmo.hpp"
+#include "geometry/geometry.hpp"
 #include "render/buffer.hpp"
-#include "render/camera.hpp"
-#include "render/geometry.hpp"
-#include "render/mesh.hpp"
 #include "render/renderer.hpp"
 #include "render/shader.hpp"
-#include "transform.hpp"
+#include "scenegraph/camera.hpp"
+#include "scenegraph/mesh.hpp"
+#include "scenegraph/transform.hpp"
 #include <memory>
 
 using namespace platformer;

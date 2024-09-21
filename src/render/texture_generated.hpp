@@ -1,8 +1,8 @@
 #ifndef __TEXTURE_GENERATED_HPP__
 #define __TEXTURE_GENERATED_HPP__
 
-#include "framebuffer.hpp"
-#include "texture.hpp"
+#include "render/framebuffer.hpp"
+#include "render/texture.hpp"
 #include <memory>
 
 // TODO: This should be merged with cubemaps sometimes later

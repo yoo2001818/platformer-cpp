@@ -1,7 +1,7 @@
 #ifndef __RENDER_MATERIAL_HPP__
 #define __RENDER_MATERIAL_HPP__
 #include "entt/entt.hpp"
-#include "render/geometry.hpp"
+#include "geometry/geometry.hpp"
 #include "render/shader.hpp"
 #include "render/texture.hpp"
 #include <any>

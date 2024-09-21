@@ -1,6 +1,6 @@
-#include "armature.hpp"
+#include "scenegraph/armature.hpp"
 #include "entt/entt.hpp"
-#include "transform.hpp"
+#include "scenegraph/transform.hpp"
 #include <glm/ext/matrix_transform.hpp>
 #include <glm/fwd.hpp>
 #include <vector>

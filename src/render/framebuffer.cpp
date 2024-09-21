@@ -1,6 +1,6 @@
 #include "render/framebuffer.hpp"
-#include "debug.hpp"
 #include "render/texture.hpp"
+#include "util/debug.hpp"
 #include <GL/glew.h>
 #include <memory>
 #include <stdexcept>

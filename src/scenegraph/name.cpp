@@ -1,4 +1,4 @@
-#include "name.hpp"
+#include "scenegraph/name.hpp"
 #include "entt/entt.hpp"
 #include <optional>
 #include <string>

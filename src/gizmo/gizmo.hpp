@@ -1,8 +1,8 @@
 #ifndef __GIZMO_HPP__
 #define __GIZMO_HPP__
 
+#include "geometry/geometry.hpp"
 #include "render/buffer.hpp"
-#include "render/geometry.hpp"
 #include "render/shader.hpp"
 #include <memory>
 

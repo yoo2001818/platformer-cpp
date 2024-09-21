@@ -1,8 +1,8 @@
-#include "file.hpp"
 #include "render/shader_preprocessor.hpp"
+#include "util/file.hpp"
 #define GLM_ENABLE_EXPERIMENTAL
-#include "debug.hpp"
 #include "render/shader.hpp"
+#include "util/debug.hpp"
 #include <GL/glew.h>
 #include <glm/gtc/type_ptr.hpp>
 

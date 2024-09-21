@@ -1,4 +1,4 @@
-#include "render/mesh.hpp"
+#include "scenegraph/mesh.hpp"
 
 using namespace platformer;
 

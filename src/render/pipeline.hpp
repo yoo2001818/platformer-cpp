@@ -2,17 +2,18 @@
 #define __PIPELINE_HPP__
 
 #include "entt/entity/fwd.hpp"
+#include "geometry/geometry.hpp"
+#include "material/material.hpp"
 #include "render/framebuffer.hpp"
-#include "render/geometry.hpp"
-#include "render/material.hpp"
-#include "render/mesh.hpp"
 #include "render/shader.hpp"
 #include "render/texture.hpp"
+#include "scenegraph/mesh.hpp"
 #include <functional>
 #include <memory>
 #include <string>
 #include <unordered_map>
 #include <vector>
+
 
 namespace platformer {
 class renderer;

@@ -14,6 +14,12 @@ public:
   virtual void init(application &pApplication) = 0;
   virtual void update(application &pApplication, float pDelta) = 0;
   virtual void dispose() = 0;
+  /**
+   * @return int 0 means netural - should be sent to imgui and the game. <0
+   * means it should be ignored by the game, >0 means it must be process by the
+   * game.
+   */
+  virtual int peek_event(application &pApplication, SDL_Event &pEvent) = 0;
   virtual void handle_event(application &pApplication, SDL_Event &pEvent) = 0;
 };
 

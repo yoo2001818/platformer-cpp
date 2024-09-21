@@ -32,6 +32,8 @@ public:
   void update(game &pGame, float pDelta);
   void handle_event(game &pGame, SDL_Event &pEvent);
 
+  bool mouse_locked() const;
+
   void body_entity(const std::optional<entt::entity> &pEntity);
   const std::optional<entt::entity> &body_entity() const;
 

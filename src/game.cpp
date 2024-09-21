@@ -63,6 +63,14 @@ void game::update(application &pApplication, float pDelta) {
 
 void game::dispose() {}
 
+int game::peek_event(application &pApplication, SDL_Event &pEvent) {
+  if (pEvent.type == SDL_WINDOWEVENT &&
+      pEvent.window.event == SDL_WINDOWEVENT_RESIZED) {
+    return 0;
+  }
+  return this->mMovement.mouse_locked() ? 1 : -1;
+}
+
 void game::handle_event(application &pApplication, SDL_Event &pEvent) {
   if (pEvent.type == SDL_WINDOWEVENT &&
       pEvent.window.event == SDL_WINDOWEVENT_RESIZED) {

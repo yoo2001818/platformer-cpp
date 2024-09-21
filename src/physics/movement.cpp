@@ -238,6 +238,8 @@ void fps_movement_system::handle_key(SDL_Keycode &pKey, bool pState) {
   }
 }
 
+bool fps_movement_system::mouse_locked() const { return this->mMouseLocked; }
+
 void fps_movement_system::body_entity(
     const std::optional<entt::entity> &pEntity) {
   this->mBodyEntity = pEntity;

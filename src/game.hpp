@@ -20,6 +20,7 @@ public:
   virtual void init(application &pApplication) override;
   virtual void update(application &pApplication, float pDelta) override;
   virtual void dispose() override;
+  virtual int peek_event(application &pApplication, SDL_Event &pEvent) override;
   virtual void handle_event(application &pApplication,
                             SDL_Event &pEvent) override;
   entt::registry &registry();

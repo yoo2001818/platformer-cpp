@@ -26,9 +26,18 @@ void application::start() {
         exit = true;
         break;
       }
-      ImGuiIO &io = ImGui::GetIO();
-      ImGui_ImplSDL2_ProcessEvent(&event);
-      if (!io.WantCaptureMouse && !io.WantCaptureKeyboard) {
+      int isProcessed = this->mApplet->peek_event(*this, event);
+      if (isProcessed < 0) {
+        ImGuiIO &io = ImGui::GetIO();
+        ImGui_ImplSDL2_ProcessEvent(&event);
+        if (!io.WantCaptureMouse && !io.WantCaptureKeyboard) {
+          this->mApplet->handle_event(*this, event);
+        }
+      } else if (isProcessed == 0) {
+        ImGuiIO &io = ImGui::GetIO();
+        ImGui_ImplSDL2_ProcessEvent(&event);
+        this->mApplet->handle_event(*this, event);
+      } else {
         this->mApplet->handle_event(*this, event);
       }
     }

@@ -1,6 +1,9 @@
 #include "loader/load.hpp"
+#include "animation/animation.hpp"
+#include "assimp/anim.h"
 #include "assimp/material.h"
 #include "assimp/mesh.h"
+#include "assimp/quaternion.h"
 #include "assimp/texture.h"
 #include "assimp/types.h"
 #include "entt/entity/entity.hpp"
@@ -29,6 +32,10 @@ using namespace platformer;
 
 glm::vec3 convert_ai_to_glm(aiVector3D pValue) {
   return glm::vec3(pValue.x, pValue.y, pValue.z);
+}
+
+glm::quat convert_ai_to_glm(aiQuaternion pValue) {
+  return glm::quat(pValue.x, pValue.y, pValue.z, pValue.w);
 }
 
 glm::vec3 convert_ai_to_glm(aiColor3D pValue) {
@@ -147,7 +154,7 @@ std::shared_ptr<texture> entity_loader::read_texture(std::string pFilename) {
     auto texture =
         std::make_shared<texture_2d>(texture_source(texture_source_image{
             .format = {GL_RGBA, GL_RGBA, GL_UNSIGNED_BYTE},
-            .filename = std::string(texPath),
+            .filename = texPath.string(),
         }));
     return texture;
   }
@@ -418,6 +425,63 @@ void entity_loader::attach_entity(aiNode *pNode, entt::entity pEntity) {
   // the tree)
 }
 
+animation_action entity_loader::read_animation(int pIndex) {
+  auto anim = this->mScene->mAnimations[pIndex];
+  animation_action action;
+  action.name = std::string(anim->mName.C_Str());
+  action.duration = anim->mDuration;
+  for (int chanId = 0; chanId < anim->mNumChannels; chanId += 1) {
+    auto nodeAnim = anim->mChannels[chanId];
+    auto entity = this->mEntityByNames.at(nodeAnim->mNodeName.C_Str());
+    if (nodeAnim->mNumPositionKeys > 0) {
+      animation_channel_translation channel;
+      channel.entity = entity;
+      // assimp does not specify this (gltf does)
+      channel.intepolation = animation_channel_interpolation::LINEAR;
+      for (int i = 0; i < nodeAnim->mNumPositionKeys; i += 1) {
+        auto key = nodeAnim->mPositionKeys[i];
+        channel.frames.emplace_back(key.mTime, convert_ai_to_glm(key.mValue));
+      }
+      action.channels.emplace_back(std::move(channel));
+    }
+    if (nodeAnim->mNumRotationKeys > 0) {
+      animation_channel_rotation channel;
+      channel.entity = entity;
+      // assimp does not specify this (gltf does)
+      channel.intepolation = animation_channel_interpolation::LINEAR;
+      for (int i = 0; i < nodeAnim->mNumRotationKeys; i += 1) {
+        auto key = nodeAnim->mRotationKeys[i];
+        channel.frames.emplace_back(key.mTime, convert_ai_to_glm(key.mValue));
+      }
+      action.channels.emplace_back(std::move(channel));
+    }
+    if (nodeAnim->mNumScalingKeys > 0) {
+      animation_channel_scale channel;
+      channel.entity = entity;
+      // assimp does not specify this (gltf does)
+      channel.intepolation = animation_channel_interpolation::LINEAR;
+      for (int i = 0; i < nodeAnim->mNumScalingKeys; i += 1) {
+        auto key = nodeAnim->mScalingKeys[i];
+        channel.frames.emplace_back(key.mTime, convert_ai_to_glm(key.mValue));
+      }
+      action.channels.emplace_back(std::move(channel));
+    }
+    // TODO: The engine does not support shape keys yet
+  }
+  return action;
+}
+
+void entity_loader::read_animation_all() {
+  auto rootEntity = this->mEntities.at(mScene->mRootNode);
+  if (mScene->mNumAnimations > 0) {
+    auto &animComp = this->mRegistry.emplace<animation_component>(rootEntity);
+    for (int i = 0; i < mScene->mNumAnimations; i += 1) {
+      animComp.actions.emplace_back(std::move(read_animation(i)));
+      animComp.playbacks.emplace_back();
+    }
+  }
+}
+
 void entity_loader::load() {
   Assimp::Importer importer;
 
@@ -439,6 +503,7 @@ void entity_loader::load() {
   for (auto [node, entity] : this->mEntities) {
     this->attach_entity(node, entity);
   }
+  this->read_animation_all();
   this->mScene = nullptr;
   this->mEntities.clear();
   this->mMaterials.clear();

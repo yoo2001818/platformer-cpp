@@ -1,5 +1,7 @@
 #ifndef __RENDER_LOAD_HPP__
 #define __RENDER_LOAD_HPP__
+#include "animation/animation.hpp"
+#include "assimp/anim.h"
 #include "assimp/mesh.h"
 #include "assimp/scene.h"
 #include "entt/entity/fwd.hpp"
@@ -38,6 +40,8 @@ private:
   armature_component read_mesh_armature(int pIndex);
   void iterate_entity(aiNode *pNode, entt::entity pParent);
   void attach_entity(aiNode *pNode, entt::entity pEntity);
+  animation_action read_animation(int pIndex);
+  void read_animation_all();
 };
 
 void load_file_to_entity(const std::string &pFilename,

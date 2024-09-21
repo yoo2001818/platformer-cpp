@@ -1,12 +1,14 @@
 #ifndef __ANIMATION_HPP__
 #define __ANIMATION_HPP__
 
+#include "entt/entity/entity.hpp"
 #include "entt/entity/fwd.hpp"
 #include <glm/fwd.hpp>
 #include <string>
 #include <utility>
 #include <variant>
 #include <vector>
+
 namespace platformer {
 
 enum class animation_channel_interpolation {
@@ -14,9 +16,20 @@ enum class animation_channel_interpolation {
   LINEAR,
 };
 
+enum class animation_channel_behavior {
+  DEFAULT,
+  CONSTANT,
+  LINEAR,
+  REPEAT,
+};
+
 struct animation_channel_base {
-  entt::entity entity;
-  animation_channel_interpolation intepolation;
+  entt::entity entity = entt::null;
+  animation_channel_interpolation intepolation =
+      animation_channel_interpolation::LINEAR;
+  animation_channel_behavior pre_behavior = animation_channel_behavior::DEFAULT;
+  animation_channel_behavior post_behavior =
+      animation_channel_behavior::DEFAULT;
 };
 
 struct animation_channel_translation : public animation_channel_base {
@@ -42,13 +55,13 @@ struct animation_action {
 };
 
 struct animation_playback {
-  float current;
+  float current = 0.0;
   bool playing = true;
   bool loop = true;
   float weight = 1.0;
 };
 
-class animation_controller {
+class animation_component {
 public:
   std::vector<animation_action> actions;
   std::vector<animation_playback> playbacks;

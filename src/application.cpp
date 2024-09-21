@@ -7,6 +7,7 @@
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_events.h>
 #include <SDL2/SDL_video.h>
+#include <chrono>
 #include <ctime>
 
 using namespace platformer;
@@ -17,7 +18,7 @@ application::application(std::unique_ptr<application_applet> &&pApplet)
 void application::start() {
   if (this->init() != 0)
     return;
-  uint64_t prevTime = SDL_GetTicks64();
+  auto prevTime = std::chrono::steady_clock::now();
   while (true) {
     SDL_Event event;
     bool exit = false;
@@ -44,11 +45,17 @@ void application::start() {
     if (exit)
       break;
 
-    uint64_t beginTime = SDL_GetTicks64();
-    this->update((beginTime - prevTime) / 1000.0f);
-    uint64_t endTime = SDL_GetTicks64();
-    int32_t deltaTime = static_cast<int32_t>(endTime - beginTime);
-    int32_t sleepTime = 16 - deltaTime;
+    auto beginTime = std::chrono::steady_clock::now();
+    float deltaTime = std::chrono::duration_cast<std::chrono::microseconds>(
+                          beginTime - prevTime)
+                          .count() /
+                      1000000.0f;
+    this->update(deltaTime);
+    auto endTime = std::chrono::steady_clock::now();
+    int32_t elapsedTime = std::chrono::duration_cast<std::chrono::milliseconds>(
+                              endTime - beginTime)
+                              .count();
+    int32_t sleepTime = 16 - elapsedTime;
 
     prevTime = beginTime;
     if (sleepTime > 0) {

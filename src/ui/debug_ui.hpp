@@ -12,6 +12,9 @@ public:
 private:
   game *mGame;
   int mSceneIndex;
+  float mDeltaTime;
+  int mDeltaFrames;
+  float mFps;
 };
 }; // namespace platformer
 

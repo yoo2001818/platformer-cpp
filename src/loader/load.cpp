@@ -35,7 +35,7 @@ glm::vec3 convert_ai_to_glm(aiVector3D pValue) {
 }
 
 glm::quat convert_ai_to_glm(aiQuaternion pValue) {
-  return glm::quat(pValue.x, pValue.y, pValue.z, pValue.w);
+  return glm::quat::wxyz(pValue.w, pValue.x, pValue.y, pValue.z);
 }
 
 glm::vec3 convert_ai_to_glm(aiColor3D pValue) {
@@ -429,7 +429,11 @@ animation_action entity_loader::read_animation(int pIndex) {
   auto anim = this->mScene->mAnimations[pIndex];
   animation_action action;
   action.name = std::string(anim->mName.C_Str());
-  action.duration = anim->mDuration;
+  float tps = anim->mTicksPerSecond;
+  if (tps == 0.0) {
+    tps = 1.0f;
+  }
+  action.duration = anim->mDuration / tps;
   for (int chanId = 0; chanId < anim->mNumChannels; chanId += 1) {
     auto nodeAnim = anim->mChannels[chanId];
     auto entity = this->mEntityByNames.at(nodeAnim->mNodeName.C_Str());
@@ -440,7 +444,8 @@ animation_action entity_loader::read_animation(int pIndex) {
       channel.intepolation = animation_channel_interpolation::LINEAR;
       for (int i = 0; i < nodeAnim->mNumPositionKeys; i += 1) {
         auto key = nodeAnim->mPositionKeys[i];
-        channel.frames.emplace_back(key.mTime, convert_ai_to_glm(key.mValue));
+        channel.frames.emplace_back(key.mTime / tps,
+                                    convert_ai_to_glm(key.mValue));
       }
       action.channels.emplace_back(std::move(channel));
     }
@@ -451,7 +456,8 @@ animation_action entity_loader::read_animation(int pIndex) {
       channel.intepolation = animation_channel_interpolation::LINEAR;
       for (int i = 0; i < nodeAnim->mNumRotationKeys; i += 1) {
         auto key = nodeAnim->mRotationKeys[i];
-        channel.frames.emplace_back(key.mTime, convert_ai_to_glm(key.mValue));
+        channel.frames.emplace_back(key.mTime / tps,
+                                    convert_ai_to_glm(key.mValue));
       }
       action.channels.emplace_back(std::move(channel));
     }
@@ -462,7 +468,8 @@ animation_action entity_loader::read_animation(int pIndex) {
       channel.intepolation = animation_channel_interpolation::LINEAR;
       for (int i = 0; i < nodeAnim->mNumScalingKeys; i += 1) {
         auto key = nodeAnim->mScalingKeys[i];
-        channel.frames.emplace_back(key.mTime, convert_ai_to_glm(key.mValue));
+        channel.frames.emplace_back(key.mTime / tps,
+                                    convert_ai_to_glm(key.mValue));
       }
       action.channels.emplace_back(std::move(channel));
     }

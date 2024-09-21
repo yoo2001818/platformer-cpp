@@ -321,10 +321,8 @@ void transform::update_component() {
 
 void transform::update_matrix() {
   if (this->mMatrixVersion < this->mComponentVersion) {
-    this->mMatrix = glm::mat4(1.0);
-    this->mMatrix = glm::translate(this->mMatrix, this->mPosition);
-    this->mMatrix *= glm::mat4_cast(this->mRotation);
-    this->mMatrix = glm::scale(this->mMatrix, this->mScale);
+    this->mMatrix = glm::translate(this->mPosition) *
+                    glm::mat4_cast(this->mRotation) * glm::scale(this->mScale);
     this->mMatrixVersion = this->mComponentVersion;
   }
 }

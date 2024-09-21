@@ -7,6 +7,7 @@
 #include "scene/scene.hpp"
 #include "scenegraph/camera.hpp"
 #include "scenegraph/name.hpp"
+#include "util/debug.hpp"
 #include <glm/ext/matrix_clip_space.hpp>
 #include <glm/ext/scalar_constants.hpp>
 #include <glm/geometric.hpp>

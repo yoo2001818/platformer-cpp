@@ -2,6 +2,7 @@
 #define __GAME_HPP__
 
 #include "SDL_events.h"
+#include "animation/animation.hpp"
 #include "application.hpp"
 #include "entt/entity/fwd.hpp"
 #include "physics/movement.hpp"
@@ -36,6 +37,7 @@ private:
   name_system mName;
   fps_movement_system mMovement;
   physics_system mPhysics;
+  animation_system mAnimation;
   debug_ui_system mDebugUi;
   platformer::renderer mRenderer;
   application *mApplication;

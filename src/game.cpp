@@ -57,6 +57,7 @@ void game::update(application &pApplication, float pDelta) {
 
   this->mMovement.update(*this, pDelta);
   this->mPhysics.update(*this, pDelta);
+  this->mAnimation.update(*this, pDelta);
   this->mDebugUi.update(*this, pDelta);
   this->mRenderer.render();
 }

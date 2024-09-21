@@ -67,5 +67,13 @@ public:
   std::vector<animation_playback> playbacks;
 };
 
+class game;
+
+class animation_system {
+public:
+  animation_system();
+  void update(game &pGame, float pDelta);
+};
+
 } // namespace platformer
 #endif
